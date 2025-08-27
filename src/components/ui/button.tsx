@@ -20,7 +20,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         "achievement-card":
-          "bg-[--achievement-color] text-white shadow-[0_4px_0_0_hsl(var(--achievement-color-darker,0,0%,0%))] active:translate-y-1 active:shadow-none",
+          "bg-transparent backdrop-blur-sm border border-[hsl(var(--achievement-color))] text-white shadow-none",
       },
       size: {
         default: "h-10 px-4 py-2",

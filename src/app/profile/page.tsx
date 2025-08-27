@@ -16,14 +16,14 @@ export default function ProfilePage() {
     const [flippedIndices, setFlippedIndices] = useState<Set<number>>(new Set());
 
     const achievementColors = [
-      'hsl(220 70% 50%)',
-      'hsl(160 60% 45%)',
-      'hsl(30 80% 55%)',
-      'hsl(280 65% 60%)',
-      'hsl(340 75% 55%)',
-      'hsl(260 80% 65%)',
-      'hsl(280 80% 70%)',
-      'hsl(200 80% 60%)',
+      '220 70% 50%',
+      '160 60% 45%',
+      '30 80% 55%',
+      '280 65% 60%',
+      '340 75% 55%',
+      '260 80% 65%',
+      '280 80% 70%',
+      '200 80% 60%',
     ];
 
     useEffect(() => {

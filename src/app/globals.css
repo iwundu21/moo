@@ -102,7 +102,7 @@
         transform: rotateY(180deg);
     }
     .flip-card-front, .flip-card-back {
-        @apply absolute w-full h-full;
+        @apply absolute w-full h-full rounded-lg;
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
     }

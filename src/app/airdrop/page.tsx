@@ -14,16 +14,46 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AirdropPage({}: {}) {
   const [isClient, setIsClient] = useState(false);
+  const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
+  const [walletAddress, setWalletAddress] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleClaim = () => {
+    if (!walletAddress.trim()) {
+        toast({
+            title: "Error",
+            description: "Please enter your wallet address.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    const claimedAmount = mainBalance;
+    // Here you would typically send the data to your backend
+    console.log('Claiming', claimedAmount, 'to wallet', walletAddress);
+    
+    toast({
+        title: "Processing Airdrop",
+        description: `Your ${claimedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MOO airdrop is processing.`,
+    });
+
+    setMainBalance(0);
+    mockUser.mainBalance = 0;
+    setWalletAddress('');
+  };
+
 
   if (!isClient) {
     return null;
@@ -42,11 +72,11 @@ export default function AirdropPage({}: {}) {
           <CardContent>
             <div className="flex items-center justify-between">
               <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                {mockUser.mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button>Claim</Button>
+                  <Button disabled={mainBalance === 0}>Claim</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] glass-card">
                   <DialogHeader>
@@ -64,11 +94,15 @@ export default function AirdropPage({}: {}) {
                         id="wallet-address"
                         placeholder="Paste your TON wallet address"
                         className="col-span-3"
+                        value={walletAddress}
+                        onChange={(e) => setWalletAddress(e.target.value)}
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit">Claim Your Allocation</Button>
+                    <DialogClose asChild>
+                        <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
+                    </DialogClose>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>

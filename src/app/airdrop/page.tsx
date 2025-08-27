@@ -88,7 +88,7 @@ export default function AirdropPage() {
             ) : (
                 <div className="flex items-center justify-between">
                 <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                    {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                 </p>
                 <Dialog>
                     <DialogTrigger asChild>
@@ -147,8 +147,10 @@ export default function AirdropPage() {
                     <div className="font-medium">{record.timestamp.toLocaleDateString()}</div>
                     <div className="text-xs text-muted-foreground">{record.timestamp.toLocaleTimeString()}</div>
                   </TableCell>
-                  <TableCell className="text-right font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                    + {record.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <TableCell className="text-right font-semibold">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                        + {record.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                    </span>
                   </TableCell>
                 </TableRow>
               ))}

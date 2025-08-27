@@ -99,7 +99,7 @@ export default function Home() {
                 </p>
                 {isTransferring ? (
                     <div className="text-xs text-amber-500 flex items-center mt-2">
-                        <Hourglass className="mr-2" />
+                        <Hourglass className="mr-2 animate-spin" />
                         Crediting in: {formatCountdown(countdown)}
                     </div>
                 ) : (

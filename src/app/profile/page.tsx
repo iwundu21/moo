@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 
 export default function ProfilePage() {
     const { userProfile, referrals, leaderboard } = useTelegram();
@@ -74,15 +75,18 @@ export default function ProfilePage() {
             {unlockedAchievements.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {unlockedAchievements.map((ach, index) => (
-                        <Card key={index} className={cn("p-4 flex flex-col items-center justify-center text-center aspect-square glass-card")}>
-                            <div className={cn("p-3 mb-2 rounded-lg", achievementColors[index % achievementColors.length])}>
-                               <ach.icon className="w-8 h-8" />
+                        <div key={index} className={cn(
+                            buttonVariants({ variant: 'default' }),
+                            'flex flex-col items-center justify-center text-center aspect-square h-auto p-4 cursor-default'
+                        )}>
+                            <div className={cn("p-3 mb-2 rounded-lg bg-primary-foreground/10")}>
+                               <ach.icon className="w-8 h-8 text-primary-foreground" />
                             </div>
                             <div className="flex-1 flex flex-col justify-center">
-                                <p className="font-semibold text-sm">{ach.title}</p>
-                                <p className="text-xs text-muted-foreground">{ach.description}</p>
+                                <p className="font-semibold text-sm text-primary-foreground">{ach.title}</p>
+                                <p className="text-xs text-primary-foreground/80">{ach.description}</p>
                             </div>
-                        </Card>
+                        </div>
                     ))}
                 </div>
             ) : (

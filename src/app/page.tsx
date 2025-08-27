@@ -151,7 +151,7 @@ export default function Home() {
                 </div>
             </CardHeader>
             <CardContent>
-                <p className="text-4xl font-semibold">
+                <p className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                     {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>

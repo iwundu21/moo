@@ -55,7 +55,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold text-lg">{userRank.balance.toLocaleString()}</p>
+                <p className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{userRank.balance.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">MOO</p>
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function LeaderboardPage() {
                       <span className="font-medium truncate">@{entry.username}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-semibold">{entry.balance.toLocaleString()}</TableCell>
+                  <TableCell className="text-right font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{entry.balance.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -147,7 +147,7 @@ export default function AirdropPage() {
                     <div className="font-medium">{record.timestamp.toLocaleDateString()}</div>
                     <div className="text-xs text-muted-foreground">{record.timestamp.toLocaleTimeString()}</div>
                   </TableCell>
-                  <TableCell className="text-right font-semibold">
+                  <TableCell className="text-right font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                     + {record.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </TableCell>
                 </TableRow>

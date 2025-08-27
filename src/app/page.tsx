@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
+import { cn } from '@/lib/utils';
 
 
 const boosts = [
@@ -157,16 +158,19 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
             </CardContent>
          </Card>
-         <Card>
+         <Card className={cn(isLicenseActive && "bg-green-500/20 border-green-500/50 relative overflow-hidden")}>
+            {isLicenseActive && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-400/30 to-transparent opacity-50"></div>}
             <CardHeader>
                 <CardTitle>Mining License</CardTitle>
             </CardHeader>
             <CardContent>
                 {isLicenseActive ? (
-                    <div className='flex flex-col items-center justify-center h-full'>
-                        <ShieldCheck className="w-10 h-10 text-green-500 mb-2" />
-                        <p className="text-center font-semibold text-green-400">License Active</p>
-                        <p className="text-xs text-muted-foreground">(1x Earning Unlocked)</p>
+                    <div className='flex flex-col items-center justify-center h-full text-center'>
+                         <div className="p-3 mb-2 rounded-full bg-white/20">
+                            <ShieldCheck className="w-10 h-10 text-white" />
+                        </div>
+                        <p className="font-semibold text-white">License Active</p>
+                        <p className="text-xs text-white/80">(1x Earning Unlocked)</p>
                     </div>
                 ) : (
                     <>

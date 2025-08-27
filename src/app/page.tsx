@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser } from '@/lib/data';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Badge } from '@/components/ui/badge';
 
 
 const boosts = [
@@ -23,12 +24,12 @@ const boosts = [
   { id: '10x', multiplier: 10, cost: 350 },
 ];
 
-export default function Home({}) {
+export default function Home({}: {}) {
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
   const [pendingBalance, setPendingBalance] = useState(mockUser.pendingBalance);
   const [isClient, setIsClient] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
+  const [activatedBoosts, setActivatedBoosts] = useState<string[]>(mockUser.purchasedBoosts);
 
   useEffect(() => {
     setIsClient(true);
@@ -69,6 +70,8 @@ export default function Home({}) {
   const handleBoostPurchase = (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
     setActivatedBoosts((prev) => [...prev, boostId]);
+    // This would ideally also update the user data on the backend
+    mockUser.purchasedBoosts = [...mockUser.purchasedBoosts, boostId];
   };
   
   if (!isClient) {
@@ -102,19 +105,20 @@ export default function Home({}) {
           </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
          <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Pending Balance</CardTitle>
+                <div className="text-xs text-amber-500 flex items-center">
+                    <Hourglass className="mr-2 animate-spin h-4 w-4" />
+                    {formatCountdown(countdown)}
+                </div>
             </CardHeader>
             <CardContent>
                 <p className="text-4xl font-semibold">
                     {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <div className="text-xs text-amber-500 flex items-center mt-2">
-                    <Hourglass className="mr-2 animate-spin" />
-                    Crediting in: {formatCountdown(countdown)}
-                </div>
+                <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
             </CardContent>
          </Card>
          <Card>
@@ -130,58 +134,69 @@ export default function Home({}) {
                 </Button>
             </CardContent>
          </Card>
-         <Card>
-            <CardHeader>
-                <CardTitle>Boost Chat Earning</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                    Increase your earning speed per message in group chats.
-                </p>
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button className="w-full" variant="outline">
-                            <Rocket className="mr-2" /> Boost Earning
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="glass-card">
-                        <DialogHeader>
-                        <DialogTitle>Boost Your Chat Earning</DialogTitle>
-                        <DialogDescription>
-                            Select a boost to purchase and increase your earning speed per message.
-                        </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid grid-cols-1 gap-4 py-4">
-                          {boosts.map((boost) => {
-                                const isActivated = activatedBoosts.includes(boost.id);
-                                return (
-                                <Button
-                                    key={boost.id}
-                                    variant="default"
-                                    className="w-full justify-between"
-                                    disabled={isActivated}
-                                    onClick={() => handleBoostPurchase(boost.id)}
-                                >
-                                    {isActivated ? (
-                                    <span>Activated</span>
-                                    ) : (
-                                    <>
-                                        <span>{boost.multiplier}x Boost</span>
-                                        <span>
-                                        {boost.cost}{' '}
-                                        <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500" />
-                                        </span>
-                                    </>
-                                    )}
-                                </Button>
-                                );
-                            })}
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </CardContent>
-         </Card>
       </div>
+
+        <Card>
+        <CardHeader>
+            <CardTitle>Boost Chat Earning</CardTitle>
+            <CardDescription>
+                Increase your earning speed per message in group chats.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {activatedBoosts.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="text-sm font-semibold">Active boosts:</span>
+                    {activatedBoosts.map(boostId => (
+                        <Badge key={boostId} variant="secondary">{boostId} Boost</Badge>
+                    ))}
+                </div>
+            )}
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button className="w-full" variant={activatedBoosts.length > 0 ? "outline" : "default"}>
+                        <Rocket className="mr-2" /> 
+                        {activatedBoosts.length > 0 ? "Purchase More Boosts" : "Boost Earning"}
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="glass-card">
+                    <DialogHeader>
+                    <DialogTitle>Boost Your Chat Earning</DialogTitle>
+                    <DialogDescription>
+                        Select a boost to purchase and increase your earning speed per message. Purchased boosts are permanent.
+                    </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 gap-4 py-4">
+                        {boosts.map((boost) => {
+                            const isActivated = activatedBoosts.includes(boost.id);
+                            return (
+                            <Button
+                                key={boost.id}
+                                variant="default"
+                                className="w-full justify-between"
+                                disabled={isActivated}
+                                onClick={() => handleBoostPurchase(boost.id)}
+                            >
+                                {isActivated ? (
+                                <span>Activated</span>
+                                ) : (
+                                <>
+                                    <span>{boost.multiplier}x Boost</span>
+                                    <span>
+                                    {boost.cost}{' '}
+                                    <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500" />
+                                    </span>
+                                </>
+                                )}
+                            </Button>
+                            );
+                        })}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </CardContent>
+        </Card>
+
 
       <div className="flex justify-center pt-8">
         <div className="relative cursor-pointer group">

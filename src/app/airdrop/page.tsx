@@ -1,13 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockUser } from '@/lib/data';
-import { CheckCircle, Radio } from 'lucide-react';
-
-const tasks = [
-    { title: "Join Telegram Channel", completed: true },
-    { title: "Follow on X", completed: true },
-    { title: "Retweet Pinned Post", completed: false },
-    { title: "Visit Website", completed: true },
-]
 
 export default function AirdropPage({}: {}) {
   return (
@@ -16,7 +8,7 @@ export default function AirdropPage({}: {}) {
         <h1 className="text-4xl font-bold tracking-tight">Airdrop</h1>
       </header>
       
-      <Card className="text-center">
+      <Card>
           <CardHeader>
               <CardTitle>Your Main Balance</CardTitle>
           </CardHeader>

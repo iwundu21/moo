@@ -23,7 +23,7 @@ export default function LeaderboardPage({}: {}) {
       </header>
 
       {userRank && (
-        <Card className="border-primary bg-primary/10">
+        <Card className="border-primary bg-primary/20">
           <CardContent className="p-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
@@ -56,7 +56,7 @@ export default function LeaderboardPage({}: {}) {
             </TableHeader>
             <TableBody>
               {mockLeaderboard.map((entry) => (
-                <TableRow key={entry.rank} className={cn(entry.username === mockUser.telegramUsername && "bg-accent/20")}>
+                <TableRow key={entry.rank} className={cn(entry.username === mockUser.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
                   <TableCell className="font-bold">
                     <div className="flex items-center justify-center">
                         {entry.rank <= 3 ? <Trophy className={cn("w-4 h-4 mr-2", entry.rank === 1 && "text-yellow-400", entry.rank === 2 && "text-gray-400", entry.rank === 3 && "text-yellow-600")} /> : null}

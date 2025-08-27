@@ -17,7 +17,7 @@ export function FooterNav() {
   const pathname = usePathname();
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-sm border-t z-50">
+    <footer className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-lg border-t z-50">
       <nav className="flex justify-around max-w-lg mx-auto px-2 pt-2 pb-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;

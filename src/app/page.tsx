@@ -144,7 +144,7 @@ export default function Home({}) {
                             <Rocket className="mr-2" /> Boost Earning
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="glass-card">
                         <DialogHeader>
                         <DialogTitle>Boost Your Chat Earning</DialogTitle>
                         <DialogDescription>

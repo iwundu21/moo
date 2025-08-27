@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket,Zap } from 'lucide-react';
+import { Star, Hourglass, Rocket } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,11 +17,18 @@ import {
 } from "@/components/ui/dialog"
 
 
+const boosts = [
+  { id: '2x', multiplier: 2, cost: 100 },
+  { id: '5x', multiplier: 5, cost: 200 },
+  { id: '10x', multiplier: 10, cost: 350 },
+];
+
 export default function Home({}) {
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
   const [pendingBalance, setPendingBalance] = useState(mockUser.pendingBalance);
   const [isClient, setIsClient] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
 
   useEffect(() => {
     setIsClient(true);
@@ -58,6 +65,11 @@ export default function Home({}) {
 
     return () => clearInterval(countdownInterval);
   }, [isClient, pendingBalance]);
+
+  const handleBoostPurchase = (boostId: string) => {
+    if (activatedBoosts.includes(boostId)) return;
+    setActivatedBoosts((prev) => [...prev, boostId]);
+  };
   
   if (!isClient) {
     return null;
@@ -140,18 +152,30 @@ export default function Home({}) {
                         </DialogDescription>
                         </DialogHeader>
                         <div className="grid grid-cols-1 gap-4 py-4">
-                            <Button variant="default" className="w-full justify-between">
-                                <span>2x Boost</span>
-                                <span>100 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
-                            </Button>
-                            <Button variant="default" className="w-full justify-between">
-                                <span>5x Boost</span>
-                                <span>200 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
-                            </Button>
-                            <Button variant="default" className="w-full justify-between">
-                                <span>10x Boost</span>
-                                <span>350 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
-                            </Button>
+                          {boosts.map((boost) => {
+                                const isActivated = activatedBoosts.includes(boost.id);
+                                return (
+                                <Button
+                                    key={boost.id}
+                                    variant="default"
+                                    className="w-full justify-between"
+                                    disabled={isActivated}
+                                    onClick={() => handleBoostPurchase(boost.id)}
+                                >
+                                    {isActivated ? (
+                                    <span>Activated</span>
+                                    ) : (
+                                    <>
+                                        <span>{boost.multiplier}x Boost</span>
+                                        <span>
+                                        {boost.cost}{' '}
+                                        <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500" />
+                                        </span>
+                                    </>
+                                    )}
+                                </Button>
+                                );
+                            })}
                         </div>
                     </DialogContent>
                 </Dialog>

@@ -74,7 +74,7 @@ export default function ProfilePage() {
             {unlockedAchievements.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {unlockedAchievements.map((ach, index) => (
-                        <Card key={index} className={cn("p-4 flex flex-col items-center justify-center text-center aspect-square")}>
+                        <Card key={index} className={cn("p-4 flex flex-col items-center justify-center text-center aspect-square glass-card")}>
                             <div className={cn("p-3 mb-2 rounded-lg", achievementColors[index % achievementColors.length])}>
                                <ach.icon className="w-8 h-8" />
                             </div>

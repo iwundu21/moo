@@ -14,7 +14,6 @@ export default function AirdropPage({}: {}) {
     <div className="container mx-auto p-4 space-y-6">
       <header className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight">Airdrop</h1>
-        <p className="text-muted-foreground">Complete tasks to earn more MOO!</p>
       </header>
       
       <Card className="text-center">

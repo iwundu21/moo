@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockUser } from '@/lib/data';
-import { CheckCircle, RadioButton } from 'lucide-react';
+import { CheckCircle, Radio } from 'lucide-react';
 
 const tasks = [
     { title: "Join Telegram Channel", completed: true },
@@ -41,7 +41,7 @@ export default function AirdropPage() {
                         {task.completed ? (
                             <CheckCircle className="text-green-500" />
                         ) : (
-                            <RadioButton className="text-muted-foreground/50" />
+                            <Radio className="text-muted-foreground/50" />
                         )}
                     </li>
                 ))}

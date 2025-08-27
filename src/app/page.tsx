@@ -29,13 +29,11 @@ export default function Home() {
   const { userProfile, addDistributionRecord } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
-  const [isClient, setIsClient] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
   const [isLicenseActive, setIsLicenseActive] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
     if(userProfile) {
       setMainBalance(userProfile.mainBalance);
       setPendingBalance(userProfile.pendingBalance);
@@ -45,7 +43,7 @@ export default function Home() {
   }, [userProfile]);
 
   useEffect(() => {
-    if (!isClient || !isLicenseActive) return;
+    if (!userProfile || !isLicenseActive) return;
 
     let earnRate = 5; // Base rate for 1x boost from license
 
@@ -62,10 +60,10 @@ export default function Home() {
     }, 2000);
 
     return () => clearInterval(earnInterval);
-  }, [isClient, activatedBoosts, isLicenseActive]);
+  }, [userProfile, activatedBoosts, isLicenseActive]);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!userProfile) return;
 
     const updateCountdown = () => {
       const now = new Date();
@@ -77,7 +75,9 @@ export default function Home() {
       if (secondsUntilNextHour === 3600 && pendingBalance > 0) { // Top of the hour
         const amountToCredit = pendingBalance;
         setMainBalance((prev) => prev + amountToCredit);
+        if (userProfile) userProfile.mainBalance += amountToCredit;
         setPendingBalance(0);
+        if (userProfile) userProfile.pendingBalance = 0;
         addDistributionRecord({
           timestamp: new Date(),
           amount: amountToCredit,
@@ -89,7 +89,7 @@ export default function Home() {
     const countdownInterval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(countdownInterval);
-  }, [isClient, pendingBalance, addDistributionRecord]);
+  }, [userProfile, pendingBalance, addDistributionRecord]);
 
   const handleBoostPurchase = (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
@@ -102,10 +102,9 @@ export default function Home() {
   const handleLicenseActivation = () => {
     if (isLicenseActive) return;
     setIsLicenseActive(true);
-    setActivatedBoosts((prev) => [...prev, '1x']);
+    // 1x boost is implicit with the license
     if (userProfile) {
       userProfile.isLicenseActive = true;
-      userProfile.purchasedBoosts = [...userProfile.purchasedBoosts, '1x'];
     }
   }
   
@@ -121,8 +120,7 @@ export default function Home() {
     return `${h}:${m}:${s}`;
   };
   
-  const hasBoosts = activatedBoosts.length > 0;
-  const hasPurchasedBoosts = activatedBoosts.filter(b => b !== '1x').length > 0;
+  const hasPurchasedBoosts = activatedBoosts.length > 0;
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -192,7 +190,7 @@ export default function Home() {
             </CardDescription>
         </CardHeader>
         <CardContent>
-            {hasBoosts && (
+            {hasPurchasedBoosts && (
                 <div className="flex flex-wrap gap-2 mb-4">
                     <span className="text-sm font-semibold">Active boosts:</span>
                     {activatedBoosts.map(boostId => (

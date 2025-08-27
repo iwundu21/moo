@@ -93,7 +93,7 @@ export default function Home() {
   }
   
   if (!userProfile) {
-    return null;
+    return null; // Or a loading spinner
   }
 
   const formatCountdown = (seconds: number | null) => {

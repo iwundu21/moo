@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser, mockReferrals } from '@/lib/data';
-import { Award, Star, Users } from 'lucide-react';
+import { Award, Star, Users, Gem } from 'lucide-react';
 import { mockLeaderboard } from '@/lib/data';
+import { Badge } from '@/components/ui/badge';
 
-export default function ProfilePage({}: {}) {
+export default function ProfilePage({}) {
     const userRank = mockLeaderboard.find(entry => entry.username === mockUser.telegramUsername)?.rank;
 
     const achievements = [
@@ -20,7 +21,15 @@ export default function ProfilePage({}: {}) {
           <AvatarImage src={mockUser.profilePictureUrl} alt={mockUser.telegramUsername} data-ai-hint="profile picture" />
           <AvatarFallback>{mockUser.telegramUsername.substring(0, 2)}</AvatarFallback>
         </Avatar>
-        <h1 className="text-2xl font-bold">@{mockUser.telegramUsername}</h1>
+        <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">@{mockUser.telegramUsername}</h1>
+            {mockUser.isPremium && (
+                <Badge variant="default" className="bg-blue-500 hover:bg-blue-600 text-white">
+                    <Gem className="mr-1 h-3 w-3" />
+                    Premium
+                </Badge>
+            )}
+        </div>
         <p className="text-sm text-muted-foreground">Telegram ID: {mockUser.id}</p>
       </div>
 
@@ -45,6 +54,16 @@ export default function ProfilePage({}: {}) {
         </CardContent>
       </Card>
       
+      <div className="space-y-4">
+        <Card>
+            <CardHeader>
+                <CardTitle>Telegram Premium</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>Status: {mockUser.isPremium ? "Yes" : "No"}</p>
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

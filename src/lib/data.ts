@@ -6,6 +6,7 @@ export const mockUser: UserProfile = {
   profilePictureUrl: 'https://picsum.photos/100/100',
   mainBalance: 12500.75,
   pendingBalance: 750.25,
+  isPremium: true,
 };
 
 export const mockLeaderboard: LeaderboardEntry[] = [

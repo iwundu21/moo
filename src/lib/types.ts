@@ -4,6 +4,7 @@ export type UserProfile = {
   profilePictureUrl: string;
   mainBalance: number;
   pendingBalance: number;
+  isPremium: boolean;
 };
 
 export type LeaderboardEntry = {

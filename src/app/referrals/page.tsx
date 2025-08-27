@@ -3,13 +3,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, UserPlus } from 'lucide-react';
-import { mockReferrals } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { useTelegram } from '@/hooks/use-telegram';
 
 export default function ReferralsPage({}: {}) {
+    const { userProfile, referrals } = useTelegram();
     const { toast } = useToast();
-    const referralLink = 'https://t.me/moo_app_bot?start=ref12345';
+    
+    if (!userProfile) {
+      return null; // Or a loading spinner
+    }
+
+    const referralLink = `https://t.me/moo_app_bot?start=ref${userProfile.id}`;
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(referralLink);
@@ -45,13 +51,13 @@ export default function ReferralsPage({}: {}) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Your Referrals ({mockReferrals.length})</CardTitle>
+          <CardTitle>Your Referrals ({referrals.length})</CardTitle>
           <CardDescription>Friends who have joined using your link.</CardDescription>
         </CardHeader>
         <CardContent>
-            {mockReferrals.length > 0 ? (
+            {referrals.length > 0 ? (
                 <ul className="space-y-3">
-                    {mockReferrals.map((ref, index) => (
+                    {referrals.map((ref, index) => (
                         <li key={index} className="flex items-center gap-4 p-2 rounded-lg bg-secondary/50">
                             <Avatar>
                                 <AvatarImage src={ref.profilePictureUrl} data-ai-hint="profile picture" />

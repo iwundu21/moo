@@ -1,3 +1,4 @@
+'use client';
 
 import {
   Table,
@@ -8,13 +9,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { mockLeaderboard, mockUser } from '@/lib/data';
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTelegram } from "@/hooks/use-telegram";
+import { useEffect, useState } from "react";
+import type { LeaderboardEntry } from "@/lib/types";
+
 
 export default function LeaderboardPage() {
-  const userRank = mockLeaderboard.find(entry => entry.username === mockUser.telegramUsername);
+  const { userProfile, leaderboard } = useTelegram();
+  const [userRank, setUserRank] = useState<LeaderboardEntry | undefined>(undefined);
+
+  useEffect(() => {
+    if (userProfile) {
+      const rank = leaderboard.find(entry => entry.username === userProfile.telegramUsername);
+      setUserRank(rank);
+    }
+  }, [userProfile, leaderboard]);
+
+  if (!userProfile) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -30,8 +46,8 @@ export default function LeaderboardPage() {
               <div className="flex items-center gap-4">
                 <span className="text-lg font-bold w-8 text-center">{userRank.rank}</span>
                 <Avatar>
-                  <AvatarImage src={mockUser.profilePictureUrl} data-ai-hint="profile picture"/>
-                  <AvatarFallback>{mockUser.telegramUsername.substring(0,1)}</AvatarFallback>
+                  <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
+                  <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</AvatarFallback>
                 </Avatar>
                 <div className="font-semibold">
                   <p>You</p>
@@ -56,8 +72,8 @@ export default function LeaderboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockLeaderboard.map((entry) => (
-                <TableRow key={entry.rank} className={cn(entry.username === mockUser.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
+              {leaderboard.map((entry) => (
+                <TableRow key={entry.rank} className={cn(entry.username === userProfile.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
                   <TableCell className="font-bold">
                     <div className="flex items-center justify-center">
                         {entry.rank <= 3 ? <Trophy className={cn("w-4 h-4 mr-2", entry.rank === 1 && "text-yellow-400", entry.rank === 2 && "text-gray-400", entry.rank === 3 && "text-yellow-600")} /> : null}

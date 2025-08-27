@@ -1,15 +1,7 @@
 import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord } from './types';
 
-export const mockUser: UserProfile = {
-  id: '12345',
-  telegramUsername: 'MooMaster',
-  profilePictureUrl: 'https://picsum.photos/100/100',
-  mainBalance: 12500.75,
-  pendingBalance: 750.25,
-  isPremium: true,
-  purchasedBoosts: ['2x'],
-  isLicenseActive: false,
-};
+// This file now mainly provides mock data for features that would require a backend.
+// The user profile data is now handled by the useTelegram hook.
 
 export const mockLeaderboard: LeaderboardEntry[] = [
   { rank: 1, username: 'CryptoKing', profilePictureUrl: 'https://picsum.photos/50/50?random=1', balance: 150000 },

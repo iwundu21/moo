@@ -3,7 +3,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { mockUser, mockDistributionHistory } from '@/lib/data';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,10 +20,12 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle } from 'lucide-react';
+import { useTelegram } from '@/hooks/use-telegram';
 
 export default function AirdropPage({}: {}) {
+  const { userProfile, distributionHistory } = useTelegram();
   const [isClient, setIsClient] = useState(false);
-  const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
+  const [mainBalance, setMainBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
   const [isClaimed, setIsClaimed] = useState(false);
   const [claimedAmount, setClaimedAmount] = useState(0);
@@ -32,11 +33,14 @@ export default function AirdropPage({}: {}) {
 
   useEffect(() => {
     setIsClient(true);
-    // If balance is 0, it means it has been claimed.
-    if (mockUser.mainBalance === 0) {
-        setIsClaimed(true);
+    if (userProfile) {
+      setMainBalance(userProfile.mainBalance);
+      // If balance is 0, it means it has been claimed.
+      if (userProfile.mainBalance === 0) {
+          setIsClaimed(true);
+      }
     }
-  }, []);
+  }, [userProfile]);
 
   const handleClaim = () => {
     if (!walletAddress.trim()) {
@@ -54,14 +58,14 @@ export default function AirdropPage({}: {}) {
     console.log('Claiming', amountToClaim, 'to wallet', walletAddress);
     
     setMainBalance(0);
-    mockUser.mainBalance = 0;
+    if(userProfile) userProfile.mainBalance = 0;
     setWalletAddress('');
     setIsClaimed(true);
   };
 
 
-  if (!isClient) {
-    return null;
+  if (!isClient || !userProfile) {
+    return null; // Or a loading spinner
   }
   
   return (
@@ -139,7 +143,7 @@ export default function AirdropPage({}: {}) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockDistributionHistory.map((record, index) => (
+              {distributionHistory.map((record, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     <div className="font-medium">{record.timestamp.toLocaleDateString()}</div>

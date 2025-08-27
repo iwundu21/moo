@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { mockUser } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Star, Hourglass, Rocket, ShieldCheck } from 'lucide-react';
 import {
@@ -16,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Badge } from '@/components/ui/badge';
+import { useTelegram } from '@/hooks/use-telegram';
 
 
 const boosts = [
@@ -25,16 +25,23 @@ const boosts = [
 ];
 
 export default function Home() {
-  const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
-  const [pendingBalance, setPendingBalance] = useState(mockUser.pendingBalance);
+  const { userProfile } = useTelegram();
+  const [mainBalance, setMainBalance] = useState(0);
+  const [pendingBalance, setPendingBalance] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [activatedBoosts, setActivatedBoosts] = useState<string[]>(mockUser.purchasedBoosts);
-  const [isLicenseActive, setIsLicenseActive] = useState(mockUser.isLicenseActive);
+  const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
+  const [isLicenseActive, setIsLicenseActive] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    if(userProfile) {
+      setMainBalance(userProfile.mainBalance);
+      setPendingBalance(userProfile.pendingBalance);
+      setActivatedBoosts(userProfile.purchasedBoosts);
+      setIsLicenseActive(userProfile.isLicenseActive);
+    }
+  }, [userProfile]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -71,18 +78,20 @@ export default function Home() {
   const handleBoostPurchase = (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
     setActivatedBoosts((prev) => [...prev, boostId]);
-    // This would ideally also update the user data on the backend
-    mockUser.purchasedBoosts = [...mockUser.purchasedBoosts, boostId];
+    if (userProfile) {
+      userProfile.purchasedBoosts = [...userProfile.purchasedBoosts, boostId];
+    }
   };
 
   const handleLicenseActivation = () => {
     if (isLicenseActive) return;
     setIsLicenseActive(true);
-    // This would ideally also update the user data on the backend
-    mockUser.isLicenseActive = true;
+    if (userProfile) {
+      userProfile.isLicenseActive = true;
+    }
   }
   
-  if (!isClient) {
+  if (!isClient || !userProfile) {
     return null;
   }
 
@@ -98,11 +107,11 @@ export default function Home() {
     <div className="container mx-auto p-4 space-y-8">
       <header className="flex items-center space-x-4 pt-4">
         <Avatar className="w-16 h-16 border-2 border-primary">
-          <AvatarImage src={mockUser.profilePictureUrl} alt={mockUser.telegramUsername} data-ai-hint="profile picture" />
-          <AvatarFallback>{mockUser.telegramUsername.substring(0, 2)}</AvatarFallback>
+          <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.telegramUsername} data-ai-hint="profile picture" />
+          <AvatarFallback>{userProfile.telegramUsername.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="text-lg font-semibold">@{mockUser.telegramUsername}</p>
+          <p className="text-lg font-semibold">@{userProfile.telegramUsername}</p>
         </div>
       </header>
 

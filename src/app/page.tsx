@@ -200,7 +200,7 @@ export default function Home() {
             )}
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button className="w-full" variant={hasPurchasedBoosts ? "outline" : "default"} disabled={!isLicenseActive}>
+                    <Button className="w-full" variant={hasPurchasedBoosts ? "secondary" : "default"} disabled={!isLicenseActive}>
                         <Rocket className="mr-2" /> 
                         {hasPurchasedBoosts ? "Purchase More Boosts" : "Boost Earning"}
                     </Button>

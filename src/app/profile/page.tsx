@@ -26,7 +26,7 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Achievements</CardTitle>
+          <CardTitle>Achievement Card</CardTitle>
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

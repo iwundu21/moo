@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Star } from 'lucide-react';
+import { Star, Hourglass } from 'lucide-react';
 
 export default function Home() {
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
   const [pendingBalance, setPendingBalance] = useState(mockUser.pendingBalance);
   const [isClient, setIsClient] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -19,27 +21,53 @@ export default function Home() {
 
   useEffect(() => {
     if (!isClient) return;
-    const earnInterval = setInterval(() => {
-      setPendingBalance((prev) => prev + Math.random() * 5);
-    }, 2000);
+
+    let earnInterval: NodeJS.Timeout;
+    if (!isTransferring) {
+      earnInterval = setInterval(() => {
+        setPendingBalance((prev) => prev + Math.random() * 5);
+      }, 2000);
+    }
 
     return () => clearInterval(earnInterval);
-  }, [isClient]);
+  }, [isClient, isTransferring]);
 
   useEffect(() => {
-    if (pendingBalance > 100) {
-      const transferTimeout = setTimeout(() => {
-        setMainBalance((prev) => prev + pendingBalance);
-        setPendingBalance(0);
-      }, 5000); // Wait 5s then transfer
-
-      return () => clearTimeout(transferTimeout);
+    if (isClient && pendingBalance > 100 && !isTransferring) {
+      setIsTransferring(true);
+      setCountdown(3600); // 1 hour in seconds
     }
-  }, [pendingBalance]);
+  }, [pendingBalance, isClient, isTransferring]);
+
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown <= 0) {
+      setMainBalance((prev) => prev + pendingBalance);
+      setPendingBalance(0);
+      setCountdown(null);
+      setIsTransferring(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown(countdown - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown, pendingBalance]);
   
   if (!isClient) {
     return null;
   }
+
+  const formatCountdown = (seconds: number | null) => {
+    if (seconds === null) return '00:00:00';
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -69,9 +97,16 @@ export default function Home() {
                 <p className="text-4xl font-semibold">
                     {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                    This balance will be transferred to your main balance automatically.
-                </p>
+                {isTransferring ? (
+                    <div className="text-xs text-amber-500 flex items-center mt-2">
+                        <Hourglass className="mr-2" />
+                        Crediting in: {formatCountdown(countdown)}
+                    </div>
+                ) : (
+                    <p className="text-xs text-muted-foreground">
+                        This balance will be transferred to your main balance automatically.
+                    </p>
+                )}
             </CardContent>
          </Card>
          <Card>

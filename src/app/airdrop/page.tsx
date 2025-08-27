@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockUser, mockDistributionHistory } from '@/lib/data';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function AirdropPage({}: {}) {
   const [isClient, setIsClient] = useState(false);
@@ -28,9 +29,12 @@ export default function AirdropPage({}: {}) {
               <CardTitle>Your Main Balance</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="flex items-center justify-between">
               <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                 {mockUser.mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
+              <Button>Claim</Button>
+            </div>
           </CardContent>
       </Card>
 

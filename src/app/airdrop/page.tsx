@@ -19,15 +19,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle } from 'lucide-react';
 
 export default function AirdropPage({}: {}) {
   const [isClient, setIsClient] = useState(false);
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
   const [walletAddress, setWalletAddress] = useState('');
+  const [isClaimed, setIsClaimed] = useState(false);
+  const [claimedAmount, setClaimedAmount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     setIsClient(true);
+    // If balance is 0, it means it has been claimed.
+    if (mockUser.mainBalance === 0) {
+        setIsClaimed(true);
+    }
   }, []);
 
   const handleClaim = () => {
@@ -40,18 +48,15 @@ export default function AirdropPage({}: {}) {
         return;
     }
 
-    const claimedAmount = mainBalance;
+    const amountToClaim = mainBalance;
+    setClaimedAmount(amountToClaim);
     // Here you would typically send the data to your backend
-    console.log('Claiming', claimedAmount, 'to wallet', walletAddress);
+    console.log('Claiming', amountToClaim, 'to wallet', walletAddress);
     
-    toast({
-        title: "Processing Airdrop",
-        description: `Your ${claimedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MOO airdrop is processing.`,
-    });
-
     setMainBalance(0);
     mockUser.mainBalance = 0;
     setWalletAddress('');
+    setIsClaimed(true);
   };
 
 
@@ -70,43 +75,53 @@ export default function AirdropPage({}: {}) {
               <CardTitle>Your Main Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button disabled={mainBalance === 0}>Claim</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] glass-card">
-                  <DialogHeader>
-                    <DialogTitle>Claim Your Allocation</DialogTitle>
-                    <DialogDescription>
-                      Enter your TON network wallet address to receive your MOO.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="wallet-address" className="text-right">
-                        Address
-                      </Label>
-                      <Input
-                        id="wallet-address"
-                        placeholder="Paste your TON wallet address"
-                        className="col-span-3"
-                        value={walletAddress}
-                        onChange={(e) => setWalletAddress(e.target.value)}
-                      />
+            {isClaimed ? (
+                <Alert>
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertTitle>Processing Airdrop</AlertTitle>
+                    <AlertDescription>
+                        Your MOO airdrop is processing. You can check the status in your wallet.
+                    </AlertDescription>
+                </Alert>
+            ) : (
+                <div className="flex items-center justify-between">
+                <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                    {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                <Dialog>
+                    <DialogTrigger asChild>
+                    <Button disabled={mainBalance === 0}>Claim</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px] glass-card">
+                    <DialogHeader>
+                        <DialogTitle>Claim Your Allocation</DialogTitle>
+                        <DialogDescription>
+                        Enter your TON network wallet address to receive your MOO.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="wallet-address" className="text-right">
+                            Address
+                        </Label>
+                        <Input
+                            id="wallet-address"
+                            placeholder="Paste your TON wallet address"
+                            className="col-span-3"
+                            value={walletAddress}
+                            onChange={(e) => setWalletAddress(e.target.value)}
+                        />
+                        </div>
                     </div>
-                  </div>
-                  <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
-                    </DialogClose>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+                </div>
+            )}
           </CardContent>
       </Card>
 

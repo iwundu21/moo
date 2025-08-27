@@ -24,7 +24,6 @@ import { useTelegram } from '@/hooks/use-telegram';
 
 export default function AirdropPage() {
   const { userProfile, distributionHistory } = useTelegram();
-  const [isClient, setIsClient] = useState(false);
   const [mainBalance, setMainBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
   const [isClaimed, setIsClaimed] = useState(false);
@@ -32,7 +31,6 @@ export default function AirdropPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsClient(true);
     if (userProfile) {
       setMainBalance(userProfile.mainBalance);
       // If balance is 0, it means it has been claimed.
@@ -64,7 +62,7 @@ export default function AirdropPage() {
   };
 
 
-  if (!isClient || !userProfile) {
+  if (!userProfile) {
     return null; // Or a loading spinner
   }
   

@@ -12,13 +12,8 @@ import { useEffect, useState } from 'react';
 export default function ReferralsPage() {
     const { userProfile, referrals } = useTelegram();
     const { toast } = useToast();
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-      setIsClient(true);
-    }, []);
     
-    if (!isClient || !userProfile) {
+    if (!userProfile) {
       return null; // Or a loading spinner
     }
 

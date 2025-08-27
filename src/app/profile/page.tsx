@@ -11,10 +11,8 @@ import { useEffect, useState } from 'react';
 export default function ProfilePage() {
     const { userProfile, referrals, leaderboard } = useTelegram();
     const [achievements, setAchievements] = useState<any[]>([]);
-    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setIsClient(true);
         if (userProfile) {
             const userRank = leaderboard.find(entry => entry.username === userProfile.telegramUsername)?.rank;
 
@@ -37,7 +35,7 @@ export default function ProfilePage() {
         }
     }, [userProfile, referrals, leaderboard]);
     
-    if (!isClient || !userProfile) {
+    if (!userProfile) {
         return null; // or a loading spinner
     }
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -39,8 +40,9 @@ export function useTelegram() {
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
 
   useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      const telegramUser = window.Telegram.WebApp.initDataUnsafe?.user;
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      const telegramUser = tg.initDataUnsafe?.user;
       
       if (telegramUser) {
         // Here we map the Telegram user data to our UserProfile type.
@@ -55,6 +57,18 @@ export function useTelegram() {
           isPremium: !!telegramUser.is_premium,
           purchasedBoosts: ['2x'], // Default value
           isLicenseActive: false, // Default value
+        });
+      } else {
+         // Fallback for when user data is not available (e.g. running outside Telegram)
+         setUserProfile({
+            id: '0000',
+            telegramUsername: 'telegram_user',
+            profilePictureUrl: 'https://picsum.photos/100/100',
+            mainBalance: 12500.75,
+            pendingBalance: 750.25,
+            isPremium: true,
+            purchasedBoosts: ['2x'],
+            isLicenseActive: true,
         });
       }
 

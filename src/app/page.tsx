@@ -92,7 +92,7 @@ export default function Home() {
     }
   }
   
-  if (!isClient || !userProfile) {
+  if (!userProfile) {
     return null;
   }
 

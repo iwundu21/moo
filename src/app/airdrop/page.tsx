@@ -9,7 +9,7 @@ const tasks = [
     { title: "Visit Website", completed: true },
 ]
 
-export default function AirdropPage() {
+export default function AirdropPage({}: {}) {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <header className="text-center space-y-2">

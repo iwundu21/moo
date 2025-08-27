@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function LeaderboardPage() {
+export default function LeaderboardPage({}: {}) {
   const userRank = mockLeaderboard.find(entry => entry.username === mockUser.telegramUsername);
 
   return (

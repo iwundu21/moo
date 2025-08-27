@@ -7,7 +7,7 @@ import { mockReferrals } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
-export default function ReferralsPage() {
+export default function ReferralsPage({}: {}) {
     const { toast } = useToast();
     const referralLink = 'https://t.me/moo_app_bot?start=ref12345';
 

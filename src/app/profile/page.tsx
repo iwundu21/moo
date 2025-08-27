@@ -4,7 +4,7 @@ import { mockUser, mockReferrals } from '@/lib/data';
 import { Award, Star, Users } from 'lucide-react';
 import { mockLeaderboard } from '@/lib/data';
 
-export default function ProfilePage() {
+export default function ProfilePage({}: {}) {
     const userRank = mockLeaderboard.find(entry => entry.username === mockUser.telegramUsername)?.rank;
 
     const achievements = [

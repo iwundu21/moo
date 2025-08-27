@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket } from 'lucide-react';
+import { Star, Hourglass, Rocket, ShieldCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,12 +24,13 @@ const boosts = [
   { id: '10x', multiplier: 10, cost: 350 },
 ];
 
-export default function Home({}: {}) {
+export default function Home() {
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
   const [pendingBalance, setPendingBalance] = useState(mockUser.pendingBalance);
   const [isClient, setIsClient] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>(mockUser.purchasedBoosts);
+  const [isLicenseActive, setIsLicenseActive] = useState(mockUser.isLicenseActive);
 
   useEffect(() => {
     setIsClient(true);
@@ -73,6 +74,13 @@ export default function Home({}: {}) {
     // This would ideally also update the user data on the backend
     mockUser.purchasedBoosts = [...mockUser.purchasedBoosts, boostId];
   };
+
+  const handleLicenseActivation = () => {
+    if (isLicenseActive) return;
+    setIsLicenseActive(true);
+    // This would ideally also update the user data on the backend
+    mockUser.isLicenseActive = true;
+  }
   
   if (!isClient) {
     return null;
@@ -126,12 +134,21 @@ export default function Home({}: {}) {
                 <CardTitle>Mining License</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                    Activate your license to start mining MOO.
-                </p>
-                <Button className="w-full">
-                    Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
-                </Button>
+                {isLicenseActive ? (
+                    <div className='flex flex-col items-center justify-center h-full'>
+                        <ShieldCheck className="w-10 h-10 text-green-500 mb-2" />
+                        <p className="text-center font-semibold text-green-400">License Active</p>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Activate your license to start mining MOO.
+                        </p>
+                        <Button className="w-full" onClick={handleLicenseActivation}>
+                            Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
+                        </Button>
+                    </>
+                )}
             </CardContent>
          </Card>
       </div>

@@ -6,6 +6,7 @@ export type UserProfile = {
   pendingBalance: number;
   isPremium: boolean;
   purchasedBoosts: string[];
+  isLicenseActive: boolean;
 };
 
 export type LeaderboardEntry = {

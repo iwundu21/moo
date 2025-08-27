@@ -8,6 +8,7 @@ export const mockUser: UserProfile = {
   pendingBalance: 750.25,
   isPremium: true,
   purchasedBoosts: ['2x'],
+  isLicenseActive: false,
 };
 
 export const mockLeaderboard: LeaderboardEntry[] = [

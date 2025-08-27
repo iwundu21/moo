@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -18,6 +19,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        "achievement-card":
+          "bg-[--achievement-color] text-white shadow-[0_4px_0_0_hsl(var(--achievement-color-darker,0,0%,0%))] active:translate-y-1 active:shadow-none",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -40,12 +43,22 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, style, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+
+    const customStyle = { ...style } as React.CSSProperties;
+
+    if (variant === 'achievement-card' && typeof customStyle['--achievement-color'] === 'string') {
+        const color = customStyle['--achievement-color'];
+        const darkerColor = color.replace(/(\d+%)\)/, (match, p1) => `${parseFloat(p1) - 10}%)`);
+        customStyle['--achievement-color-darker'] = darkerColor;
+    }
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        style={customStyle}
         {...props}
       />
     )

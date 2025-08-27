@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, Users, Gem, Rocket, ShieldCheck, Lock } from 'lucide-react';
+import { Award, Star, Users, Gem, Rocket, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { useEffect, useState } from 'react';
@@ -15,14 +15,14 @@ export default function ProfilePage() {
     const [unlockedAchievements, setUnlockedAchievements] = useState<any[]>([]);
 
     const achievementColors = [
-        "bg-chart-1/20 text-chart-1",
-        "bg-chart-2/20 text-chart-2",
-        "bg-chart-3/20 text-chart-3",
-        "bg-chart-4/20 text-chart-4",
-        "bg-chart-5/20 text-chart-5",
-        "bg-primary/20 text-primary",
-        "bg-accent/20 text-accent",
-        "bg-blue-500/20 text-blue-400",
+      'hsl(220 70% 50%)',
+      'hsl(160 60% 45%)',
+      'hsl(30 80% 55%)',
+      'hsl(280 65% 60%)',
+      'hsl(340 75% 55%)',
+      'hsl(260 80% 65%)',
+      'hsl(280 80% 70%)',
+      'hsl(200 80% 60%)',
     ];
 
     useEffect(() => {
@@ -75,16 +75,21 @@ export default function ProfilePage() {
             {unlockedAchievements.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {unlockedAchievements.map((ach, index) => (
-                        <div key={index} className={cn(
-                            buttonVariants({ variant: 'default' }),
+                        <div key={index} 
+                          className={cn(
+                            buttonVariants({ variant: 'achievement-card' }),
                             'flex flex-col items-center justify-center text-center aspect-square h-auto p-4 cursor-default'
-                        )}>
-                            <div className={cn("p-3 mb-2 rounded-lg bg-primary-foreground/10")}>
-                               <ach.icon className="w-8 h-8 text-primary-foreground" />
+                          )}
+                          style={{ 
+                            '--achievement-color': achievementColors[index % achievementColors.length] 
+                          } as React.CSSProperties}
+                        >
+                            <div className={cn("p-3 mb-2 rounded-lg bg-white/10")}>
+                               <ach.icon className="w-8 h-8 text-white" />
                             </div>
                             <div className="flex-1 flex flex-col justify-center">
-                                <p className="font-semibold text-sm text-primary-foreground">{ach.title}</p>
-                                <p className="text-xs text-primary-foreground/80">{ach.description}</p>
+                                <p className="font-semibold text-sm text-white">{ach.title}</p>
+                                <p className="text-xs text-white/80">{ach.description}</p>
                             </div>
                         </div>
                     ))}
@@ -95,16 +100,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
       
-      <div className="space-y-4">
-        <Card>
-            <CardHeader>
-                <CardTitle>Telegram Premium</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>Status: {userProfile.isPremium ? "Yes" : "No"}</p>
-            </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

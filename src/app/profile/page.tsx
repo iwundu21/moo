@@ -3,10 +3,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, Users, Gem, Rocket, ShieldCheck } from 'lucide-react';
+import { Award, Star, Users, Gem, Rocket, ShieldCheck, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
     const { userProfile, referrals, leaderboard } = useTelegram();
@@ -16,24 +17,18 @@ export default function ProfilePage() {
         if (userProfile) {
             const userRank = leaderboard.find(entry => entry.username === userProfile.telegramUsername)?.rank;
 
-            const baseAchievements = [
+            const allAchievements = [
                 { icon: Star, title: 'MOO Starter', description: 'Joined the MOO-niverse', unlocked: true },
                 { icon: ShieldCheck, title: 'Licensed Miner', description: 'Activated mining license', unlocked: userProfile.isLicenseActive },
+                { icon: Rocket, title: '2x Booster', description: 'Purchased the 2x boost', unlocked: userProfile.purchasedBoosts.includes('2x') },
+                { icon: Rocket, title: '5x Booster', description: 'Purchased the 5x boost', unlocked: userProfile.purchasedBoosts.includes('5x') },
+                { icon: Rocket, title: '10x Booster', description: 'Purchased the 10x boost', unlocked: userProfile.purchasedBoosts.includes('10x') },
                 { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
                 { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: referrals.length > 0 },
                 { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: userProfile.isPremium },
             ];
 
-            const boostAchievements = userProfile.purchasedBoosts
-                .filter(boostId => boostId !== '1x') // Don't show the 1x license boost as a separate achievement
-                .map(boostId => ({
-                    icon: Rocket,
-                    title: `${boostId} Booster`,
-                    description: `Purchased the ${boostId} boost.`,
-                    unlocked: true,
-                }));
-
-            setAchievements([...baseAchievements, ...boostAchievements].filter(ach => ach.unlocked));
+            setAchievements(allAchievements);
         }
     }, [userProfile, referrals, leaderboard]);
     
@@ -68,9 +63,9 @@ export default function ProfilePage() {
             {achievements.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {achievements.map((ach, index) => (
-                        <Card key={index} className="p-4 flex flex-col items-center justify-center text-center aspect-square">
-                            <div className="p-3 mb-2 bg-primary/20 text-primary rounded-lg">
-                               <ach.icon className="w-8 h-8" />
+                        <Card key={index} className={cn("p-4 flex flex-col items-center justify-center text-center aspect-square", !ach.unlocked && "opacity-50 bg-secondary")}>
+                            <div className={cn("p-3 mb-2 rounded-lg", ach.unlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                               {ach.unlocked ? <ach.icon className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
                             </div>
                             <div className="flex-1 flex flex-col justify-center">
                                 <p className="font-semibold text-sm">{ach.title}</p>
@@ -80,7 +75,7 @@ export default function ProfilePage() {
                     ))}
                 </div>
             ) : (
-                <p className="text-center text-muted-foreground py-4">No achievements unlocked yet.</p>
+                <p className="text-center text-muted-foreground py-4">No achievements found.</p>
             )}
         </CardContent>
       </Card>
@@ -98,5 +93,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

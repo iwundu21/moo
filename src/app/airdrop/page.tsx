@@ -22,7 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 
-export default function AirdropPage({}: {}) {
+export default function AirdropPage() {
   const { userProfile, distributionHistory } = useTelegram();
   const [isClient, setIsClient] = useState(false);
   const [mainBalance, setMainBalance] = useState(0);

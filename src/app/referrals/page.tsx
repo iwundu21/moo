@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,12 +7,18 @@ import { Copy, UserPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegram } from '@/hooks/use-telegram';
+import { useEffect, useState } from 'react';
 
-export default function ReferralsPage({}: {}) {
+export default function ReferralsPage() {
     const { userProfile, referrals } = useTelegram();
     const { toast } = useToast();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
     
-    if (!userProfile) {
+    if (!isClient || !userProfile) {
       return null; // Or a loading spinner
     }
 

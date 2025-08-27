@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -20,15 +21,17 @@ import type { LeaderboardEntry } from "@/lib/types";
 export default function LeaderboardPage() {
   const { userProfile, leaderboard } = useTelegram();
   const [userRank, setUserRank] = useState<LeaderboardEntry | undefined>(undefined);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     if (userProfile) {
       const rank = leaderboard.find(entry => entry.username === userProfile.telegramUsername);
       setUserRank(rank);
     }
   }, [userProfile, leaderboard]);
 
-  if (!userProfile) {
+  if (!isClient || !userProfile) {
     return null; // Or a loading spinner
   }
 

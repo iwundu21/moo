@@ -29,14 +29,16 @@ export default function ProfilePage() {
           <CardTitle>Achievements</CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {achievements.map((ach, index) => (
-                    <Card key={index} className={`p-4 flex flex-col items-center justify-center gap-2 aspect-square transition-opacity ${!ach.unlocked && 'opacity-40'}`}>
-                        <div className="p-3 bg-primary/20 text-primary rounded-full">
+                    <Card key={index} className={`p-4 flex items-center gap-4 transition-opacity ${!ach.unlocked && 'opacity-40'}`}>
+                        <div className="p-3 bg-primary/20 text-primary rounded-lg">
                            <ach.icon className="w-8 h-8" />
                         </div>
-                        <p className="font-semibold text-sm">{ach.title}</p>
-                        <p className="text-xs text-muted-foreground">{ach.description}</p>
+                        <div className="flex-1">
+                            <p className="font-semibold">{ach.title}</p>
+                            <p className="text-sm text-muted-foreground">{ach.description}</p>
+                        </div>
                     </Card>
                 ))}
             </div>

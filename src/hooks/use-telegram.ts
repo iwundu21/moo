@@ -21,6 +21,7 @@ interface TelegramWebApp {
   initDataUnsafe: {
     user?: TelegramUser;
   };
+  ready: () => void;
   // Add other WebApp properties and methods if needed
 }
 
@@ -40,43 +41,51 @@ export function useTelegram() {
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      const telegramUser = tg.initDataUnsafe?.user;
-      
-      if (telegramUser) {
-        // Here we map the Telegram user data to our UserProfile type.
-        // For balances and other app-specific data, we'd normally fetch them from a backend.
-        // For now, we'll use some default values.
-        setUserProfile({
-          id: telegramUser.id.toString(),
-          telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-          profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
-          mainBalance: 12500.75, // Default value
-          pendingBalance: 750.25, // Default value
-          isPremium: !!telegramUser.is_premium,
-          purchasedBoosts: ['2x'], // Default value
-          isLicenseActive: false, // Default value
-        });
-      } else {
-         // Fallback for when user data is not available (e.g. running outside Telegram)
-         setUserProfile({
-            id: '0000',
-            telegramUsername: 'telegram_user',
-            profilePictureUrl: 'https://picsum.photos/100/100',
-            mainBalance: 12500.75,
-            pendingBalance: 750.25,
-            isPremium: true,
-            purchasedBoosts: ['2x'],
-            isLicenseActive: true,
-        });
-      }
+    const initTelegram = () => {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        const telegramUser = tg.initDataUnsafe?.user;
+        
+        if (telegramUser) {
+          // Here we map the Telegram user data to our UserProfile type.
+          // For balances and other app-specific data, we'd normally fetch them from a backend.
+          // For now, we'll use some default values.
+          setUserProfile({
+            id: telegramUser.id.toString(),
+            telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+            profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
+            mainBalance: 12500.75, // Default value
+            pendingBalance: 750.25, // Default value
+            isPremium: !!telegramUser.is_premium,
+            purchasedBoosts: ['2x'], // Default value
+            isLicenseActive: false, // Default value
+          });
+        } else {
+           // Fallback for when user data is not available (e.g. running outside Telegram)
+           setUserProfile({
+              id: '0000',
+              telegramUsername: 'telegram_user',
+              profilePictureUrl: 'https://picsum.photos/100/100',
+              mainBalance: 12500.75,
+              pendingBalance: 750.25,
+              isPremium: true,
+              purchasedBoosts: ['2x'],
+              isLicenseActive: true,
+          });
+        }
 
-      // For other data, we still use mock data as we don't have a backend.
-      setLeaderboard(mockLeaderboard);
-      setReferrals(mockReferrals);
-      setDistributionHistory(mockDistributionHistory);
+        // For other data, we still use mock data as we don't have a backend.
+        setLeaderboard(mockLeaderboard);
+        setReferrals(mockReferrals);
+        setDistributionHistory(mockDistributionHistory);
+      } else {
+        // Retry if Telegram WebApp is not loaded yet
+        setTimeout(initTelegram, 100);
+      }
     }
+    
+    initTelegram();
   }, []);
 
   return { userProfile, leaderboard, referrals, distributionHistory };

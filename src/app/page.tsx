@@ -26,7 +26,7 @@ const boosts = [
 ];
 
 export default function Home() {
-  const { userProfile } = useTelegram();
+  const { userProfile, addDistributionRecord } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [isClient, setIsClient] = useState(false);
@@ -74,9 +74,14 @@ export default function Home() {
       const secondsUntilNextHour = Math.floor((nextHour.getTime() - now.getTime()) / 1000);
       setCountdown(secondsUntilNextHour);
 
-      if (secondsUntilNextHour === 3600) { // Top of the hour
-        setMainBalance((prev) => prev + pendingBalance);
+      if (secondsUntilNextHour === 3600 && pendingBalance > 0) { // Top of the hour
+        const amountToCredit = pendingBalance;
+        setMainBalance((prev) => prev + amountToCredit);
         setPendingBalance(0);
+        addDistributionRecord({
+          timestamp: new Date(),
+          amount: amountToCredit,
+        });
       }
     };
 
@@ -84,7 +89,7 @@ export default function Home() {
     const countdownInterval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(countdownInterval);
-  }, [isClient, pendingBalance]);
+  }, [isClient, pendingBalance, addDistributionRecord]);
 
   const handleBoostPurchase = (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
@@ -255,5 +260,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

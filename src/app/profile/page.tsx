@@ -11,8 +11,18 @@ import { cn } from '@/lib/utils';
 
 export default function ProfilePage() {
     const { userProfile, referrals, leaderboard } = useTelegram();
-    const [achievements, setAchievements] = useState<any[]>([]);
     const [unlockedAchievements, setUnlockedAchievements] = useState<any[]>([]);
+
+    const achievementColors = [
+        "bg-chart-1/20 text-chart-1",
+        "bg-chart-2/20 text-chart-2",
+        "bg-chart-3/20 text-chart-3",
+        "bg-chart-4/20 text-chart-4",
+        "bg-chart-5/20 text-chart-5",
+        "bg-primary/20 text-primary",
+        "bg-accent/20 text-accent",
+        "bg-blue-500/20 text-blue-400",
+    ];
 
     useEffect(() => {
         if (userProfile) {
@@ -65,7 +75,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {unlockedAchievements.map((ach, index) => (
                         <Card key={index} className={cn("p-4 flex flex-col items-center justify-center text-center aspect-square")}>
-                            <div className={cn("p-3 mb-2 rounded-lg", "bg-primary/20 text-primary")}>
+                            <div className={cn("p-3 mb-2 rounded-lg", achievementColors[index % achievementColors.length])}>
                                <ach.icon className="w-8 h-8" />
                             </div>
                             <div className="flex-1 flex flex-col justify-center">

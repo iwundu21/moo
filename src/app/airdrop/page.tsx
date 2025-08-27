@@ -28,26 +28,6 @@ export default function AirdropPage({}: {}) {
           </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Airdrop Tasks</CardTitle>
-          <CardDescription>Complete these tasks to be eligible for more rewards.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <ul className="space-y-3">
-                {tasks.map((task, index) => (
-                    <li key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                        <span className="font-medium">{task.title}</span>
-                        {task.completed ? (
-                            <CheckCircle className="text-green-500" />
-                        ) : (
-                            <Radio className="text-muted-foreground/50" />
-                        )}
-                    </li>
-                ))}
-            </ul>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser } from '@/lib/data';
+import { Button } from '@/components/ui/button';
+import { Star } from 'lucide-react';
 
 export default function Home() {
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
@@ -60,6 +62,19 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">
                     This balance will be transferred to your main balance automatically.
                 </p>
+            </CardContent>
+         </Card>
+         <Card>
+            <CardHeader>
+                <CardTitle>Mining License</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                    Activate your license to start mining MOO.
+                </p>
+                <Button className="w-full">
+                    Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
+                </Button>
             </CardContent>
          </Card>
       </div>

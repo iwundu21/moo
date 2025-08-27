@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 export default function ProfilePage() {
     const { userProfile, referrals, leaderboard } = useTelegram();
     const [achievements, setAchievements] = useState<any[]>([]);
+    const [unlockedAchievements, setUnlockedAchievements] = useState<any[]>([]);
 
     useEffect(() => {
         if (userProfile) {
@@ -28,7 +29,7 @@ export default function ProfilePage() {
                 { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: userProfile.isPremium },
             ];
 
-            setAchievements(allAchievements);
+            setUnlockedAchievements(allAchievements.filter(ach => ach.unlocked));
         }
     }, [userProfile, referrals, leaderboard]);
     
@@ -60,12 +61,12 @@ export default function ProfilePage() {
           <CardTitle>Achievements</CardTitle>
         </CardHeader>
         <CardContent>
-            {achievements.length > 0 ? (
+            {unlockedAchievements.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {achievements.map((ach, index) => (
-                        <Card key={index} className={cn("p-4 flex flex-col items-center justify-center text-center aspect-square", !ach.unlocked && "opacity-50 bg-secondary")}>
-                            <div className={cn("p-3 mb-2 rounded-lg", ach.unlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                               {ach.unlocked ? <ach.icon className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
+                    {unlockedAchievements.map((ach, index) => (
+                        <Card key={index} className={cn("p-4 flex flex-col items-center justify-center text-center aspect-square")}>
+                            <div className={cn("p-3 mb-2 rounded-lg", "bg-primary/20 text-primary")}>
+                               <ach.icon className="w-8 h-8" />
                             </div>
                             <div className="flex-1 flex flex-col justify-center">
                                 <p className="font-semibold text-sm">{ach.title}</p>
@@ -75,7 +76,7 @@ export default function ProfilePage() {
                     ))}
                 </div>
             ) : (
-                <p className="text-center text-muted-foreground py-4">No achievements found.</p>
+                <p className="text-center text-muted-foreground py-4">No achievements unlocked yet.</p>
             )}
         </CardContent>
       </Card>

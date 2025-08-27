@@ -8,13 +8,22 @@ import { Badge } from '@/components/ui/badge';
 export default function ProfilePage({}: {}) {
     const userRank = mockLeaderboard.find(entry => entry.username === mockUser.telegramUsername)?.rank;
 
-    const achievements = [
+    const baseAchievements = [
       { icon: Star, title: 'MOO Starter', description: 'Joined the MOO-niverse', unlocked: true },
       { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
       { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: mockReferrals.length > 0 },
       { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: mockUser.isPremium },
-      { icon: Rocket, title: 'Booster', description: 'Purchased a boost', unlocked: mockUser.purchasedBoosts.length > 0 },
     ];
+
+    const boostAchievements = mockUser.purchasedBoosts.map(boostId => ({
+        icon: Rocket,
+        title: `${boostId} Booster`,
+        description: `Purchased the ${boostId} boost.`,
+        unlocked: true,
+    }));
+
+    const achievements = [...baseAchievements, ...boostAchievements];
+
 
   return (
     <div className="container mx-auto p-4 space-y-6">

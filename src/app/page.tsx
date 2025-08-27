@@ -72,7 +72,7 @@ export default function Home() {
       const secondsUntilNextHour = Math.floor((nextHour.getTime() - now.getTime()) / 1000);
       setCountdown(secondsUntilNextHour);
 
-      if (secondsUntilNextHour === 3600 && pendingBalance > 0) { // Top of the hour
+      if (now.getMinutes() === 0 && now.getSeconds() === 0 && pendingBalance > 0) { // Top of the hour
         const amountToCredit = pendingBalance;
         setMainBalance((prev) => prev + amountToCredit);
         if (userProfile) userProfile.mainBalance += amountToCredit;
@@ -200,7 +200,7 @@ export default function Home() {
             )}
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button className="w-full" variant={hasPurchasedBoosts ? "secondary" : "default"} disabled={!isLicenseActive}>
+                    <Button className="w-full" variant={"default"} disabled={!isLicenseActive}>
                         <Rocket className="mr-2" /> 
                         {hasPurchasedBoosts ? "Purchase More Boosts" : "Boost Earning"}
                     </Button>

@@ -24,12 +24,14 @@ export default function ProfilePage() {
                 { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: userProfile.isPremium },
             ];
 
-            const boostAchievements = userProfile.purchasedBoosts.map(boostId => ({
-                icon: Rocket,
-                title: `${boostId} Booster`,
-                description: `Purchased the ${boostId} boost.`,
-                unlocked: true,
-            }));
+            const boostAchievements = userProfile.purchasedBoosts
+                .filter(boostId => boostId !== '1x') // Don't show the 1x license boost as a separate achievement
+                .map(boostId => ({
+                    icon: Rocket,
+                    title: `${boostId} Booster`,
+                    description: `Purchased the ${boostId} boost.`,
+                    unlocked: true,
+                }));
 
             setAchievements([...baseAchievements, ...boostAchievements].filter(ach => ach.unlocked));
         }
@@ -96,3 +98,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

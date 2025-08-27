@@ -20,9 +20,9 @@ import { useTelegram } from '@/hooks/use-telegram';
 
 
 const boosts = [
-  { id: '2x', multiplier: 2, cost: 100 },
-  { id: '5x', multiplier: 5, cost: 200 },
-  { id: '10x', multiplier: 10, cost: 350 },
+  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message' },
+  { id: '5x', multiplier: 5, cost: 200, description: 'Earn 25 MOO per message' },
+  { id: '10x', multiplier: 10, cost: 350, description: 'Earn 50 MOO per message' },
 ];
 
 export default function Home() {
@@ -45,14 +45,24 @@ export default function Home() {
   }, [userProfile]);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !isLicenseActive) return;
 
+    let earnRate = 5; // Base rate for 1x boost from license
+
+    const twoX = activatedBoosts.includes('2x');
+    const fiveX = activatedBoosts.includes('5x');
+    const tenX = activatedBoosts.includes('10x');
+
+    if (tenX) earnRate = 50;
+    else if (fiveX) earnRate = 25;
+    else if (twoX) earnRate = 10;
+    
     const earnInterval = setInterval(() => {
-      setPendingBalance((prev) => prev + Math.random() * 5);
+      setPendingBalance((prev) => prev + (Math.random() * earnRate) / 5 );
     }, 2000);
 
     return () => clearInterval(earnInterval);
-  }, [isClient]);
+  }, [isClient, activatedBoosts, isLicenseActive]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -87,8 +97,10 @@ export default function Home() {
   const handleLicenseActivation = () => {
     if (isLicenseActive) return;
     setIsLicenseActive(true);
+    setActivatedBoosts((prev) => [...prev, '1x']);
     if (userProfile) {
       userProfile.isLicenseActive = true;
+      userProfile.purchasedBoosts = [...userProfile.purchasedBoosts, '1x'];
     }
   }
   
@@ -103,6 +115,9 @@ export default function Home() {
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${h}:${m}:${s}`;
   };
+  
+  const hasBoosts = activatedBoosts.length > 0;
+  const hasPurchasedBoosts = activatedBoosts.filter(b => b !== '1x').length > 0;
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -148,6 +163,7 @@ export default function Home() {
                     <div className='flex flex-col items-center justify-center h-full'>
                         <ShieldCheck className="w-10 h-10 text-green-500 mb-2" />
                         <p className="text-center font-semibold text-green-400">License Active</p>
+                        <p className="text-xs text-muted-foreground">(1x Earning Unlocked)</p>
                     </div>
                 ) : (
                     <>
@@ -171,7 +187,7 @@ export default function Home() {
             </CardDescription>
         </CardHeader>
         <CardContent>
-            {activatedBoosts.length > 0 && (
+            {hasBoosts && (
                 <div className="flex flex-wrap gap-2 mb-4">
                     <span className="text-sm font-semibold">Active boosts:</span>
                     {activatedBoosts.map(boostId => (
@@ -181,9 +197,9 @@ export default function Home() {
             )}
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button className="w-full" variant={activatedBoosts.length > 0 ? "outline" : "default"}>
+                    <Button className="w-full" variant={hasPurchasedBoosts ? "outline" : "default"} disabled={!isLicenseActive}>
                         <Rocket className="mr-2" /> 
-                        {activatedBoosts.length > 0 ? "Purchase More Boosts" : "Boost Earning"}
+                        {hasPurchasedBoosts ? "Purchase More Boosts" : "Boost Earning"}
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="glass-card">
@@ -205,13 +221,16 @@ export default function Home() {
                                 onClick={() => handleBoostPurchase(boost.id)}
                             >
                                 {isActivated ? (
-                                <span>Activated</span>
+                                <span className='text-left'>Activated</span>
                                 ) : (
                                 <>
-                                    <span>{boost.multiplier}x Boost</span>
-                                    <span>
-                                    {boost.cost}{' '}
-                                    <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500" />
+                                    <div className='text-left'>
+                                        <p>{boost.multiplier}x Boost</p>
+                                        <p className="text-xs text-primary-foreground/80">{boost.description}</p>
+                                    </div>
+                                    <span className='flex items-center'>
+                                        {boost.cost}{' '}
+                                        <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500" />
                                     </span>
                                 </>
                                 )}
@@ -236,3 +255,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

@@ -6,6 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { mockUser, mockDistributionHistory } from '@/lib/data';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function AirdropPage({}: {}) {
   const [isClient, setIsClient] = useState(false);
@@ -33,7 +44,34 @@ export default function AirdropPage({}: {}) {
               <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                 {mockUser.mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
-              <Button>Claim</Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>Claim</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] glass-card">
+                  <DialogHeader>
+                    <DialogTitle>Claim Your Allocation</DialogTitle>
+                    <DialogDescription>
+                      Enter your TON network wallet address to receive your MOO.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="wallet-address" className="text-right">
+                        Address
+                      </Label>
+                      <Input
+                        id="wallet-address"
+                        placeholder="Paste your TON wallet address"
+                        className="col-span-3"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit">Claim Your Allocation</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
       </Card>

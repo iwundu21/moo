@@ -1,4 +1,5 @@
 import type {Config} from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 export default {
   darkMode: ['class'],
@@ -102,5 +103,14 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    plugin(function({ addUtilities }) {
+      addUtilities({
+        '.perspective-1000': {
+          perspective: '1000px',
+        },
+      })
+    })
+  ],
 } satisfies Config;

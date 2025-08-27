@@ -90,4 +90,23 @@
     .glass-card {
         @apply bg-card border shadow-lg backdrop-blur-lg;
     }
+
+    .flip-card {
+        @apply aspect-square;
+    }
+    .flip-card-inner {
+        @apply relative w-full h-full text-center transition-transform duration-700;
+        transform-style: preserve-3d;
+    }
+    .flip-card.is-flipped .flip-card-inner {
+        transform: rotateY(180deg);
+    }
+    .flip-card-front, .flip-card-back {
+        @apply absolute w-full h-full;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+    .flip-card-back {
+        transform: rotateY(180deg);
+    }
 }

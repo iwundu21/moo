@@ -1,4 +1,4 @@
-import type { UserProfile, LeaderboardEntry, Referral } from './types';
+import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord } from './types';
 
 export const mockUser: UserProfile = {
   id: '12345',
@@ -25,4 +25,12 @@ export const mockReferrals: Referral[] = [
     { username: 'Friend1', profilePictureUrl: 'https://picsum.photos/50/50?random=11' },
     { username: 'Friend2', profilePictureUrl: 'https://picsum.photos/50/50?random=12' },
     { username: 'Friend3', profilePictureUrl: 'https://picsum.photos/50/50?random=13' },
+];
+
+export const mockDistributionHistory: DistributionRecord[] = [
+  { timestamp: new Date(new Date().getTime() - 1 * 60 * 60 * 1000), amount: 750.25 },
+  { timestamp: new Date(new Date().getTime() - 2 * 60 * 60 * 1000), amount: 730.10 },
+  { timestamp: new Date(new Date().getTime() - 3 * 60 * 60 * 1000), amount: 780.50 },
+  { timestamp: new Date(new Date().getTime() - 4 * 60 * 60 * 1000), amount: 710.00 },
+  { timestamp: new Date(new Date().getTime() - 5 * 60 * 60 * 1000), amount: 765.90 },
 ];

@@ -17,3 +17,8 @@ export type Referral = {
   username: string;
   profilePictureUrl: string;
 };
+
+export type DistributionRecord = {
+  timestamp: Date;
+  amount: number;
+};

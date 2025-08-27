@@ -7,6 +7,7 @@ export const mockUser: UserProfile = {
   mainBalance: 12500.75,
   pendingBalance: 750.25,
   isPremium: true,
+  purchasedBoosts: ['2x'],
 };
 
 export const mockLeaderboard: LeaderboardEntry[] = [

@@ -1,17 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser, mockReferrals } from '@/lib/data';
-import { Award, Star, Users, Gem } from 'lucide-react';
+import { Award, Star, Users, Gem, Rocket } from 'lucide-react';
 import { mockLeaderboard } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 
-export default function ProfilePage({}) {
+export default function ProfilePage({}: {}) {
     const userRank = mockLeaderboard.find(entry => entry.username === mockUser.telegramUsername)?.rank;
 
     const achievements = [
       { icon: Star, title: 'MOO Starter', description: 'Joined the MOO-niverse', unlocked: true },
       { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
       { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: mockReferrals.length > 0 },
+      { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: mockUser.isPremium },
+      { icon: Rocket, title: 'Booster', description: 'Purchased a boost', unlocked: mockUser.purchasedBoosts.length > 0 },
     ];
 
   return (

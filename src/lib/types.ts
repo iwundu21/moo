@@ -5,6 +5,7 @@ export type UserProfile = {
   mainBalance: number;
   pendingBalance: number;
   isPremium: boolean;
+  purchasedBoosts: string[];
 };
 
 export type LeaderboardEntry = {

@@ -31,14 +31,13 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4 space-y-8 animate-fade-in">
-      <header className="flex flex-col items-center text-center space-y-4 pt-8">
-        <Avatar className="w-24 h-24 border-4 border-primary shadow-lg">
+      <header className="flex items-center space-x-4 pt-4">
+        <Avatar className="w-16 h-16 border-2 border-primary">
           <AvatarImage src={mockUser.profilePictureUrl} alt={mockUser.telegramUsername} data-ai-hint="profile picture" />
           <AvatarFallback>{mockUser.telegramUsername.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">MOO</h1>
-          <p className="text-muted-foreground text-lg">@{mockUser.telegramUsername}</p>
+          <p className="text-lg font-semibold">@{mockUser.telegramUsername}</p>
         </div>
       </header>
 

@@ -141,15 +141,15 @@ export default function Home({}) {
                         </DialogHeader>
                         <div className="grid grid-cols-1 gap-4 py-4">
                             <Button variant="default" className="w-full justify-between">
-                                <span>2x Boost (24h)</span>
+                                <span>2x Boost</span>
                                 <span>100 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
                             </Button>
                             <Button variant="default" className="w-full justify-between">
-                                <span>5x Boost (24h)</span>
+                                <span>5x Boost</span>
                                 <span>200 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
                             </Button>
                             <Button variant="default" className="w-full justify-between">
-                                <span>10x Boost (24h)</span>
+                                <span>10x Boost</span>
                                 <span>350 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
                             </Button>
                         </div>

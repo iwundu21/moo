@@ -11,14 +11,20 @@ import { Star } from 'lucide-react';
 export default function Home() {
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
   const [pendingBalance, setPendingBalance] = useState(mockUser.pendingBalance);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
     const earnInterval = setInterval(() => {
       setPendingBalance((prev) => prev + Math.random() * 5);
     }, 2000);
 
     return () => clearInterval(earnInterval);
-  }, []);
+  }, [isClient]);
 
   useEffect(() => {
     if (pendingBalance > 100) {
@@ -30,9 +36,13 @@ export default function Home() {
       return () => clearTimeout(transferTimeout);
     }
   }, [pendingBalance]);
+  
+  if (!isClient) {
+    return null;
+  }
 
   return (
-    <div className="container mx-auto p-4 space-y-8 animate-fade-in">
+    <div className="container mx-auto p-4 space-y-8">
       <header className="flex items-center space-x-4 pt-4">
         <Avatar className="w-16 h-16 border-2 border-primary">
           <AvatarImage src={mockUser.profilePictureUrl} alt={mockUser.telegramUsername} data-ai-hint="profile picture" />

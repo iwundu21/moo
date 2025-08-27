@@ -16,7 +16,7 @@ export default function LeaderboardPage() {
   const userRank = mockLeaderboard.find(entry => entry.username === mockUser.telegramUsername);
 
   return (
-    <div className="container mx-auto p-4 space-y-6 animate-fade-in">
+    <div className="container mx-auto p-4 space-y-6">
       <header className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-muted-foreground">See who's at the top of the MOO-niverse!</p>

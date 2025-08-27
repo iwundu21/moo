@@ -14,7 +14,7 @@ export default function ProfilePage() {
     ];
 
   return (
-    <div className="container mx-auto p-4 space-y-6 animate-fade-in">
+    <div className="container mx-auto p-4 space-y-6">
       <div className="flex flex-col items-center space-y-2">
         <Avatar className="w-32 h-32 border-4 border-primary shadow-lg">
           <AvatarImage src={mockUser.profilePictureUrl} alt={mockUser.telegramUsername} data-ai-hint="profile picture" />

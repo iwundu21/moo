@@ -18,6 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
+import { DailyEarningsChart } from '@/components/DailyEarningsChart';
 
 
 const boosts = [
@@ -250,15 +251,16 @@ export default function Home() {
         </CardContent>
         </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily Earnings</CardTitle>
+          <CardDescription>Your MOO earnings for the current week.</CardDescription>
+        </CardHeader>
+        <CardContent className="pl-2">
+            <DailyEarningsChart />
+        </CardContent>
+      </Card>
 
-      <div className="flex justify-center pt-8">
-        <div className="relative cursor-pointer group">
-          <Image src="https://picsum.photos/150/150" alt="MOO Coin" width={150} height={150} className="rounded-full shadow-2xl transition-transform duration-300 group-hover:scale-105" data-ai-hint="coin logo" />
-          <div className="absolute inset-0 bg-black/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <p className="text-white font-bold text-xl">Tap!</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

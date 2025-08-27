@@ -6,9 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mockUser } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass } from 'lucide-react';
+import { Star, Hourglass, Rocket,Zap } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
-export default function Home({}: {}) {
+
+export default function Home({}) {
   const [mainBalance, setMainBalance] = useState(mockUser.mainBalance);
   const [pendingBalance, setPendingBalance] = useState(mockUser.pendingBalance);
   const [isClient, setIsClient] = useState(false);
@@ -107,6 +116,45 @@ export default function Home({}: {}) {
                 <Button className="w-full">
                     Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
                 </Button>
+            </CardContent>
+         </Card>
+         <Card>
+            <CardHeader>
+                <CardTitle>Boost Chat Earning</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                    Increase your earning speed per message in group chats.
+                </p>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button className="w-full" variant="outline">
+                            <Rocket className="mr-2" /> Boost Earning
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                        <DialogTitle>Boost Your Chat Earning</DialogTitle>
+                        <DialogDescription>
+                            Select a boost to purchase and increase your earning speed per message.
+                        </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 gap-4 py-4">
+                            <Button variant="default" className="w-full justify-between">
+                                <span>2x Boost (24h)</span>
+                                <span>100 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
+                            </Button>
+                            <Button variant="default" className="w-full justify-between">
+                                <span>5x Boost (24h)</span>
+                                <span>200 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
+                            </Button>
+                            <Button variant="default" className="w-full justify-between">
+                                <span>10x Boost (24h)</span>
+                                <span>350 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500"/></span>
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </CardContent>
          </Card>
       </div>

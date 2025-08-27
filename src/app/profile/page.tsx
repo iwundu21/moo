@@ -98,15 +98,15 @@ export default function ProfilePage() {
                                 <div className="flip-card-front">
                                     <div 
                                     className={cn(
-                                        buttonVariants({ variant: 'achievement-card' }),
-                                        'flex flex-col items-center justify-center text-center w-full h-full p-4'
+                                        'glass-card flex flex-col items-center justify-center text-center w-full h-full p-4 rounded-lg relative overflow-hidden'
                                     )}
                                     style={{ 
                                         '--achievement-color': achievementColors[index % achievementColors.length] 
                                     } as React.CSSProperties}
                                     >
+                                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[hsl(var(--achievement-color)_/_0.3)] to-transparent opacity-50"></div>
                                         <div className={cn("p-3 mb-2 rounded-lg bg-white/10")}>
-                                        <ach.icon className="w-8 h-8 text-white" />
+                                          <ach.icon className="w-8 h-8 text-white" />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center">
                                             <p className="font-semibold text-sm text-white">{ach.title}</p>
@@ -117,13 +117,13 @@ export default function ProfilePage() {
                                 <div className="flip-card-back">
                                      <div 
                                       className={cn(
-                                        buttonVariants({ variant: 'achievement-card' }),
-                                        'flex flex-col items-center justify-center text-center w-full h-full p-4'
+                                        'glass-card flex flex-col items-center justify-center text-center w-full h-full p-4 rounded-lg relative overflow-hidden'
                                       )}
                                       style={{ 
                                         '--achievement-color': achievementColors[index % achievementColors.length] 
                                       } as React.CSSProperties}
                                     >
+                                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[hsl(var(--achievement-color)_/_0.3)] to-transparent opacity-50"></div>
                                         <p className="text-4xl font-bold text-white">MOO</p>
                                     </div>
                                 </div>

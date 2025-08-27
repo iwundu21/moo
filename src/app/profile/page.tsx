@@ -9,8 +9,8 @@ export default function ProfilePage() {
 
     const achievements = [
       { icon: Star, title: 'MOO Starter', description: 'Joined the MOO-niverse', unlocked: true },
-      { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10 on the leaderboard', unlocked: !!(userRank && userRank <= 10) },
-      { icon: Users, title: 'Friendly Referrer', description: 'Successfully referred at least one friend', unlocked: mockReferrals.length > 0 },
+      { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
+      { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: mockReferrals.length > 0 },
     ];
 
   return (
@@ -28,20 +28,18 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle>Achievements</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-            <ul className="space-y-3">
+        <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
                 {achievements.map((ach, index) => (
-                    <li key={index} className={`flex items-start gap-4 p-3 rounded-lg bg-secondary/50 transition-opacity ${!ach.unlocked && 'opacity-40'}`}>
-                        <div className="p-2 bg-primary/20 text-primary rounded-full">
-                           <ach.icon className="w-6 h-6" />
+                    <Card key={index} className={`p-4 flex flex-col items-center justify-center gap-2 aspect-square transition-opacity ${!ach.unlocked && 'opacity-40'}`}>
+                        <div className="p-3 bg-primary/20 text-primary rounded-full">
+                           <ach.icon className="w-8 h-8" />
                         </div>
-                        <div>
-                            <p className="font-semibold">{ach.title}</p>
-                            <p className="text-sm text-muted-foreground">{ach.description}</p>
-                        </div>
-                    </li>
+                        <p className="font-semibold text-sm">{ach.title}</p>
+                        <p className="text-xs text-muted-foreground">{ach.description}</p>
+                    </Card>
                 ))}
-            </ul>
+            </div>
         </CardContent>
       </Card>
       

@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Star, Hourglass, Rocket, ShieldCheck } from 'lucide-react';
@@ -28,7 +27,7 @@ const boosts = [
 ];
 
 export default function Home() {
-  const { userProfile, addDistributionRecord } = useTelegram();
+  const { userProfile, addDistributionRecord, updateUserProfile } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -77,9 +76,8 @@ export default function Home() {
       if (now.getMinutes() === 0 && now.getSeconds() === 0 && pendingBalance > 0) { // Top of the hour
         const amountToCredit = pendingBalance;
         setMainBalance((prev) => prev + amountToCredit);
-        if (userProfile) userProfile.mainBalance += amountToCredit;
+        updateUserProfile({ mainBalance: mainBalance + amountToCredit, pendingBalance: 0 });
         setPendingBalance(0);
-        if (userProfile) userProfile.pendingBalance = 0;
         addDistributionRecord({
           timestamp: new Date(),
           amount: amountToCredit,
@@ -91,23 +89,19 @@ export default function Home() {
     const countdownInterval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(countdownInterval);
-  }, [userProfile, pendingBalance, addDistributionRecord]);
+  }, [userProfile, pendingBalance, addDistributionRecord, mainBalance, updateUserProfile]);
 
   const handleBoostPurchase = (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
-    setActivatedBoosts((prev) => [...prev, boostId]);
-    if (userProfile) {
-      userProfile.purchasedBoosts = [...userProfile.purchasedBoosts, boostId];
-    }
+    const newBoosts = [...activatedBoosts, boostId];
+    setActivatedBoosts(newBoosts);
+    updateUserProfile({ purchasedBoosts: newBoosts });
   };
 
   const handleLicenseActivation = () => {
     if (isLicenseActive) return;
     setIsLicenseActive(true);
-    // 1x boost is implicit with the license
-    if (userProfile) {
-      userProfile.isLicenseActive = true;
-    }
+    updateUserProfile({ isLicenseActive: true });
   }
   
   if (!userProfile) {
@@ -144,8 +138,8 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <div className="flex flex-row items-center justify-between pb-6">
+         <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <div className="flex flex-row items-center justify-between">
                 <h3 className="text-2xl font-semibold leading-none tracking-tight">Pending Balance</h3>
                 <div className="text-xs text-amber-500 flex items-center">
                     <Hourglass className="mr-2 animate-spin h-4 w-4" />
@@ -159,31 +153,33 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
             </div>
          </div>
-         <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm p-6", isLicenseActive && "bg-green-500/20 border-green-500/50 relative overflow-hidden")}>
-            {isLicenseActive && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-400/30 to-transparent opacity-50"></div>}
-            <div className="pb-6">
-                <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>
-            </div>
-            <div>
-                {isLicenseActive ? (
-                    <div className='flex flex-col items-center justify-center h-full text-center'>
-                         <div className="p-3 mb-2 rounded-full bg-white/20">
-                            <ShieldCheck className="w-10 h-10 text-white" />
-                        </div>
-                        <p className="font-semibold text-white">License Active</p>
-                        <p className="text-xs text-white/80">(1x Earning Unlocked)</p>
+         <div className={cn("space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6 flex flex-col items-center justify-center text-center", isLicenseActive && "bg-green-900/50 border-green-500/50 relative overflow-hidden")}>
+            {isLicenseActive && (
+              <>
+                <div className="absolute inset-0 bg-grid-green-500/30 [mask-image:linear-gradient(to_bottom,white_40%,transparent_90%)]"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.4),transparent_60%)]"></div>
+              </>
+            )}
+            <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>
+            
+            {isLicenseActive ? (
+                <div className='flex flex-col items-center justify-center h-full text-center z-10 pt-2'>
+                      <div className="p-3 mb-2 rounded-full bg-white/20">
+                        <ShieldCheck className="w-10 h-10 text-white" />
                     </div>
-                ) : (
-                    <>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Activate your license to start mining MOO.
-                        </p>
-                        <Button className="w-full" onClick={handleLicenseActivation}>
-                            Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
-                        </Button>
-                    </>
-                )}
-            </div>
+                    <p className="font-semibold text-white">License Active</p>
+                    <p className="text-xs text-white/80">(1x Earning Unlocked)</p>
+                </div>
+            ) : (
+                <div className="pt-2">
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Activate your license to start mining MOO.
+                    </p>
+                    <Button className="w-full" onClick={handleLicenseActivation}>
+                        Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
+                    </Button>
+                </div>
+            )}
          </div>
       </div>
 

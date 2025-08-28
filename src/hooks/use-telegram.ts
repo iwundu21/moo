@@ -32,66 +32,66 @@ declare global {
   }
 }
 
+// Store the profile in a variable that persists across hook instances
+let globalUserProfile: UserProfile | null = null;
+const profileListeners: Set<(profile: UserProfile | null) => void> = new Set();
+
 const useTelegram = () => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(globalUserProfile);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
+
+  const notifyListeners = () => {
+    for (const listener of profileListeners) {
+      listener(globalUserProfile);
+    }
+  };
+
+  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
+    if (globalUserProfile) {
+      globalUserProfile = { ...globalUserProfile, ...updates };
+      notifyListeners();
+    }
+  }, []);
 
   const addDistributionRecord = useCallback((record: DistributionRecord) => {
     setDistributionHistory(prevHistory => [record, ...prevHistory]);
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    let pollCount = 0;
-    const maxPolls = 10; // Poll for 1 second max
+    // Register listener
+    const listener = (profile: UserProfile | null) => setUserProfile(profile);
+    profileListeners.add(listener);
 
-    const initTelegram = () => {
-      if (!isMounted) return;
+    // Initial load logic should only run once
+    if (!globalUserProfile) {
+      let isMounted = true;
+      let pollCount = 0;
+      const maxPolls = 10; // Poll for 1 second max
 
-      const tg = window.Telegram?.WebApp;
-      if (tg && tg.initDataUnsafe) {
-        tg.ready();
-        
-        if (tg.initDataUnsafe.user) {
-          const telegramUser = tg.initDataUnsafe.user;
-          setUserProfile({
-            id: telegramUser.id.toString(),
-            telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-            profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
-            mainBalance: 12500.75, // Default value, should be fetched from a backend
-            pendingBalance: 750.25, // Default value
-            isPremium: !!telegramUser.is_premium,
-            purchasedBoosts: [], // Default value
-            isLicenseActive: false, // Default value
-          });
-        } else {
-           // Fallback for development if user data isn't available but script is
-          setUserProfile({
-              id: '0000',
-              telegramUsername: 'telegram_user',
-              profilePictureUrl: 'https://picsum.photos/100/100',
+      const initTelegram = () => {
+        if (!isMounted) return;
+
+        const tg = window.Telegram?.WebApp;
+        if (tg && tg.initDataUnsafe) {
+          tg.ready();
+          
+          if (tg.initDataUnsafe.user) {
+            const telegramUser = tg.initDataUnsafe.user;
+            globalUserProfile = {
+              id: telegramUser.id.toString(),
+              telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+              profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
               mainBalance: 12500.75,
               pendingBalance: 750.25,
-              isPremium: true,
-              purchasedBoosts: ['2x'],
-              isLicenseActive: true,
-          });
-        }
-        // Set mock data for other parts of the app
-        setLeaderboard(mockLeaderboard);
-        setReferrals(mockReferrals);
-
-      } else if (pollCount < maxPolls) {
-        // If tg is not ready, poll again shortly
-        pollCount++;
-        setTimeout(initTelegram, 100);
-      } else {
-        // Fallback for development if Telegram script never loads
-        console.log("Telegram WebApp not found after polling, using mock data.");
-        if (isMounted) {
-            setUserProfile({
+              isPremium: !!telegramUser.is_premium,
+              purchasedBoosts: [],
+              isLicenseActive: false,
+            };
+          } else {
+             // Fallback for development if user data isn't available
+            globalUserProfile = {
                 id: '0000',
                 telegramUsername: 'telegram_user',
                 profilePictureUrl: 'https://picsum.photos/100/100',
@@ -99,22 +99,52 @@ const useTelegram = () => {
                 pendingBalance: 750.25,
                 isPremium: true,
                 purchasedBoosts: ['2x'],
-                isLicenseActive: true,
-            });
+                isLicenseActive: false, // Start as inactive
+            };
+          }
+          notifyListeners();
+          setLeaderboard(mockLeaderboard);
+          setReferrals(mockReferrals);
+
+        } else if (pollCount < maxPolls) {
+          pollCount++;
+          setTimeout(initTelegram, 100);
+        } else {
+          console.log("Telegram WebApp not found, using mock data.");
+          if (isMounted) {
+            globalUserProfile = {
+                id: '0000',
+                telegramUsername: 'telegram_user',
+                profilePictureUrl: 'https://picsum.photos/100/100',
+                mainBalance: 12500.75,
+                pendingBalance: 750.25,
+                isPremium: true,
+                purchasedBoosts: ['2x'],
+                isLicenseActive: false, // Start as inactive
+            };
+            notifyListeners();
             setLeaderboard(mockLeaderboard);
             setReferrals(mockReferrals);
+          }
         }
-      }
-    };
-    
-    initTelegram();
+      };
+      
+      initTelegram();
 
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    // Cleanup listener
     return () => {
-      isMounted = false;
+      profileListeners.delete(listener);
     };
   }, []);
 
-  return { userProfile, leaderboard, referrals, distributionHistory, addDistributionRecord };
+  return { userProfile, leaderboard, referrals, distributionHistory, addDistributionRecord, updateUserProfile };
 };
 
 export { useTelegram };
+
+    

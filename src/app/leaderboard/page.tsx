@@ -10,7 +10,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTelegram } from "@/hooks/use-telegram";
@@ -41,8 +40,7 @@ export default function LeaderboardPage() {
       </header>
 
       {userRank && (
-        <Card className="border-primary bg-primary/20">
-          <CardContent className="p-4">
+        <div className="rounded-lg border border-primary bg-primary/20 p-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <span className="text-lg font-bold w-8 text-center">{userRank.rank}</span>
@@ -59,11 +57,10 @@ export default function LeaderboardPage() {
                 <p className="text-xs text-muted-foreground">MOO</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+        </div>
       )}
 
-      <Card>
+      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
@@ -95,7 +92,7 @@ export default function LeaderboardPage() {
               ))}
             </TableBody>
           </Table>
-      </Card>
+      </div>
     </div>
   );
 }

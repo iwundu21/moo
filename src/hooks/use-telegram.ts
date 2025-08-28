@@ -226,7 +226,8 @@ const useTelegram = () => {
                 rank: index + 1,
                 username: data.telegramUsername,
                 balance: data.mainBalance,
-                profilePictureUrl: data.profilePictureUrl
+                profilePictureUrl: data.profilePictureUrl,
+                isPremium: data.isPremium || false
             }
         }));
         

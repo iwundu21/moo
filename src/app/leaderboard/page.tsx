@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy } from "lucide-react";
+import { Trophy, BadgeCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTelegram } from "@/hooks/use-telegram";
 import { useEffect, useState } from "react";
@@ -46,10 +46,13 @@ export default function LeaderboardPage() {
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-bold w-8 text-center">{userRank.rank}</span>
-                <Avatar>
-                  <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
-                  <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</AvatarFallback>
-                </Avatar>
+                 <div className="relative">
+                    <Avatar>
+                        <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
+                        <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</AvatarFallback>
+                    </Avatar>
+                    <BadgeCheck className={cn("absolute -bottom-1 -right-1 w-5 h-5", userProfile.isPremium ? "text-blue-500" : "text-destructive")} />
+                </div>
                 <div className="font-semibold text-sm">
                   <p>You</p>
                 </div>
@@ -72,7 +75,7 @@ export default function LeaderboardPage() {
             </TableHeader>
             <TableBody>
               {leaderboard.map((entry) => (
-                <TableRow key={entry.rank} className={cn(entry.username === userProfile.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
+                <TableRow key={entry.rank} className={cn(entry.username === userProfile.username && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
                   <TableCell className="font-bold text-xs">
                     <div className="flex items-center justify-center">
                         {entry.rank <= 3 ? <Trophy className={cn("w-4 h-4 mr-2", entry.rank === 1 && "text-yellow-400", entry.rank === 2 && "text-gray-400", entry.rank === 3 && "text-yellow-600")} /> : null}
@@ -81,10 +84,13 @@ export default function LeaderboardPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={entry.profilePictureUrl} data-ai-hint="profile picture" />
-                        <AvatarFallback>{entry.username.substring(0, 1)}</AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="w-8 h-8">
+                            <AvatarImage src={entry.profilePictureUrl} data-ai-hint="profile picture" />
+                            <AvatarFallback>{entry.username.substring(0, 1)}</AvatarFallback>
+                        </Avatar>
+                        <BadgeCheck className={cn("absolute -bottom-1 -right-1 w-4 h-4", entry.isPremium ? "text-blue-500" : "text-destructive")} />
+                      </div>
                       <span className="font-medium truncate text-xs">@{entry.username}</span>
                     </div>
                   </TableCell>

@@ -19,6 +19,7 @@ export type LeaderboardEntry = {
   username: string;
   profilePictureUrl: string;
   balance: number;
+  isPremium: boolean;
 };
 
 export type Referral = {

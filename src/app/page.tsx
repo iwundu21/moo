@@ -28,8 +28,8 @@ import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
 
 const boosts = [
   { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message', price: 1.00 },
-  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 25 MOO per message', price: 2.00 },
-  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 50 MOO per message', price: 3.50 },
+  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 20 MOO per message', price: 2.00 },
+  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 35 MOO per message', price: 3.50 },
 ];
 
 type TaskStatus = 'idle' | 'verifying' | 'completed';
@@ -84,11 +84,13 @@ export default function Home() {
     // updating the user's pendingBalance in the database.
     // For now, the pending balance will not increase automatically.
 
-    let earnRate = 0; // Base rate is 0 until a boost is purchased
-    if (activatedBoosts.includes('10x')) earnRate = 50;
-    else if (activatedBoosts.includes('5x')) earnRate = 25;
+    let earnRate = 0; // Base rate is 0
+    
+    // Determine the highest active boost
+    if (activatedBoosts.includes('10x')) earnRate = 35;
+    else if (activatedBoosts.includes('5x')) earnRate = 20;
     else if (activatedBoosts.includes('2x')) earnRate = 10;
-    else if (isLicenseActive) earnRate = 5; // Default rate after license activation
+    else if (isLicenseActive && allTasksCompleted) earnRate = 5;
 
 
   }, [userProfile, activatedBoosts, isLicenseActive]);
@@ -482,3 +484,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

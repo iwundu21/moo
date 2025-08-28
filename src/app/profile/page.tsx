@@ -37,9 +37,9 @@ export default function ProfilePage() {
             const allAchievements = [
                 { icon: Star, title: 'MOO Starter', description: 'Joined the MOO-niverse', unlocked: true },
                 { icon: ShieldCheck, title: 'Licensed Miner', description: 'Activated mining license', unlocked: userProfile.isLicenseActive },
-                { icon: Rocket, title: '2x Booster', description: 'Purchased the 2x boost', unlocked: userProfile.purchasedBoosts.includes('2x') },
-                { icon: Rocket, title: '5x Booster', description: 'Purchased the 5x boost', unlocked: userProfile.purchasedBoosts.includes('5x') },
-                { icon: Rocket, title: '10x Booster', description: 'Purchased the 10x boost', unlocked: userProfile.purchasedBoosts.includes('10x') },
+                { icon: Rocket, title: '2x Booster', description: 'Earn 10 MOO per message', unlocked: userProfile.purchasedBoosts.includes('2x') },
+                { icon: Rocket, title: '5x Booster', description: 'Earn 20 MOO per message', unlocked: userProfile.purchasedBoosts.includes('5x') },
+                { icon: Rocket, title: '10x Booster', description: 'Earn 35 MOO per message', unlocked: userProfile.purchasedBoosts.includes('10x') },
                 { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
                 { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: referrals.length > 0 },
                 { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: userProfile.isPremium },
@@ -151,3 +151,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

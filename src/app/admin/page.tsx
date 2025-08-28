@@ -19,11 +19,11 @@ export default function AdminPage() {
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
 
-    const headers = ['Username', 'Wallet Address', 'Amount'];
+    const headers = ['Wallet Address', 'Amount'];
     const csvContent = [
       headers.join(','),
       ...claimedAirdrops.map(claim => 
-        [claim.username, claim.walletAddress, claim.amount].join(',')
+        [claim.walletAddress, claim.amount].join(',')
       )
     ].join('\n');
 

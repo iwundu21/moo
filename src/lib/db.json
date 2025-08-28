@@ -4,7 +4,7 @@
     "id": "0",
     "telegramUsername": "telegram_user",
     "profilePictureUrl": "https://picsum.photos/100/100",
-    "mainBalance": 150,
+    "mainBalance": 0,
     "pendingBalance": 0,
     "isPremium": false,
     "purchasedBoosts": [],

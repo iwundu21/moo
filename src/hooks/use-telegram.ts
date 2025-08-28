@@ -32,7 +32,7 @@ declare global {
   }
 }
 
-// Store data in variables that persist across hook instances, except for the airdrop status.
+// Store data in variables that persist across hook instances
 let globalUserProfile: UserProfile | null = null;
 const profileListeners: Set<(profile: UserProfile | null) => void> = new Set();
 
@@ -43,14 +43,6 @@ let globalClaimedAirdrops: AirdropClaim[] = [];
 const claimListeners: Set<(claims: AirdropClaim[]) => void> = new Set();
 
 const AIRDROP_STATUS_STORAGE_KEY = 'moo-airdrop-live-status';
-
-const getAirdropStatusFromStorage = (): boolean => {
-    if (typeof window === 'undefined') return true;
-    const storedValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
-    // Default to true if not set
-    return storedValue === null ? true : storedValue === 'true';
-};
-
 
 const notifyProfileListeners = () => {
     for (const listener of profileListeners) {
@@ -77,17 +69,21 @@ const useTelegram = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(globalClaimedAirdrops);
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
+  
+  // Airdrop status state with proper initialization from localStorage
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const storedValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
+    return storedValue === null ? true : storedValue === 'true';
+  });
 
   
   useEffect(() => {
-    // Set initial state from storage on mount
-    setIsAirdropLive(getAirdropStatusFromStorage());
-
-    // Listener for storage events (from other tabs or our manual dispatch)
+    // Listener for storage events (from other tabs)
     const handleStorageChange = (event: StorageEvent) => {
         if (event.key === AIRDROP_STATUS_STORAGE_KEY) {
-            setIsAirdropLive(getAirdropStatusFromStorage());
+            const storedValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
+            setIsAirdropLive(storedValue === null ? true : storedValue === 'true');
         }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -230,16 +226,8 @@ const useTelegram = () => {
 
   const setAirdropStatus = useCallback((isLive: boolean) => {
     if (typeof window !== 'undefined') {
-        const oldValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
-        const newValue = String(isLive);
-        window.localStorage.setItem(AIRDROP_STATUS_STORAGE_KEY, newValue);
-        // Manually dispatch a storage event to trigger updates in the same tab.
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: AIRDROP_STATUS_STORAGE_KEY,
-            oldValue: oldValue,
-            newValue: newValue,
-            storageArea: window.localStorage,
-        }));
+        window.localStorage.setItem(AIRDROP_STATUS_STORAGE_KEY, String(isLive));
+        setIsAirdropLive(isLive);
     }
   }, []);
 

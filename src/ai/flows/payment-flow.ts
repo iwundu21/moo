@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow for creating Telegram payment invoices using Telegram Stars.
@@ -14,7 +15,7 @@ import 'dotenv/config';
 
 const CreatePaymentInputSchema = z.object({
   userId: z.string().describe("The user's Telegram ID."),
-  boostId: z.string().describe('The ID of the boost being purchased.'),
+  boostId: z.string().describe('The ID of the item being purchased (e.g., "2x", "license").'),
   price: z.number().describe('The price of the item in Telegram Stars (XTR).'),
 });
 export type CreatePaymentInput = z.infer<typeof CreatePaymentInputSchema>;
@@ -41,13 +42,18 @@ const createPaymentFlow = ai.defineFlow(
 
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`;
 
+    const isLicense = input.boostId === 'license';
+    const title = isLicense ? 'MOO Mining License' : `MOO Boost ${input.boostId}`;
+    const description = isLicense ? 'Activate your license to start mining MOO tokens.' : `Purchase a ${input.boostId} boost for your MOO mining.`;
+    const label = isLicense ? 'Mining License' : `${input.boostId} Boost`;
+
     const payload = {
-        title: `MOO Boost ${input.boostId}`,
-        description: `Purchase a ${input.boostId} boost for your MOO mining.`,
-        payload: `boost-${input.boostId}-${input.userId}`,
+        title,
+        description,
+        payload: `${input.boostId}-${input.userId}`,
         provider_token: '', // Must be empty for Telegram Stars
         currency: 'XTR', // Use XTR for Telegram Stars
-        prices: [{ label: `${input.boostId} Boost`, amount: input.price }] // Price in the smallest units of the currency (i.e., number of stars)
+        prices: [{ label, amount: input.price }] // Price in the smallest units of the currency (i.e., number of stars)
     };
 
     try {

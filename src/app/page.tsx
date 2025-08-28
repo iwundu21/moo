@@ -145,19 +145,30 @@ export default function Home() {
     }
   };
 
-  const handleLicenseActivation = () => {
-    if (isLicenseActive) return;
+  const handleLicenseActivation = async () => {
+    if (isLicenseActive || !userProfile) return;
     const cost = 150;
-    if (mainBalance >= cost) {
-        const newMainBalance = mainBalance - cost;
-        setMainBalance(newMainBalance);
-        setIsLicenseActive(true);
-        updateUserProfile({ isLicenseActive: true, mainBalance: newMainBalance });
-        setShowConfetti(true);
-        setShowActivationSuccess(true);
-    } else {
-        // Optionally, show a toast or message that they don't have enough balance
-        console.log("Not enough balance to activate license.");
+    
+    try {
+      const invoiceLink = await createPayment({
+        userId: userProfile.id,
+        boostId: 'license', // Special ID for license
+        price: cost
+      });
+
+      if (invoiceLink && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.openInvoice(invoiceLink, (status) => {
+          if (status === 'paid') {
+            setIsLicenseActive(true);
+            updateUserProfile({ isLicenseActive: true });
+            setShowConfetti(true);
+            setShowActivationSuccess(true);
+            window.Telegram.WebApp.close();
+          }
+        });
+      }
+    } catch (error) {
+      console.error("License payment creation failed:", error);
     }
   }
 
@@ -286,8 +297,8 @@ export default function Home() {
                         <p className="text-xs text-muted-foreground mb-4">
                             Activate your license to start mining MOO.
                         </p>
-                        <Button className="w-full" onClick={handleLicenseActivation} disabled={mainBalance < 150}>
-                            Activate for 150 MOO <Star className="ml-2 fill-yellow-400 text-yellow-500" />
+                        <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
+                            Activate for 150 <Zap className="ml-2 w-4 h-4 text-yellow-400" />
                         </Button>
                     </div>
                 </div>

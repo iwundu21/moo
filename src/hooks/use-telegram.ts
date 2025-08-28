@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord, AirdropClaim } from '@/lib/types';
-import { mockLeaderboard, mockReferrals, mockDistributionHistory } from '@/lib/data';
+import { defaultUserProfile, mockLeaderboard, mockReferrals, mockDistributionHistory } from '@/lib/data';
 import { store } from '@/lib/store';
 
 interface TelegramUser {
@@ -44,7 +44,6 @@ const useTelegram = () => {
 
   useEffect(() => {
     setIsClient(true);
-    // This effect runs only once on initial mount to load user data
     if (!store.getUserProfile()) {
       let isMounted = true;
       let pollCount = 0;
@@ -62,8 +61,8 @@ const useTelegram = () => {
                 id: telegramUser.id.toString(),
                 telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
                 profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
-                mainBalance: 12500.75,
-                pendingBalance: 750.25,
+                mainBalance: defaultUserProfile.mainBalance,
+                pendingBalance: defaultUserProfile.pendingBalance,
                 isPremium: !!telegramUser.is_premium,
                 purchasedBoosts: [],
                 isLicenseActive: false,
@@ -72,26 +71,14 @@ const useTelegram = () => {
               };
           
           store.initialize(initialProfile, mockLeaderboard);
-          setReferrals(mockReferrals); // Referrals are static for now
+          setReferrals(mockReferrals);
         } else if (pollCount < maxPolls) {
           pollCount++;
           setTimeout(initTelegram, 100);
         } else {
-          console.log("Telegram WebApp not found, using mock data.");
+          console.log("Telegram WebApp not found, using mock data from db.json.");
           if (isMounted) {
-            const initialProfile: UserProfile = {
-              id: '0000',
-              telegramUsername: 'telegram_user',
-              profilePictureUrl: 'https://picsum.photos/100/100',
-              mainBalance: 12500.75,
-              pendingBalance: 750.25,
-              isPremium: true,
-              purchasedBoosts: [],
-              isLicenseActive: false,
-              completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
-              hasClaimedAirdrop: false,
-            };
-            store.initialize(initialProfile, mockLeaderboard);
+            store.initialize(defaultUserProfile, mockLeaderboard);
             setReferrals(mockReferrals);
           }
         }
@@ -104,7 +91,6 @@ const useTelegram = () => {
   }, []);
 
   useEffect(() => {
-    // This effect subscribes to store updates
     const handleUpdate = () => {
       setUserProfile(store.getUserProfile());
       setLeaderboard(store.getLeaderboard());
@@ -113,8 +99,6 @@ const useTelegram = () => {
     };
 
     store.subscribe(handleUpdate);
-    
-    // Initial sync in case data was loaded by another component
     handleUpdate();
 
     return () => {
@@ -136,7 +120,6 @@ const useTelegram = () => {
   }, []);
 
   const addDistributionRecord = useCallback((record: DistributionRecord) => {
-    // This state is local to the component and doesn't need to be in the store for now
     setDistributionHistory(prevHistory => [record, ...prevHistory]);
   }, []);
 

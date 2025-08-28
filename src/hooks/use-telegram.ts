@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord, AirdropClaim } from '@/lib/types';
-import { defaultUserProfile, mockLeaderboard, mockReferrals, mockDistributionHistory } from '@/lib/data';
+import { defaultUserProfile, mockDistributionHistory } from '@/lib/data';
 import { store } from '@/lib/store';
 
 interface TelegramUser {
@@ -19,6 +19,7 @@ interface TelegramUser {
 interface TelegramWebApp {
   initDataUnsafe: {
     user?: TelegramUser;
+    start_param?: string;
   };
   ready: () => void;
   onEvent: (eventType: string, eventHandler: () => void) => void;
@@ -41,21 +42,12 @@ const useTelegram = () => {
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [isClient, setIsClient] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
 
   useEffect(() => {
     setIsClient(true);
     
-    const handleStoreUpdate = () => {
-      setUserProfile(store.getUserProfile());
-      setLeaderboard(store.getLeaderboard());
-      setClaimedAirdrops(store.getClaimedAirdrops());
-      setIsAirdropLive(store.getAirdropStatus());
-      setReferrals(store.getReferrals());
-    };
-
-    store.subscribe(handleStoreUpdate);
-    handleStoreUpdate(); // Initial sync
-
     let isMounted = true;
     let pollCount = 0;
     const maxPolls = 10;
@@ -64,12 +56,36 @@ const useTelegram = () => {
       if (!isMounted) return;
 
       const tg = window.Telegram?.WebApp;
+
+      const updateUserState = (userId: string) => {
+        if (!userId) return;
+        const profile = store.getUserProfile(userId);
+        setUserProfile(profile);
+        setLeaderboard(store.getLeaderboard());
+        setClaimedAirdrops(store.getClaimedAirdrops());
+        setIsAirdropLive(store.getAirdropStatus());
+        setReferrals(store.getReferrals(userId));
+        setCurrentUserId(userId);
+      };
+
+      const handleStoreUpdate = () => {
+        if (currentUserId) {
+          updateUserState(currentUserId);
+        }
+      };
+
+      store.subscribe(handleStoreUpdate);
+      
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         tg.ready();
         const telegramUser = tg.initDataUnsafe.user;
-        
-        const currentUserProfile: UserProfile = {
-            id: telegramUser.id.toString(),
+        const userId = telegramUser.id.toString();
+
+        let userProfile = store.getUserProfile(userId);
+
+        if (!userProfile) {
+          userProfile = {
+            id: userId,
             telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
             profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
             mainBalance: defaultUserProfile.mainBalance,
@@ -80,28 +96,54 @@ const useTelegram = () => {
             completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             hasClaimedAirdrop: false,
           };
-      
-        store.initialize(currentUserProfile, mockLeaderboard, mockReferrals);
+        }
+        
+        store.initialize(userProfile);
+
+        // Handle referral
+        const startParam = tg.initDataUnsafe.start_param;
+        if (startParam && startParam.startsWith('ref')) {
+            const referrerId = startParam.substring(3);
+            if (referrerId && referrerId !== userId) {
+                const referrerProfile = store.getUserProfile(referrerId) || store.getAllUserProfiles()[referrerId];
+                if(referrerProfile) {
+                     store.addReferral(referrerId, {
+                        username: userProfile.telegramUsername,
+                        profilePictureUrl: userProfile.profilePictureUrl,
+                    });
+                }
+            }
+        }
+        
+        updateUserState(userId);
 
       } else if (pollCount < maxPolls) {
         pollCount++;
         setTimeout(initTelegram, 100);
       } else {
-         if (isMounted && !store.getUserProfile()) {
+         if (isMounted && !currentUserId) {
           console.log("Telegram WebApp not found, initializing with default user for development.");
-          store.initialize(defaultUserProfile, mockLeaderboard, mockReferrals);
+          const devUserId = defaultUserProfile.id;
+          store.initialize(defaultUserProfile);
+          updateUserState(devUserId);
         }
       }
+
+      return () => {
+         store.unsubscribe(handleStoreUpdate);
+      };
     };
 
-    initTelegram();
+    const unsubscribe = initTelegram();
     
     return () => { 
       isMounted = false; 
-      store.unsubscribe(handleStoreUpdate);
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
 
-  }, []);
+  }, [currentUserId]);
 
 
   const setAirdropStatus = useCallback((isLive: boolean) => {
@@ -113,8 +155,9 @@ const useTelegram = () => {
   }, []);
 
   const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
-    store.updateUserProfile(updates);
-  }, []);
+    if (!currentUserId) return;
+    store.updateUserProfile(currentUserId, updates);
+  }, [currentUserId]);
 
   const addDistributionRecord = useCallback((record: DistributionRecord) => {
     setDistributionHistory(prevHistory => [record, ...prevHistory]);

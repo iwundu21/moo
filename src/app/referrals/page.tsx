@@ -2,7 +2,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button';
-import { Copy, UserPlus } from 'lucide-react';
+import { Copy, UserPlus, Share2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegram } from '@/hooks/use-telegram';
@@ -16,6 +16,7 @@ export default function ReferralsPage() {
     }
 
     const referralLink = `https://t.me/moo_app_bot?start=ref${userProfile.id}`;
+    const shareText = `Join me on MOO and let's earn together! ${referralLink}`;
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(referralLink);
@@ -24,6 +25,12 @@ export default function ReferralsPage() {
             description: "Referral link copied to clipboard.",
         });
     };
+
+    const shareOnTelegram = () => {
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join me on MOO and let\'s earn together!')}`;
+        window.open(telegramShareUrl, '_blank');
+    };
+
 
     return (
     <div className="container mx-auto p-4 space-y-8">
@@ -41,8 +48,8 @@ export default function ReferralsPage() {
           <Button className="w-full" onClick={copyToClipboard}>
             <Copy className="mr-2 h-4 w-4" /> Copy Link
           </Button>
-          <Button className="w-full" variant="outline">
-            <UserPlus className="mr-2 h-4 w-4" /> Invite via Telegram
+          <Button className="w-full" variant="outline" onClick={shareOnTelegram}>
+            <Share2 className="mr-2 h-4 w-4" /> Invite via Telegram
           </Button>
         </div>
       </div>

@@ -14,7 +14,8 @@
       "telegram": "idle",
       "community": "idle"
     },
-    "hasClaimedAirdrop": false
+    "hasClaimedAirdrop": false,
+    "referredBy": null
   },
   "leaderboard": [],
   "referrals": [],

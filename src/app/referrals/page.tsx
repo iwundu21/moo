@@ -2,14 +2,18 @@
 'use client'
 
 import { Button } from '@/components/ui/button';
-import { Copy, UserPlus, Share2 } from 'lucide-react';
+import { Copy, UserPlus, Share2, Ticket } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegram } from '@/hooks/use-telegram';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ReferralsPage() {
-    const { userProfile, referrals } = useTelegram();
+    const { userProfile, referrals, redeemReferralCode } = useTelegram();
     const { toast } = useToast();
+    const [referralCode, setReferralCode] = useState('');
     
     if (!userProfile) {
       return null; // Or a loading spinner
@@ -30,6 +34,29 @@ export default function ReferralsPage() {
         window.open(telegramShareUrl, '_blank');
     };
 
+    const handleRedeemCode = () => {
+      if (!referralCode.trim()) {
+          toast({
+              title: "Error",
+              description: "Please enter a referral code.",
+              variant: "destructive",
+          });
+          return;
+      }
+      
+      const result = redeemReferralCode(referralCode.trim());
+
+      toast({
+          title: result.success ? "Success!" : "Error",
+          description: result.message,
+          variant: result.success ? "default" : "destructive",
+      });
+
+      if (result.success) {
+        setReferralCode('');
+      }
+    };
+
 
     return (
     <div className="container mx-auto p-4 space-y-8">
@@ -40,6 +67,23 @@ export default function ReferralsPage() {
       </header>
 
       <div className="space-y-6">
+
+        <div className="space-y-4">
+          <p className="text-sm font-semibold text-center">Redeem a Referral Code</p>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="referral-code" className="sr-only">Referral Code</Label>
+            <Input 
+              id="referral-code"
+              placeholder="Enter friend's referral code (their ID)"
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value)}
+            />
+            <Button onClick={handleRedeemCode}>
+              <Ticket className="mr-2 h-4 w-4" /> Redeem Code
+            </Button>
+          </div>
+        </div>
+
         <div className="space-y-4 text-center">
             <p className="text-sm font-semibold">Your Referral Link</p>
             <div className="p-4 border-dashed border-2 border-primary/50 rounded-lg bg-primary/10 text-primary font-mono text-xs break-all">

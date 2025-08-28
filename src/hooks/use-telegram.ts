@@ -59,6 +59,32 @@ const useTelegram = () => {
     }
   };
 
+  const addReferral = (referrerId: string, refereeProfile: UserProfile) => {
+    const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    const allReferrals: {[key: string]: Referral[]} = storedData.referrals || {};
+    const allUserProfiles: {[key: string]: UserProfile} = storedData.userProfiles || {};
+
+    if (!allReferrals[referrerId]) {
+      allReferrals[referrerId] = [];
+    }
+    if (!allReferrals[referrerId].some(r => r.username === refereeProfile.telegramUsername)) {
+      allReferrals[referrerId].push({
+          username: refereeProfile.telegramUsername,
+          profilePictureUrl: refereeProfile.profilePictureUrl,
+      });
+
+      // Update referrer's profile if they exist
+      if(allUserProfiles[referrerId]) {
+        // You could add a referral bonus here if you want
+      }
+      
+      saveData({ referrals: allReferrals });
+      return true;
+    }
+    return false;
+  };
+
+
   useEffect(() => {
     setIsClient(true);
 
@@ -103,20 +129,12 @@ const useTelegram = () => {
         currentLeaderboard.sort((a,b) => b.balance - a.balance).forEach((p, i) => p.rank = i + 1);
     }
 
-    // Handle referral
+    // Handle referral from URL
     const startParam = tg.initDataUnsafe.start_param;
     if (startParam && startParam.startsWith('ref')) {
         const referrerId = startParam.substring(3);
         if (referrerId && referrerId !== userId) {
-            if (!allReferrals[referrerId]) {
-                allReferrals[referrerId] = [];
-            }
-            if (!allReferrals[referrerId].some(r => r.username === currentUserProfile.telegramUsername)) {
-                allReferrals[referrerId].push({
-                    username: currentUserProfile.telegramUsername,
-                    profilePictureUrl: currentUserProfile.profilePictureUrl,
-                });
-            }
+            addReferral(referrerId, currentUserProfile);
         }
     }
 
@@ -137,6 +155,34 @@ const useTelegram = () => {
     });
 
   }, []);
+
+  const redeemReferralCode = useCallback((referrerId: string): {success: boolean, message: string} => {
+    if (!userProfile) return {success: false, message: "User profile not loaded."};
+
+    if (referrerId === userProfile.id) {
+        return {success: false, message: "You cannot redeem your own referral code."};
+    }
+    
+    const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    const allUserProfiles: {[key: string]: UserProfile} = storedData.userProfiles || {};
+
+    if (!allUserProfiles[referrerId]) {
+        return {success: false, message: "Invalid referral code. User not found."};
+    }
+
+    if (userProfile.referredBy) {
+        return {success: false, message: "You have already redeemed a referral code."};
+    }
+
+    const wasAdded = addReferral(referrerId, userProfile);
+
+    if (wasAdded) {
+      updateUserProfile({ referredBy: referrerId });
+      return {success: true, message: "Referral code redeemed successfully!"};
+    } else {
+      return {success: false, message: "Referral could not be added. You might have already been referred."};
+    }
+  }, [userProfile]);
 
   const addClaimRecord = useCallback((claim: AirdropClaim) => {
     setClaimedAirdrops(prev => {
@@ -195,7 +241,8 @@ const useTelegram = () => {
     clearAllClaims,
     addDistributionRecord, 
     updateUserProfile, 
-    addClaimRecord, 
+    addClaimRecord,
+    redeemReferralCode, 
     isClient
   };
 };

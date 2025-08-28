@@ -85,11 +85,11 @@ export default function ProfilePage() {
         <p className="text-sm text-muted-foreground">Telegram ID: {userProfile.id}</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Achievements</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+        <div>
+          <h2 className="text-2xl font-semibold leading-none tracking-tight">Achievements</h2>
+        </div>
+        <div className="pt-2">
             {unlockedAchievements.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {unlockedAchievements.map((ach, index) => (
@@ -98,7 +98,7 @@ export default function ProfilePage() {
                                 <div className="flip-card-front">
                                     <div 
                                     className={cn(
-                                        'glass-card flex flex-col items-center justify-center text-center w-full h-full p-4 rounded-lg relative overflow-hidden'
+                                        'bg-card/80 backdrop-blur border shadow-lg flex flex-col items-center justify-center text-center w-full h-full p-4 rounded-lg relative overflow-hidden'
                                     )}
                                     style={{ 
                                         '--achievement-color': achievementColors[index % achievementColors.length] 
@@ -117,7 +117,7 @@ export default function ProfilePage() {
                                 <div className="flip-card-back">
                                      <div 
                                       className={cn(
-                                        'glass-card flex flex-col items-center justify-center text-center w-full h-full p-4 rounded-lg relative overflow-hidden'
+                                        'bg-card/80 backdrop-blur border shadow-lg flex flex-col items-center justify-center text-center w-full h-full p-4 rounded-lg relative overflow-hidden'
                                       )}
                                       style={{ 
                                         '--achievement-color': achievementColors[index % achievementColors.length] 
@@ -134,8 +134,8 @@ export default function ProfilePage() {
             ) : (
                 <p className="text-center text-muted-foreground py-4">No achievements unlocked yet.</p>
             )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       
     </div>
   );

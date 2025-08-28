@@ -81,7 +81,7 @@ export default function AirdropPage() {
       setEligibilityCriteria(criteria);
       setIsEligible(criteria.every(c => c.isCompleted));
     }
-  }, [userProfile, referrals]);
+  }, [userProfile, referrals, isAirdropLive]);
 
   const handleClaim = () => {
     if (!walletAddress.trim()) {

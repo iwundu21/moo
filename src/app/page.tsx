@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Zap } from 'lucide-react';
+import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Zap, Ticket } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Confetti from 'react-confetti';
 import { createPayment } from '@/ai/flows/payment-flow';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 
 const boosts = [
@@ -37,11 +39,12 @@ const initialTasks: SocialTasks = {
   twitter: 'idle',
   telegram: 'idle',
   community: 'idle',
+  referral: 'idle'
 };
 
 
 export default function Home() {
-  const { userProfile, addDistributionRecord, updateUserProfile } = useTelegram();
+  const { userProfile, addDistributionRecord, updateUserProfile, redeemReferralCode } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -51,6 +54,8 @@ export default function Home() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showActivationSuccess, setShowActivationSuccess] = useState(false);
   const [openedTasks, setOpenedTasks] = useState<Set<string>>(new Set());
+  const [referralCodeInput, setReferralCodeInput] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     if(userProfile) {
@@ -58,7 +63,14 @@ export default function Home() {
       setPendingBalance(userProfile.pendingBalance);
       setActivatedBoosts(userProfile.purchasedBoosts);
       setIsLicenseActive(userProfile.isLicenseActive);
-      setSocialTasks(userProfile.completedSocialTasks || initialTasks);
+      
+      const initialSocialTasks = {
+        twitter: userProfile.completedSocialTasks?.twitter || 'idle',
+        telegram: userProfile.completedSocialTasks?.telegram || 'idle',
+        community: userProfile.completedSocialTasks?.community || 'idle',
+        referral: userProfile.referredBy ? 'completed' : 'idle',
+      };
+      setSocialTasks(initialSocialTasks);
     }
   }, [userProfile]);
 
@@ -185,6 +197,31 @@ export default function Home() {
     }, 6000); // 6 seconds
   }
 
+   const handleRedeemCode = () => {
+      if (!referralCodeInput.trim()) {
+          toast({
+              title: "Error",
+              description: "Please enter a referral code.",
+              variant: "destructive",
+          });
+          return;
+      }
+      
+      const result = redeemReferralCode(referralCodeInput.trim().toUpperCase());
+
+      toast({
+          title: result.success ? "Success!" : "Error",
+          description: result.message,
+          variant: result.success ? "default" : "destructive",
+      });
+
+      if (result.success) {
+        setReferralCodeInput('');
+        setSocialTasks(prev => ({...prev, referral: 'completed' }));
+        updateUserProfile({ mainBalance: mainBalance + 100 });
+      }
+    };
+
   const socialTaskList = [
     { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
     { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/your-channel', reward: 100 },
@@ -284,6 +321,25 @@ export default function Home() {
                                     </div>
                                 )
                             })}
+                            {socialTasks.referral !== 'completed' && (
+                                <div className="space-y-2 pt-2">
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                        id="referral-code-input"
+                                        placeholder="Enter friend's referral code"
+                                        value={referralCodeInput}
+                                        onChange={(e) => setReferralCodeInput(e.target.value)}
+                                        className="uppercase flex-1"
+                                        disabled={socialTasks.referral === 'completed'}
+                                        />
+                                        <Button onClick={handleRedeemCode} disabled={socialTasks.referral === 'completed'} className="w-28">
+                                            <Ticket className="mr-2" />
+                                            Redeem
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground px-1">Redeem a code to get +100 MOO.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : (

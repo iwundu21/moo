@@ -2,18 +2,13 @@
 'use client'
 
 import { Button } from '@/components/ui/button';
-import { Copy, UserPlus, Share2, Ticket } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Copy, UserPlus, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegram } from '@/hooks/use-telegram';
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 export default function ReferralsPage() {
-    const { userProfile, referrals, redeemReferralCode } = useTelegram();
+    const { userProfile } = useTelegram();
     const { toast } = useToast();
-    const [referralCodeInput, setReferralCodeInput] = useState('');
     
     if (!userProfile) {
       return null; // Or a loading spinner
@@ -36,30 +31,6 @@ export default function ReferralsPage() {
         window.open(telegramShareUrl, '_blank');
     };
 
-    const handleRedeemCode = () => {
-      if (!referralCodeInput.trim()) {
-          toast({
-              title: "Error",
-              description: "Please enter a referral code.",
-              variant: "destructive",
-          });
-          return;
-      }
-      
-      const result = redeemReferralCode(referralCodeInput.trim().toUpperCase());
-
-      toast({
-          title: result.success ? "Success!" : "Error",
-          description: result.message,
-          variant: result.success ? "default" : "destructive",
-      });
-
-      if (result.success) {
-        setReferralCodeInput('');
-      }
-    };
-
-
     return (
     <div className="container mx-auto p-4 space-y-8">
       <header className="text-center space-y-2">
@@ -69,23 +40,6 @@ export default function ReferralsPage() {
       </header>
 
       <div className="space-y-6">
-
-        <div className="space-y-4">
-          <p className="text-sm font-semibold text-center">Redeem a Referral Code</p>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="referral-code-input" className="sr-only">Referral Code</Label>
-            <Input 
-              id="referral-code-input"
-              placeholder="Enter friend's referral code (e.g., M1A2B3)"
-              value={referralCodeInput}
-              onChange={(e) => setReferralCodeInput(e.target.value)}
-              className="uppercase"
-            />
-            <Button onClick={handleRedeemCode}>
-              <Ticket className="mr-2 h-4 w-4" /> Redeem Code
-            </Button>
-          </div>
-        </div>
 
         <div className="space-y-4 text-center">
             <p className="text-sm font-semibold">Your Referral Code</p>
@@ -102,26 +56,6 @@ export default function ReferralsPage() {
             </div>
         </div>
 
-        <div className="space-y-4">
-            <h2 className="text-base font-semibold leading-none tracking-tight text-center">Your Referrals ({referrals.length})</h2>
-            <div className='p-2'>
-                {referrals.length > 0 ? (
-                    <ul className="space-y-3">
-                        {referrals.map((ref, index) => (
-                            <li key={index} className="flex items-center gap-4 p-3 rounded-lg bg-secondary/50 backdrop-blur-sm border border-border/50">
-                                <Avatar className="w-10 h-10 border-2 border-primary/50">
-                                    <AvatarImage src={ref.profilePictureUrl} data-ai-hint="profile picture" />
-                                    <AvatarFallback>{ref.username.substring(0, 2)}</AvatarFallback>
-                                </Avatar>
-                                <span className="font-semibold text-sm">@{ref.username}</span>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className="text-center text-muted-foreground py-8 text-sm">You haven't referred anyone yet.</p>
-                )}
-            </div>
-        </div>
       </div>
     </div>
   );

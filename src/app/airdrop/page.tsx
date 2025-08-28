@@ -135,7 +135,7 @@ export default function AirdropPage() {
             </Alert>
         ) : (
             <div className="flex items-center justify-between">
-                <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">
                     {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                     <span className="text-base ml-1">MOO</span>
                 </p>

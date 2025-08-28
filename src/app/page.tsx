@@ -251,6 +251,8 @@ export default function Home() {
     return null; // Or a loading spinner
   }
 
+  const isReadyToEarn = isLicenseActive && allTasksCompleted;
+
   return (
     <div className="container mx-auto p-4 space-y-8">
       {showConfetti && <Confetti recycle={false} onConfettiComplete={() => setShowConfetti(false)} />}
@@ -266,7 +268,7 @@ export default function Home() {
 
       <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground">Main Balance</p>
-          <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+          <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">
             {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
             <span className="text-base ml-1">MOO</span>
           </p>
@@ -281,7 +283,7 @@ export default function Home() {
               </div>
           </div>
           <div>
-              <p className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+              <p className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">
                   {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                   <span className="text-base ml-1">MOO</span>
               </p>
@@ -380,7 +382,7 @@ export default function Home() {
                     )}
                 </div>
             ) : (
-                <div className="text-center py-4">
+                 <div className="text-center py-4">
                      <p className="text-sm text-green-500 font-semibold">You are now active to earn!</p>
                     <p className="text-xs text-muted-foreground">Start sending messages in designated group chats.</p>
                 </div>

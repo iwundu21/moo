@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Zap, Ticket } from 'lucide-react';
+import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Zap, Ticket, Info } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
@@ -264,42 +265,48 @@ export default function Home() {
           </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div className="space-y-4 rounded-lg p-6">
-            <div className="flex flex-row items-center justify-between">
-                <h3 className="text-xl font-semibold leading-none tracking-tight">Pending Balance</h3>
-                <div className="text-xs text-amber-500 flex items-center">
-                    <Hourglass className="mr-2 animate-spin h-4 w-4" />
-                    {formatCountdown(countdown)}
-                </div>
-            </div>
-            <div>
-                <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                    {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
-                </p>
-                <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
-            </div>
-         </div>
-         <div className="space-y-4 rounded-lg p-6 flex flex-col">
-            <div className="flex-1">
-                <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>
-                <p className="text-xs text-muted-foreground pt-1.5">
-                    Activate your license to start mining MOO.
-                </p>
-            </div>
-            <div className="pt-2">
-                 <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
-                    {isLicenseActive ? (
-                        <span className='flex items-center'><CheckCircle className="mr-2"/> License Active</span>
-                    ) : (
-                        <span className='flex items-center'>Activate for 150 <Zap className="ml-2 w-4 h-4 text-yellow-400" /></span>
-                    )}
-                </Button>
-            </div>
-         </div>
+      <div className="space-y-4 rounded-lg p-6">
+          <div className="flex flex-row items-center justify-between">
+              <h3 className="text-xl font-semibold leading-none tracking-tight">Pending Balance</h3>
+              <div className="text-xs text-amber-500 flex items-center">
+                  <Hourglass className="mr-2 animate-spin h-4 w-4" />
+                  {formatCountdown(countdown)}
+              </div>
+          </div>
+          <div>
+              <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                  {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
+              </p>
+              <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
+          </div>
       </div>
       
-      {isLicenseActive && (
+      {!isLicenseActive ? (
+        <div className="space-y-4">
+            <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>How It Works</AlertTitle>
+                <AlertDescription className="text-xs space-y-1">
+                  <p>1. Activate your license to unlock earning tasks.</p>
+                  <p>2. Complete social tasks to become active to earn.</p>
+                  <p>3. Send messages in designated group chats to earn MOO.</p>
+                </AlertDescription>
+            </Alert>
+            <div className="rounded-lg p-6">
+                <div className="flex-1">
+                    <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>
+                    <p className="text-xs text-muted-foreground pt-1.5">
+                        Activate your license to start mining MOO.
+                    </p>
+                </div>
+                <div className="pt-4">
+                    <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
+                        <span className='flex items-center'>Activate for 150 <Zap className="ml-2 w-4 h-4 text-yellow-400" /></span>
+                    </Button>
+                </div>
+            </div>
+        </div>
+      ) : (
         <>
           <div className="space-y-4 rounded-lg p-6">
             <div>

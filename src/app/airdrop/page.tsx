@@ -67,97 +67,94 @@ export default function AirdropPage() {
   }
   
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto p-4 space-y-8">
       <header className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight">Airdrop</h1>
       </header>
       
-      <Card>
-          <CardHeader>
-              <CardTitle>Your Main Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isClaimed ? (
-                <Alert>
-                    <CheckCircle className="h-4 w-4" />
-                    <AlertTitle>Claim Submitted for Processing</AlertTitle>
-                    <AlertDescription>
-                        Your request to claim {claimedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
-                    </AlertDescription>
-                </Alert>
-            ) : (
-                <div className="flex items-center justify-between">
-                <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                    {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                </p>
-                <Dialog>
-                    <DialogTrigger asChild>
-                    <Button disabled={mainBalance === 0}>Claim</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Claim Your Allocation</DialogTitle>
-                        <DialogDescription>
-                        Enter your TON network wallet address to receive your MOO.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="wallet-address" className="text-right">
-                            Address
-                        </Label>
-                        <Input
-                            id="wallet-address"
-                            placeholder="Paste your TON wallet address"
-                            className="col-span-3"
-                            value={walletAddress}
-                            onChange={(e) => setWalletAddress(e.target.value)}
-                        />
-                        </div>
+      <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <h2 className="text-2xl font-semibold leading-none tracking-tight">Your Main Balance</h2>
+          
+        {isClaimed ? (
+            <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Claim Submitted for Processing</AlertTitle>
+                <AlertDescription>
+                    Your request to claim {claimedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
+                </AlertDescription>
+            </Alert>
+        ) : (
+            <div className="flex items-center justify-between">
+            <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+            </p>
+            <Dialog>
+                <DialogTrigger asChild>
+                <Button disabled={mainBalance === 0}>Claim</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Claim Your Allocation</DialogTitle>
+                    <DialogDescription>
+                    Enter your TON network wallet address to receive your MOO.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="wallet-address" className="text-right">
+                        Address
+                    </Label>
+                    <Input
+                        id="wallet-address"
+                        placeholder="Paste your TON wallet address"
+                        className="col-span-3"
+                        value={walletAddress}
+                        onChange={(e) => setWalletAddress(e.target.value)}
+                    />
                     </div>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
-                        </DialogClose>
-                    </DialogFooter>
-                    </DialogContent>
-                </Dialog>
                 </div>
-            )}
-          </CardContent>
-      </Card>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
+                    </DialogClose>
+                </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            </div>
+        )}
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Distribution History</CardTitle>
-          <CardDescription>Record of hourly pending balance credits.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date & Time</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {distributionHistory.map((record, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <div className="font-medium">{record.timestamp.toLocaleDateString()}</div>
-                    <div className="text-xs text-muted-foreground">{record.timestamp.toLocaleTimeString()}</div>
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        + {record.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                    </span>
-                  </TableCell>
+      <div className="space-y-4">
+        <div className='px-2'>
+          <h2 className="text-2xl font-semibold leading-none tracking-tight">Distribution History</h2>
+          <p className="text-sm text-muted-foreground">Record of hourly pending balance credits.</p>
+        </div>
+        <div className='rounded-lg border bg-card text-card-foreground shadow-sm'>
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Date & Time</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                {distributionHistory.map((record, index) => (
+                    <TableRow key={index}>
+                    <TableCell>
+                        <div className="font-medium">{record.timestamp.toLocaleDateString()}</div>
+                        <div className="text-xs text-muted-foreground">{record.timestamp.toLocaleTimeString()}</div>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                            + {record.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                        </span>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+        </div>
+      </div>
 
     </div>
   );

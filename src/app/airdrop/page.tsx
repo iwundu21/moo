@@ -180,7 +180,7 @@ export default function AirdropPage() {
              )}>
                 {isAirdropLive ? <Zap className="h-4 w-4 text-green-500" /> : <Ban className="h-4 w-4 text-amber-500" />}
                 <AlertTitle className={cn(isAirdropLive ? "text-green-400" : "text-amber-400")}>
-                    {isAirdropLive ? 'Airdrop Claim is Live!' : 'Claiming Coming Soon'}
+                    {isAirdropLive ? 'Airdrop Claim is Live!' : 'Airdrop Claiming is Coming Soon'}
                 </AlertTitle>
                 <AlertDescription className="text-xs">
                     {isAirdropLive ? 'Complete the eligibility tasks and claim your MOO tokens.' : 'The airdrop claim period has not started yet. Please check back later.'}

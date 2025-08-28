@@ -84,24 +84,24 @@ const useTelegram = () => {
         let userProfile = store.getUserProfile(userId);
 
         if (!userProfile) {
+          // This is the corrected logic: merge defaults with new user data
           userProfile = {
-            ...defaultUserProfile, // Start with defaults
+            ...defaultUserProfile,
             id: userId,
             telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
             profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
             isPremium: !!telegramUser.is_premium,
           };
+          store.initialize(userProfile);
         }
         
-        store.initialize(userProfile);
-
         // Handle referral
         const startParam = tg.initDataUnsafe.start_param;
         if (startParam && startParam.startsWith('ref')) {
             const referrerId = startParam.substring(3);
             if (referrerId && referrerId !== userId) {
                 const referrerProfile = store.getUserProfile(referrerId) || store.getAllUserProfiles()[referrerId];
-                if(referrerProfile) {
+                if(referrerProfile && userProfile) {
                      store.addReferral(referrerId, {
                         username: userProfile.telegramUsername,
                         profilePictureUrl: userProfile.profilePictureUrl,

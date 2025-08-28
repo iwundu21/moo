@@ -67,45 +67,21 @@ const useTelegram = () => {
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         tg.ready();
         const telegramUser = tg.initDataUnsafe.user;
-        const existingProfile = store.getUserProfile();
-
-        // Initialize the store only if it hasn't been initialized yet.
-        // Otherwise, subsequent users won't be added to the leaderboard.
-        if (!existingProfile) {
-            const initialProfile: UserProfile = {
-                id: telegramUser.id.toString(),
-                telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-                profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
-                mainBalance: defaultUserProfile.mainBalance,
-                pendingBalance: defaultUserProfile.pendingBalance,
-                isPremium: !!telegramUser.is_premium,
-                purchasedBoosts: [],
-                isLicenseActive: false,
-                completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
-                hasClaimedAirdrop: false,
-              };
-          
-            store.initialize(initialProfile, mockLeaderboard, mockReferrals);
-        } else {
-            // If the store is initialized but for a different user, create a new profile and add to leaderboard
-            // This case might happen in some development environments or shared devices
-             if (existingProfile.id !== telegramUser.id.toString()) {
-                 const newProfile: UserProfile = {
-                    id: telegramUser.id.toString(),
-                    telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
-                    profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
-                    mainBalance: defaultUserProfile.mainBalance,
-                    pendingBalance: defaultUserProfile.pendingBalance,
-                    isPremium: !!telegramUser.is_premium,
-                    purchasedBoosts: [],
-                    isLicenseActive: false,
-                    completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
-                    hasClaimedAirdrop: false,
-                };
-                // The initialize function now handles adding users to the existing leaderboard
-                store.initialize(newProfile, [], []);
-             }
-        }
+        
+        const currentUserProfile: UserProfile = {
+            id: telegramUser.id.toString(),
+            telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+            profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
+            mainBalance: defaultUserProfile.mainBalance,
+            pendingBalance: defaultUserProfile.pendingBalance,
+            isPremium: !!telegramUser.is_premium,
+            purchasedBoosts: [],
+            isLicenseActive: false,
+            completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
+            hasClaimedAirdrop: false,
+          };
+      
+        store.initialize(currentUserProfile, mockLeaderboard, mockReferrals);
 
       } else if (pollCount < maxPolls) {
         pollCount++;

@@ -10,6 +10,7 @@ class AppStore {
   private claimedAirdrops: AirdropClaim[] = [];
   private isAirdropLive: boolean = true;
   private listeners: Set<Listener> = new Set();
+  private isInitialized = false;
 
   // --- Subscription ---
   subscribe(listener: Listener): void {
@@ -28,38 +29,27 @@ class AppStore {
 
   // --- Initialization ---
   initialize(profile: UserProfile, mockLeaderboard: LeaderboardEntry[], mockReferrals: Referral[]): void {
-    // If the store is already initialized with a user, don't re-initialize.
-    // Instead, just ensure the new user is on the leaderboard.
-    if (this.userProfile) {
-        const userInLeaderboard = this.leaderboard.some(u => u.username === profile.telegramUsername);
-        if (!userInLeaderboard) {
-            this.leaderboard.push({
-                rank: 0,
-                username: profile.telegramUsername,
-                profilePictureUrl: profile.profilePictureUrl,
-                balance: profile.mainBalance
-            });
-            this.sortAndRankLeaderboard();
-            this.notifyListeners();
-        }
-        return;
-    }
-
     // Standard initialization for the very first user in a session.
-    this.userProfile = profile;
-    this.leaderboard = [...mockLeaderboard];
-    this.referrals = [...mockReferrals];
-    
-    const userInMock = this.leaderboard.some(u => u.username === this.userProfile!.telegramUsername);
-
-    if (!userInMock) {
-      this.leaderboard.push({
-        rank: 0,
-        username: this.userProfile!.telegramUsername,
-        profilePictureUrl: this.userProfile!.profilePictureUrl,
-        balance: this.userProfile!.mainBalance
-      });
+    if (!this.isInitialized) {
+        this.userProfile = profile;
+        this.leaderboard = [...mockLeaderboard];
+        this.referrals = [...mockReferrals];
+        this.isInitialized = true;
     }
+
+    const userInLeaderboard = this.leaderboard.some(u => u.username === profile.telegramUsername);
+    if (!userInLeaderboard) {
+        this.leaderboard.push({
+            rank: 0, // Rank will be recalculated
+            username: profile.telegramUsername,
+            profilePictureUrl: profile.profilePictureUrl,
+            balance: profile.mainBalance
+        });
+    }
+    
+    // Always ensure the current user's profile is set
+    this.userProfile = profile;
+
     this.sortAndRankLeaderboard();
     this.notifyListeners();
   }

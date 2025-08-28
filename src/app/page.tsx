@@ -103,7 +103,7 @@ export default function Home() {
       const secondsUntilNextHour = Math.floor((nextHour.getTime() - now.getTime()) / 1000);
       setCountdown(secondsUntilNextHour);
 
-      if (now.getMinutes() === 0 && now.getSeconds() === 0 && pendingBalance > 0) { // Top of the hour
+      if (now.getMinutes() === 0 && now.getSeconds() === 0) { // Top of the hour
         const amountToCredit = pendingBalance;
         
         const newMainBalance = mainBalance + amountToCredit;

@@ -77,52 +77,13 @@ const useTelegram = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(globalClaimedAirdrops);
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(getAirdropStatusFromStorage());
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
 
   
-  const setAirdropStatus = useCallback((isLive: boolean) => {
-    if (typeof window !== 'undefined') {
-        window.localStorage.setItem(AIRDROP_STATUS_STORAGE_KEY, String(isLive));
-        // Manually dispatch a storage event to trigger updates in the same tab.
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: AIRDROP_STATUS_STORAGE_KEY,
-            newValue: String(isLive),
-        }));
-    }
-  }, []);
-
-  const addClaimRecord = useCallback((claim: AirdropClaim) => {
-    globalClaimedAirdrops.push(claim);
-    notifyClaimListeners();
-  }, []);
-
-  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
-    if (globalUserProfile) {
-      const wasLeaderboardUpdated = 'mainBalance' in updates;
-      globalUserProfile = { ...globalUserProfile, ...updates };
-      notifyProfileListeners();
-
-      if (wasLeaderboardUpdated) {
-        const userInLeaderboardIndex = globalLeaderboard.findIndex(u => u.username === globalUserProfile!.telegramUsername);
-        if (userInLeaderboardIndex !== -1) {
-            globalLeaderboard[userInLeaderboardIndex].balance = globalUserProfile.mainBalance;
-        }
-        
-        globalLeaderboard.sort((a, b) => b.balance - a.balance);
-        globalLeaderboard.forEach((user, index) => {
-            user.rank = index + 1;
-        });
-
-        notifyLeaderboardListeners();
-      }
-    }
-  }, []);
-
-  const addDistributionRecord = useCallback((record: DistributionRecord) => {
-    setDistributionHistory(prevHistory => [record, ...prevHistory]);
-  }, []);
-
   useEffect(() => {
+    // Set initial state from storage on mount
+    setIsAirdropLive(getAirdropStatusFromStorage());
+
     // Listener for storage events (from other tabs or our manual dispatch)
     const handleStorageChange = (event: StorageEvent) => {
         if (event.key === AIRDROP_STATUS_STORAGE_KEY) {
@@ -142,10 +103,11 @@ const useTelegram = () => {
     claimListeners.add(claimListener);
    
     // Initial sync with global state on mount
-    setUserProfile(globalUserProfile);
-    setLeaderboard(globalLeaderboard);
-    setClaimedAirdrops(globalClaimedAirdrops);
-    setIsAirdropLive(getAirdropStatusFromStorage());
+    if (globalUserProfile) {
+      setUserProfile(globalUserProfile);
+      setLeaderboard(globalLeaderboard);
+      setClaimedAirdrops(globalClaimedAirdrops);
+    }
 
 
     // Initial load logic should only run once
@@ -266,9 +228,53 @@ const useTelegram = () => {
     };
   }, []);
 
+  const setAirdropStatus = useCallback((isLive: boolean) => {
+    if (typeof window !== 'undefined') {
+        const oldValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
+        const newValue = String(isLive);
+        window.localStorage.setItem(AIRDROP_STATUS_STORAGE_KEY, newValue);
+        // Manually dispatch a storage event to trigger updates in the same tab.
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: AIRDROP_STATUS_STORAGE_KEY,
+            oldValue: oldValue,
+            newValue: newValue,
+            storageArea: window.localStorage,
+        }));
+    }
+  }, []);
+
+  const addClaimRecord = useCallback((claim: AirdropClaim) => {
+    globalClaimedAirdrops.push(claim);
+    notifyClaimListeners();
+  }, []);
+
+  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
+    if (globalUserProfile) {
+      const wasLeaderboardUpdated = 'mainBalance' in updates;
+      globalUserProfile = { ...globalUserProfile, ...updates };
+      notifyProfileListeners();
+
+      if (wasLeaderboardUpdated) {
+        const userInLeaderboardIndex = globalLeaderboard.findIndex(u => u.username === globalUserProfile!.telegramUsername);
+        if (userInLeaderboardIndex !== -1) {
+            globalLeaderboard[userInLeaderboardIndex].balance = globalUserProfile.mainBalance;
+        }
+        
+        globalLeaderboard.sort((a, b) => b.balance - a.balance);
+        globalLeaderboard.forEach((user, index) => {
+            user.rank = index + 1;
+        });
+
+        notifyLeaderboardListeners();
+      }
+    }
+  }, []);
+
+  const addDistributionRecord = useCallback((record: DistributionRecord) => {
+    setDistributionHistory(prevHistory => [record, ...prevHistory]);
+  }, []);
+
   return { userProfile, leaderboard, referrals, distributionHistory, claimedAirdrops, isAirdropLive, addDistributionRecord, updateUserProfile, addClaimRecord, setAirdropStatus };
 };
 
 export { useTelegram };
-
-    

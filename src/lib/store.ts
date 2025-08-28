@@ -28,8 +28,24 @@ class AppStore {
 
   // --- Initialization ---
   initialize(profile: UserProfile, mockLeaderboard: LeaderboardEntry[], mockReferrals: Referral[]): void {
-    if (this.userProfile) return; // Already initialized
+    // If the store is already initialized with a user, don't re-initialize.
+    // Instead, just ensure the new user is on the leaderboard.
+    if (this.userProfile) {
+        const userInLeaderboard = this.leaderboard.some(u => u.username === profile.telegramUsername);
+        if (!userInLeaderboard) {
+            this.leaderboard.push({
+                rank: 0,
+                username: profile.telegramUsername,
+                profilePictureUrl: profile.profilePictureUrl,
+                balance: profile.mainBalance
+            });
+            this.sortAndRankLeaderboard();
+            this.notifyListeners();
+        }
+        return;
+    }
 
+    // Standard initialization for the very first user in a session.
     this.userProfile = profile;
     this.leaderboard = [...mockLeaderboard];
     this.referrals = [...mockReferrals];

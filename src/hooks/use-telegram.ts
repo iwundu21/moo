@@ -34,18 +34,16 @@ declare global {
 }
 
 const useTelegram = () => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(store.getUserProfile());
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(store.getLeaderboard());
-  const [referrals, setReferrals] = useState<Referral[]>(store.getReferrals());
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
-  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(store.getClaimedAirdrops());
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true); // Default to true, will be updated from store
+  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    // Initialize state from store only on the client
-    setIsAirdropLive(store.getAirdropStatus());
     
     const handleStoreUpdate = () => {
       setUserProfile(store.getUserProfile());
@@ -56,22 +54,25 @@ const useTelegram = () => {
     };
 
     store.subscribe(handleStoreUpdate);
+    handleStoreUpdate(); // Initial sync
 
-    // Initial check in case store is already populated
-    if (!store.getUserProfile()) {
-      let isMounted = true;
-      let pollCount = 0;
-      const maxPolls = 10;
+    let isMounted = true;
+    let pollCount = 0;
+    const maxPolls = 10;
 
-      const initTelegram = () => {
-        if (!isMounted) return;
+    const initTelegram = () => {
+      if (!isMounted) return;
 
-        const tg = window.Telegram?.WebApp;
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-          tg.ready();
-          const telegramUser = tg.initDataUnsafe.user;
+      const tg = window.Telegram?.WebApp;
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        tg.ready();
+        const telegramUser = tg.initDataUnsafe.user;
+        const existingProfile = store.getUserProfile();
 
-          const initialProfile: UserProfile = {
+        // Initialize the store only if it hasn't been initialized yet.
+        // Otherwise, subsequent users won't be added to the leaderboard.
+        if (!existingProfile) {
+            const initialProfile: UserProfile = {
                 id: telegramUser.id.toString(),
                 telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
                 profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
@@ -84,28 +85,43 @@ const useTelegram = () => {
                 hasClaimedAirdrop: false,
               };
           
-          store.initialize(initialProfile, mockLeaderboard, mockReferrals);
-        } else if (pollCount < maxPolls) {
-          pollCount++;
-          setTimeout(initTelegram, 100);
+            store.initialize(initialProfile, mockLeaderboard, mockReferrals);
         } else {
-          console.log("Telegram WebApp not found. App will wait for real user data.");
-          // In a real scenario, you might want to show a message to the user
-          // For now, we initialize with a null/default state, and the UI should handle it.
-           if (isMounted) {
-            store.initialize(defaultUserProfile, [], []);
-          }
+            // If the store is initialized but for a different user, create a new profile and add to leaderboard
+            // This case might happen in some development environments or shared devices
+             if (existingProfile.id !== telegramUser.id.toString()) {
+                 const newProfile: UserProfile = {
+                    id: telegramUser.id.toString(),
+                    telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+                    profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
+                    mainBalance: defaultUserProfile.mainBalance,
+                    pendingBalance: defaultUserProfile.pendingBalance,
+                    isPremium: !!telegramUser.is_premium,
+                    purchasedBoosts: [],
+                    isLicenseActive: false,
+                    completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
+                    hasClaimedAirdrop: false,
+                };
+                // The initialize function now handles adding users to the existing leaderboard
+                store.initialize(newProfile, [], []);
+             }
         }
-      };
 
-      initTelegram();
-      
-      return () => { isMounted = false; };
-    } else {
-        handleStoreUpdate(); // Ensure state is synced on mount if store is already initialized
-    }
+      } else if (pollCount < maxPolls) {
+        pollCount++;
+        setTimeout(initTelegram, 100);
+      } else {
+         if (isMounted && !store.getUserProfile()) {
+          console.log("Telegram WebApp not found, initializing with default user for development.");
+          store.initialize(defaultUserProfile, mockLeaderboard, mockReferrals);
+        }
+      }
+    };
 
-     return () => {
+    initTelegram();
+    
+    return () => { 
+      isMounted = false; 
       store.unsubscribe(handleStoreUpdate);
     };
 

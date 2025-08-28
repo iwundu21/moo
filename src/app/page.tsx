@@ -307,7 +307,7 @@ export default function Home() {
                 </div>
                 <div className="pt-4">
                     <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
-                        <span className='flex items-center'>Activate for 150 <Zap className="ml-2 w-4 h-4 text-yellow-400" /></span>
+                        <span className='flex items-center'>Activate for 150 <Star className="ml-2 w-4 h-4 text-yellow-400" /></span>
                     </Button>
                 </div>
             </div>
@@ -435,7 +435,7 @@ export default function Home() {
                                             <p className="text-xs text-primary-foreground/80">{boost.description}</p>
                                         </div>
                                         <span className='flex items-center'>
-                                            {boost.cost} <Zap className="ml-2 w-4 h-4 text-yellow-400" />
+                                            {boost.cost} <Star className="ml-2 w-4 h-4 text-yellow-400" />
                                         </span>
                                     </>
                                     )}
@@ -469,4 +469,6 @@ export default function Home() {
     </div>
   );
 }
+    
+
     

@@ -364,7 +364,8 @@ export default function Home() {
                 </div>
             ) : (
                 <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">All social tasks completed!</p>
+                     <p className="text-sm text-green-500 font-semibold">You are now active to earn!</p>
+                    <p className="text-xs text-muted-foreground">Start sending messages in designated group chats.</p>
                 </div>
             )}
           </div>

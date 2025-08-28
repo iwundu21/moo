@@ -15,7 +15,8 @@
       "community": "idle"
     },
     "hasClaimedAirdrop": false,
-    "referredBy": null
+    "referredBy": null,
+    "referralCode": ""
   },
   "leaderboard": [],
   "referrals": [],

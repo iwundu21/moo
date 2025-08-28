@@ -37,6 +37,20 @@ declare global {
 
 const STORE_KEY = 'moo-app-data-v2';
 
+// Function to generate a unique referral code
+const generateReferralCode = (existingCodes: Set<string>): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code: string;
+    do {
+        code = 'M';
+        for (let i = 0; i < 5; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+    } while (existingCodes.has(code));
+    return code;
+};
+
+
 const useTelegram = () => {
   const [isClient, setIsClient] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -44,7 +58,6 @@ const useTelegram = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
 
 
   const saveData = (data: any) => {
@@ -78,7 +91,7 @@ const useTelegram = () => {
         // You could add a referral bonus here if you want
       }
       
-      saveData({ referrals: allReferrals });
+      saveData({ referrals: allReferrals, userProfiles: allUserProfiles });
       return true;
     }
     return false;
@@ -103,17 +116,20 @@ const useTelegram = () => {
     const allReferrals: {[key: string]: Referral[]} = storedData.referrals || {};
     let currentLeaderboard: LeaderboardEntry[] = storedData.leaderboard || [];
     const currentClaimedAirdrops: AirdropClaim[] = storedData.claimedAirdrops || [];
-    const airdropStatus = storedData.isAirdropLive === undefined ? true : storedData.isAirdropLive;
 
     let currentUserProfile = allUserProfiles[userId];
 
     if (!currentUserProfile) {
+        const existingReferralCodes = new Set(Object.values(allUserProfiles).map(p => p.referralCode).filter(Boolean) as string[]);
+        const newReferralCode = generateReferralCode(existingReferralCodes);
+
         currentUserProfile = {
             ...defaultUserProfile,
             id: userId,
             telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
             profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${userId}/100/100`,
             isPremium: !!telegramUser.is_premium,
+            referralCode: newReferralCode,
         };
         allUserProfiles[userId] = currentUserProfile;
     }
@@ -132,9 +148,14 @@ const useTelegram = () => {
     // Handle referral from URL
     const startParam = tg.initDataUnsafe.start_param;
     if (startParam && startParam.startsWith('ref')) {
-        const referrerId = startParam.substring(3);
-        if (referrerId && referrerId !== userId) {
-            addReferral(referrerId, currentUserProfile);
+        const referrerCode = startParam.substring(3);
+        const referrerProfile = Object.values(allUserProfiles).find(p => p.referralCode === referrerCode);
+        if (referrerProfile && referrerProfile.id !== userId) {
+            if(!currentUserProfile.referredBy) {
+              addReferral(referrerProfile.id, currentUserProfile);
+              currentUserProfile.referredBy = referrerProfile.id;
+              allUserProfiles[userId] = currentUserProfile;
+            }
         }
     }
 
@@ -143,7 +164,6 @@ const useTelegram = () => {
     setLeaderboard(currentLeaderboard);
     setClaimedAirdrops(currentClaimedAirdrops);
     setReferrals(allReferrals[userId] || []);
-    setIsAirdropLive(airdropStatus);
 
     // Save initial state to localStorage
     saveData({ 
@@ -151,22 +171,23 @@ const useTelegram = () => {
         referrals: allReferrals, 
         leaderboard: currentLeaderboard, 
         claimedAirdrops: currentClaimedAirdrops,
-        isAirdropLive: airdropStatus,
     });
 
   }, []);
 
-  const redeemReferralCode = useCallback((referrerId: string): {success: boolean, message: string} => {
+  const redeemReferralCode = useCallback((referralCode: string): {success: boolean, message: string} => {
     if (!userProfile) return {success: false, message: "User profile not loaded."};
 
-    if (referrerId === userProfile.id) {
+    if (referralCode === userProfile.referralCode) {
         return {success: false, message: "You cannot redeem your own referral code."};
     }
     
     const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
     const allUserProfiles: {[key: string]: UserProfile} = storedData.userProfiles || {};
 
-    if (!allUserProfiles[referrerId]) {
+    const referrerProfile = Object.values(allUserProfiles).find(p => p.referralCode === referralCode && p.id !== userProfile.id);
+
+    if (!referrerProfile) {
         return {success: false, message: "Invalid referral code. User not found."};
     }
 
@@ -174,10 +195,10 @@ const useTelegram = () => {
         return {success: false, message: "You have already redeemed a referral code."};
     }
 
-    const wasAdded = addReferral(referrerId, userProfile);
+    const wasAdded = addReferral(referrerProfile.id, userProfile);
 
     if (wasAdded) {
-      updateUserProfile({ referredBy: referrerId });
+      updateUserProfile({ referredBy: referrerProfile.id });
       return {success: true, message: "Referral code redeemed successfully!"};
     } else {
       return {success: false, message: "Referral could not be added. You might have already been referred."};
@@ -225,10 +246,6 @@ const useTelegram = () => {
     setDistributionHistory(prevHistory => [record, ...prevHistory]);
   }, []);
   
-  const setAirdropStatus = useCallback((isLive: boolean) => {
-    setIsAirdropLive(isLive);
-    saveData({ isAirdropLive: isLive });
-  }, []);
 
   return { 
     userProfile, 
@@ -236,8 +253,6 @@ const useTelegram = () => {
     referrals, 
     distributionHistory, 
     claimedAirdrops,
-    isAirdropLive,
-    setAirdropStatus,
     clearAllClaims,
     addDistributionRecord, 
     updateUserProfile, 

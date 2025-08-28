@@ -10,7 +10,8 @@ export type UserProfile = {
   isLicenseActive: boolean;
   completedSocialTasks?: { [key: string]: 'idle' | 'verifying' | 'completed' };
   hasClaimedAirdrop?: boolean;
-  referredBy?: string;
+  referredBy?: string | null;
+  referralCode?: string;
 };
 
 export type LeaderboardEntry = {

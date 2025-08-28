@@ -19,7 +19,7 @@ export default function ReferralsPage() {
       return null; // Or a loading spinner
     }
 
-    const userReferralCode = userProfile.id;
+    const userReferralCode = userProfile.referralCode || '';
     const referralLink = `https://t.me/Moo_airdrop_bot?start=ref${userReferralCode}`;
 
     const copyToClipboard = () => {
@@ -46,7 +46,7 @@ export default function ReferralsPage() {
           return;
       }
       
-      const result = redeemReferralCode(referralCodeInput.trim());
+      const result = redeemReferralCode(referralCodeInput.trim().toUpperCase());
 
       toast({
           title: result.success ? "Success!" : "Error",
@@ -76,9 +76,10 @@ export default function ReferralsPage() {
             <Label htmlFor="referral-code-input" className="sr-only">Referral Code</Label>
             <Input 
               id="referral-code-input"
-              placeholder="Enter friend's referral code (their ID)"
+              placeholder="Enter friend's referral code (e.g., M1A2B3)"
               value={referralCodeInput}
               onChange={(e) => setReferralCodeInput(e.target.value)}
+              className="uppercase"
             />
             <Button onClick={handleRedeemCode}>
               <Ticket className="mr-2 h-4 w-4" /> Redeem Code

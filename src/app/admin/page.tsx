@@ -15,6 +15,7 @@ import { useTelegram } from '@/hooks/use-telegram';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AdminPage() {
   const { claimedAirdrops, isAirdropLive, setAirdropStatus, isClient } = useTelegram();
@@ -22,11 +23,11 @@ export default function AdminPage() {
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
 
-    const headers = ['Wallet Address', 'Amount'];
+    const headers = ['User ID', 'Username', 'Wallet Address', 'Amount'];
     const csvContent = [
       headers.join(','),
-      ...claimedAirops.map(claim => 
-        [claim.walletAddress, claim.amount].join(',')
+      ...claimedAirdrops.map(claim => 
+        [claim.userId, claim.username, claim.walletAddress, claim.amount].join(',')
       )
     ].join('\n');
 
@@ -89,7 +90,7 @@ export default function AdminPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Username</TableHead>
+              <TableHead>User</TableHead>
               <TableHead>Wallet Address</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
@@ -98,7 +99,15 @@ export default function AdminPage() {
             {claimedAirdrops.length > 0 ? (
               claimedAirdrops.map((claim, index) => (
                 <TableRow key={index}>
-                  <TableCell className="font-medium">@{claim.username}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                            <AvatarImage src={claim.profilePictureUrl} data-ai-hint="profile picture" />
+                            <AvatarFallback>{claim.username.substring(0, 1)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-xs">@{claim.username}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-xs">{claim.walletAddress}</TableCell>
                   <TableCell className="text-right font-semibold">
                     {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}

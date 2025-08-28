@@ -1,3 +1,4 @@
+
 export type UserProfile = {
   id: string;
   telegramUsername: string;
@@ -29,7 +30,9 @@ export type DistributionRecord = {
 };
 
 export type AirdropClaim = {
+  userId: string;
   username: string;
   walletAddress: string;
   amount: number;
+  profilePictureUrl: string;
 };

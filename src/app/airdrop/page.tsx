@@ -97,9 +97,11 @@ export default function AirdropPage() {
     setClaimedAmount(amountToClaim);
     
     addClaimRecord({
+        userId: userProfile.id,
         username: userProfile.telegramUsername,
         walletAddress: walletAddress,
         amount: amountToClaim,
+        profilePictureUrl: userProfile.profilePictureUrl,
     });
     
     updateUserProfile({ mainBalance: 0, hasClaimedAirdrop: true });

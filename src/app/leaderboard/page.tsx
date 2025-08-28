@@ -10,16 +10,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, BadgeCheck } from "lucide-react";
+import { Trophy, BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTelegram } from "@/hooks/use-telegram";
 import { useEffect, useState } from "react";
 import type { LeaderboardEntry } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 
 
 export default function LeaderboardPage() {
   const { userProfile, leaderboard, totalUserCount } = useTelegram();
   const [userRank, setUserRank] = useState<LeaderboardEntry | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10;
 
   useEffect(() => {
     if (userProfile) {
@@ -27,6 +30,24 @@ export default function LeaderboardPage() {
       setUserRank(rank);
     }
   }, [userProfile, leaderboard]);
+
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = leaderboard.slice(indexOfFirstUser, indexOfLastUser);
+
+  const totalPages = Math.ceil(leaderboard.length / usersPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   if (!userProfile) {
     return null; // Or a loading spinner
@@ -74,7 +95,7 @@ export default function LeaderboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaderboard.map((entry) => (
+              {currentUsers.map((entry) => (
                 <TableRow key={entry.rank} className={cn(entry.username === userProfile.username && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
                   <TableCell className="font-bold text-xs text-center">
                     <div className="flex items-center justify-center">
@@ -102,6 +123,31 @@ export default function LeaderboardPage() {
             </TableBody>
           </Table>
       </div>
+
+       <div className="flex items-center justify-center space-x-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePrevPage}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft className="mr-2" />
+          Previous
+        </Button>
+        <span className="text-sm font-medium">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+        >
+          Next
+          <ChevronRight className="ml-2" />
+        </Button>
+      </div>
+
     </div>
   );
 }

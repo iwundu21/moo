@@ -155,9 +155,9 @@ export default function Home() {
   }
 
   const socialTaskList = [
-    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile' },
-    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/your-channel' },
-    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/your-community' },
+    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
+    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/your-channel', reward: 100 },
+    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/your-community', reward: 100 },
   ];
   
   const formatCountdown = (seconds: number | null) => {
@@ -228,7 +228,11 @@ export default function Home() {
                                         <Button asChild className="flex-1 justify-start" variant="outline" disabled={status !== 'idle'}>
                                             <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
                                                 <task.icon className="mr-3" />
-                                                {task.text}
+                                                <span className="flex-1 text-left">{task.text}</span>
+                                                 <Badge variant="secondary" className="flex items-center gap-1">
+                                                    +{task.reward}
+                                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-500" />
+                                                 </Badge>
                                             </Link>
                                         </Button>
                                         {(isOpened || status !== 'idle') && (
@@ -335,3 +339,4 @@ export default function Home() {
     </div>
   );
 }
+ 

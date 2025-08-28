@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, Users, Gem, Rocket, ShieldCheck } from 'lucide-react';
+import { Award, Star, Users, Gem, Rocket, ShieldCheck, Twitter, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { useEffect, useState } from 'react';
@@ -23,7 +23,11 @@ export default function ProfilePage() {
       '340 75% 55%',
       '260 80% 65%',
       '280 80% 70%',
-      '200 80% 60%',
+      '200-80%-60%',
+      '220 70% 50%',
+      '160 60% 45%',
+      '30 80% 55%',
+      '280 65% 60%',
     ];
 
     useEffect(() => {
@@ -39,6 +43,9 @@ export default function ProfilePage() {
                 { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
                 { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: referrals.length > 0 },
                 { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: userProfile.isPremium },
+                { icon: Twitter, title: 'X Follower', description: 'Followed on X', unlocked: userProfile.completedSocialTasks?.twitter === 'completed' },
+                { icon: Send, title: 'Telegram Subscriber', description: 'Subscribed to channel', unlocked: userProfile.completedSocialTasks?.telegram === 'completed' },
+                { icon: Users, title: 'Community Member', description: 'Joined the community', unlocked: userProfile.completedSocialTasks?.community === 'completed' },
             ];
 
             const unlocked = allAchievements.filter(ach => ach.unlocked);

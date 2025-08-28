@@ -96,7 +96,7 @@ export default function LeaderboardPage() {
             </TableHeader>
             <TableBody>
               {currentUsers.map((entry) => (
-                <TableRow key={entry.rank} className={cn(entry.username === userProfile.username && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
+                <TableRow key={entry.rank} className={cn(entry.username === userProfile.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
                   <TableCell className="font-bold text-xs text-center">
                     <div className="flex items-center justify-center">
                         {entry.rank <= 3 ? <Trophy className={cn("w-4 h-4 mr-2", entry.rank === 1 && "text-yellow-400", entry.rank === 2 && "text-gray-400", entry.rank === 3 && "text-yellow-600")} /> : null}

@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Zap, Ticket, Info } from 'lucide-react';
+import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -216,7 +216,7 @@ export default function Home() {
           variant: result.success ? "default" : "destructive",
       });
 
-      if (result.success) {
+      if (result.success && userProfile) {
         setReferralCodeInput('');
         const newMainBalance = mainBalance + 100;
         setMainBalance(newMainBalance);
@@ -267,7 +267,8 @@ export default function Home() {
       <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground">Main Balance</p>
           <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-            {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
+            {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+            <span className="text-base ml-1">MOO</span>
           </p>
       </div>
 
@@ -281,7 +282,8 @@ export default function Home() {
           </div>
           <div>
               <p className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                  {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
+                  {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                  <span className="text-base ml-1">MOO</span>
               </p>
               <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
           </div>
@@ -469,6 +471,4 @@ export default function Home() {
     </div>
   );
 }
-    
-
     

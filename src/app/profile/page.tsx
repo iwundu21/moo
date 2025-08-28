@@ -91,7 +91,7 @@ export default function ProfilePage() {
 
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
         <div>
-          <h2 className="text-base font-semibold leading-none tracking-tight">Achievements</h2>
+          <h2 className="text-base font-semibold leading-none tracking-tight">Achievement Card</h2>
         </div>
         <div className="pt-2">
             {unlockedAchievements.length > 0 ? (

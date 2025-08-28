@@ -85,16 +85,11 @@ const useTelegram = () => {
 
         if (!userProfile) {
           userProfile = {
+            ...defaultUserProfile, // Start with defaults
             id: userId,
             telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
             profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
-            mainBalance: defaultUserProfile.mainBalance,
-            pendingBalance: defaultUserProfile.pendingBalance,
             isPremium: !!telegramUser.is_premium,
-            purchasedBoosts: [],
-            isLicenseActive: false,
-            completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
-            hasClaimedAirdrop: false,
           };
         }
         

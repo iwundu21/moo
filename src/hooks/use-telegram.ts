@@ -21,7 +21,7 @@ import {
 
 interface TelegramUser {
   id: number;
-  first_name: string;
+  first_name?: string;
   last_name?: string;
   username?: string;
   language_code: string;
@@ -89,8 +89,6 @@ const useTelegram = () => {
         await runTransaction(db, async (transaction) => {
             const userDoc = await transaction.get(userDocRef);
             if (!userDoc.exists()) {
-                // If for some reason the doc doesn't exist, we can't update it.
-                // The main fetch logic should handle creation.
                 console.error("Attempted to update a non-existent user profile.");
                 return;
             }
@@ -111,17 +109,22 @@ const useTelegram = () => {
   useEffect(() => {
     setIsClient(true);
     const tg = window.Telegram?.WebApp;
-
-    if (!tg?.initDataUnsafe?.user) {
-        // You might want to handle non-Telegram environments
+    if (!tg) {
         return;
     }
+    
     tg.ready();
 
-    const telegramUser = tg.initDataUnsafe.user;
-    const userId = telegramUser.id.toString();
+    if (!tg.initDataUnsafe?.user) {
+        return;
+    }
 
     const fetchInitialData = async () => {
+        const telegramUser = tg.initDataUnsafe.user;
+        if (!telegramUser) return;
+        
+        const userId = telegramUser.id.toString();
+
         // Fetch global settings
         const settingsDocRef = doc(db, 'settings', 'app');
         const settingsDoc = await getDoc(settingsDocRef);
@@ -135,9 +138,11 @@ const useTelegram = () => {
 
         if (!userDoc.exists()) {
             const newReferralCode = await generateReferralCode();
+            const safeUsername = telegramUser.username || `${telegramUser.first_name || 'User'} ${telegramUser.last_name || ''}`.trim();
+
             currentUserProfile = {
                 id: userId,
-                telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+                telegramUsername: safeUsername,
                 profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${userId}/100/100`,
                 mainBalance: 0,
                 pendingBalance: 0,
@@ -152,7 +157,6 @@ const useTelegram = () => {
             await setDoc(userDocRef, currentUserProfile);
         } else {
              currentUserProfile = userDoc.data() as UserProfile;
-             // Backwards compatibility: if an old user doesn't have a referral code, generate one.
              if (!currentUserProfile.referralCode) {
                  const newReferralCode = await generateReferralCode();
                  currentUserProfile.referralCode = newReferralCode;
@@ -160,7 +164,6 @@ const useTelegram = () => {
              }
         }
         
-        // Handle referral from URL on first login, before setting the main profile state
         const startParam = tg.initDataUnsafe.start_param;
         if (startParam && startParam.startsWith('ref') && !currentUserProfile.referredBy) {
             const referrerCode = startParam.substring(3);
@@ -175,7 +178,6 @@ const useTelegram = () => {
                     await runTransaction(db, async (transaction) => {
                         const refereeDocRef = doc(db, 'userProfiles', userId);
                         
-                        // 1. Update referee's profile
                         currentUserProfile.referredBy = referrerId;
                         currentUserProfile.mainBalance = (currentUserProfile.mainBalance || 0) + 100;
                         if(currentUserProfile.completedSocialTasks){
@@ -183,12 +185,10 @@ const useTelegram = () => {
                         }
                         transaction.set(refereeDocRef, currentUserProfile);
                         
-                        // 2. Give referrer 100 MOO
                         const referrerProfile = referrerDoc.data() as UserProfile;
                         const newReferrerBalance = (referrerProfile.mainBalance || 0) + 100;
                         transaction.update(referrerDoc.ref, { mainBalance: newReferrerBalance });
 
-                        // 3. Add to referrer's referral list
                         const referralRecordRef = doc(collection(db, 'userProfiles', referrerId, 'referrals'));
                         transaction.set(referralRecordRef, { 
                             username: currentUserProfile.telegramUsername, 
@@ -200,15 +200,12 @@ const useTelegram = () => {
             }
         }
 
-        // Now set the final state of the user profile
         setUserProfile(currentUserProfile);
         
-        // Fetch referrals for the current user
         const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
         const referralSnapshot = await getDocs(query(referralsCol, orderBy('timestamp', 'desc')));
         setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
 
-        // Fetch leaderboard
         const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
         const leaderboardSnapshot = await getDocs(leaderboardQuery);
         setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
@@ -221,7 +218,6 @@ const useTelegram = () => {
             }
         }));
         
-        // Fetch airdrop claims (typically for an admin view)
         const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
         const claimsSnapshot = await getDocs(claimsQuery);
         setClaimedAirdrops(claimsSnapshot.docs.map(d => d.data() as AirdropClaim));
@@ -268,7 +264,6 @@ const useTelegram = () => {
                 throw new Error("User has already redeemed a code.");
             }
 
-            // 1. Give referee 100 MOO and update their status
             const newRefereeBalance = (currentProfile?.mainBalance || 0) + 100;
             transaction.update(userDocRef, { 
                 referredBy: referrerId,
@@ -276,11 +271,9 @@ const useTelegram = () => {
                 'completedSocialTasks.referral': 'completed'
             });
 
-            // 2. Give referrer 100 MOO
             const newReferrerBalance = (referrerProfile.mainBalance || 0) + 100;
             transaction.update(referrerDoc.ref, { mainBalance: newReferrerBalance });
 
-            // 3. Add to referrer's referral list
             const referralRecordRef = doc(collection(db, 'userProfiles', referrerId, 'referrals'));
             transaction.set(referralRecordRef, { 
                 username: userProfile.telegramUsername, 
@@ -289,7 +282,6 @@ const useTelegram = () => {
             });
         });
         
-        // Update local state after successful transaction
         setUserProfile(prev => prev ? {
             ...prev,
             referredBy: referrerId, 

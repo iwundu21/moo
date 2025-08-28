@@ -69,23 +69,23 @@ export default function AirdropPage() {
   return (
     <div className="container mx-auto p-4 space-y-8">
       <header className="text-center space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Airdrop</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Airdrop</h1>
       </header>
       
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <h2 className="text-2xl font-semibold leading-none tracking-tight">Your Main Balance</h2>
+          <h2 className="text-xl font-semibold leading-none tracking-tight">Your Main Balance</h2>
           
         {isClaimed ? (
             <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Claim Submitted for Processing</AlertTitle>
-                <AlertDescription>
+                <AlertDescription className="text-xs">
                     Your request to claim {claimedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
                 </AlertDescription>
             </Alert>
         ) : (
             <div className="flex items-center justify-between">
-            <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+            <p className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                 {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
             </p>
             <Dialog>
@@ -126,8 +126,8 @@ export default function AirdropPage() {
 
       <div className="space-y-4">
         <div className='px-2'>
-          <h2 className="text-2xl font-semibold leading-none tracking-tight">Distribution History</h2>
-          <p className="text-sm text-muted-foreground">Record of hourly pending balance credits.</p>
+          <h2 className="text-xl font-semibold leading-none tracking-tight">Distribution History</h2>
+          <p className="text-xs text-muted-foreground">Record of hourly pending balance credits.</p>
         </div>
         <div className='rounded-lg border bg-card text-card-foreground shadow-sm'>
             <Table>

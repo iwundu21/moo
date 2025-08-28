@@ -74,7 +74,7 @@ export default function ProfilePage() {
           <AvatarFallback>{userProfile.telegramUsername.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">@{userProfile.telegramUsername}</h1>
+            <h1 className="text-xl font-bold">@{userProfile.telegramUsername}</h1>
             {userProfile.isPremium && (
                 <Badge variant="default" className="bg-blue-500 hover:bg-blue-600 text-white">
                     <Gem className="mr-1 h-3 w-3" />
@@ -82,12 +82,12 @@ export default function ProfilePage() {
                 </Badge>
             )}
         </div>
-        <p className="text-sm text-muted-foreground">Telegram ID: {userProfile.id}</p>
+        <p className="text-xs text-muted-foreground">Telegram ID: {userProfile.id}</p>
       </div>
 
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
         <div>
-          <h2 className="text-2xl font-semibold leading-none tracking-tight">Achievements</h2>
+          <h2 className="text-xl font-semibold leading-none tracking-tight">Achievements</h2>
         </div>
         <div className="pt-2">
             {unlockedAchievements.length > 0 ? (
@@ -109,7 +109,7 @@ export default function ProfilePage() {
                                           <ach.icon className="w-8 h-8 text-white" />
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center">
-                                            <p className="font-semibold text-sm text-white">{ach.title}</p>
+                                            <p className="font-semibold text-xs text-white">{ach.title}</p>
                                             <p className="text-xs text-white/80">{ach.description}</p>
                                         </div>
                                     </div>
@@ -124,7 +124,7 @@ export default function ProfilePage() {
                                       } as React.CSSProperties}
                                     >
                                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[hsl(var(--achievement-color)_/_0.3)] to-transparent opacity-50"></div>
-                                        <p className="text-4xl font-bold text-white">MOO</p>
+                                        <p className="text-3xl font-bold text-white">MOO</p>
                                     </div>
                                 </div>
                             </div>

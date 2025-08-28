@@ -28,14 +28,14 @@ export default function ReferralsPage() {
     return (
     <div className="container mx-auto p-4 space-y-8">
       <header className="text-center space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Refer a Friend</h1>
-        <p className="text-muted-foreground">Earn more MOO for every friend you invite!</p>
+        <h1 className="text-3xl font-bold tracking-tight">Refer a Friend</h1>
+        <p className="text-xs text-muted-foreground">Earn more MOO for every friend you invite!</p>
       </header>
 
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <h2 className="text-2xl font-semibold leading-none tracking-tight">Your Referral Link</h2>
+        <h2 className="text-xl font-semibold leading-none tracking-tight">Your Referral Link</h2>
         <div className="space-y-4 pt-2">
-          <div className="p-3 border rounded-md bg-secondary/50 text-sm break-all">
+          <div className="p-3 border rounded-md bg-secondary/50 text-xs break-all">
             {referralLink}
           </div>
           <Button className="w-full" onClick={copyToClipboard}>
@@ -49,8 +49,8 @@ export default function ReferralsPage() {
 
       <div className="space-y-4">
         <div className='px-2'>
-          <h2 className="text-2xl font-semibold leading-none tracking-tight">Your Referrals ({referrals.length})</h2>
-          <p className="text-sm text-muted-foreground pt-1.5">Friends who have joined using your link.</p>
+          <h2 className="text-xl font-semibold leading-none tracking-tight">Your Referrals ({referrals.length})</h2>
+          <p className="text-xs text-muted-foreground pt-1.5">Friends who have joined using your link.</p>
         </div>
         <div className='rounded-lg border bg-card text-card-foreground shadow-sm p-4'>
             {referrals.length > 0 ? (

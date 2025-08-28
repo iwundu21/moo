@@ -35,15 +35,15 @@ export default function LeaderboardPage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <header className="text-center space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Leaderboard</h1>
-        <p className="text-muted-foreground">See who's at the top of the MOO-niverse!</p>
+        <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
+        <p className="text-xs text-muted-foreground">See who's at the top of the MOO-niverse!</p>
       </header>
 
       {userRank && (
         <div className="rounded-lg border border-primary bg-primary/20 p-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <span className="text-lg font-bold w-8 text-center">{userRank.rank}</span>
+                <span className="text-base font-bold w-8 text-center">{userRank.rank}</span>
                 <Avatar>
                   <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
                   <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</AvatarFallback>
@@ -53,7 +53,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{userRank.balance.toLocaleString()}</p>
+                <p className="font-bold text-base bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{userRank.balance.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">MOO</p>
               </div>
             </div>

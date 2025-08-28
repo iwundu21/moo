@@ -186,13 +186,13 @@ export default function Home() {
           <AvatarFallback>{userProfile.telegramUsername.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="text-lg font-semibold">@{userProfile.telegramUsername}</p>
+          <p className="text-base font-semibold">@{userProfile.telegramUsername}</p>
         </div>
       </header>
 
       <div className="text-center">
-          <p className="text-xl font-medium text-muted-foreground">Main Balance</p>
-          <p className="text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+          <p className="text-lg font-medium text-muted-foreground">Main Balance</p>
+          <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
             {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
           </p>
       </div>
@@ -200,14 +200,14 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
          <div className="space-y-4 rounded-lg p-6">
             <div className="flex flex-row items-center justify-between">
-                <h3 className="text-2xl font-semibold leading-none tracking-tight">Pending Balance</h3>
+                <h3 className="text-xl font-semibold leading-none tracking-tight">Pending Balance</h3>
                 <div className="text-xs text-amber-500 flex items-center">
                     <Hourglass className="mr-2 animate-spin h-4 w-4" />
                     {formatCountdown(countdown)}
                 </div>
             </div>
             <div>
-                <p className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                     {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                 </p>
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
@@ -218,9 +218,9 @@ export default function Home() {
                 showActivationSuccess ? (
                     <div className="flex flex-col items-center justify-center text-center h-full">
                         <PartyPopper className="w-16 h-16 text-yellow-500 mb-4" />
-                        <h3 className="text-2xl font-semibold leading-none tracking-tight">Congratulations! 🎊</h3>
+                        <h3 className="text-xl font-semibold leading-none tracking-tight">Congratulations! 🎊</h3>
                         <div className="pt-2">
-                            <p className="text-sm text-muted-foreground mb-4">
+                            <p className="text-xs text-muted-foreground mb-4">
                                 Your mining license is active! You can now earn rewards by sending messages in group chats. Complete one final step to supercharge your earnings.
                             </p>
                             <Button className="w-full" onClick={() => setShowActivationSuccess(false)}>
@@ -230,8 +230,8 @@ export default function Home() {
                     </div>
                 ) : !allTasksCompleted ? (
                     <div>
-                        <h3 className="text-2xl font-semibold leading-none tracking-tight">Social Tasks</h3>
-                        <p className="text-sm text-muted-foreground pt-1.5">
+                        <h3 className="text-xl font-semibold leading-none tracking-tight">Social Tasks</h3>
+                        <p className="text-xs text-muted-foreground pt-1.5">
                             Complete tasks to earn more rewards.
                         </p>
                         <div className="space-y-3 pt-4">
@@ -272,9 +272,9 @@ export default function Home() {
                 ) : null
             ) : (
                 <div className="flex flex-col items-center justify-center text-center h-full">
-                    <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>
+                    <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>
                     <div className="pt-2">
-                        <p className="text-sm text-muted-foreground mb-4">
+                        <p className="text-xs text-muted-foreground mb-4">
                             Activate your license to start mining MOO.
                         </p>
                         <Button className="w-full" onClick={handleLicenseActivation} disabled={mainBalance < 150}>
@@ -288,15 +288,15 @@ export default function Home() {
 
       <div className="space-y-4 rounded-lg p-6">
         <div>
-            <h3 className="text-2xl font-semibold leading-none tracking-tight">Boost Chat Earning</h3>
-            <p className="text-sm text-muted-foreground pt-1.5">
+            <h3 className="text-xl font-semibold leading-none tracking-tight">Boost Chat Earning</h3>
+            <p className="text-xs text-muted-foreground pt-1.5">
                 Increase your earning speed per message in group chats.
             </p>
         </div>
         <div className="pt-2">
             {hasPurchasedBoosts && (
                 <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="text-sm font-semibold">Active boosts:</span>
+                    <span className="text-xs font-semibold">Active boosts:</span>
                     {activatedBoosts.map(boostId => (
                         <Badge key={boostId} variant="secondary">{boostId} Boost</Badge>
                     ))}

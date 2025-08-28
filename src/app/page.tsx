@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, ShieldCheck, Twitter, Send, Users, CheckCircle, Loader2 } from 'lucide-react';
+import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -251,15 +251,7 @@ export default function Home() {
                             })}
                         </div>
                     </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center text-center h-full">
-                        <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-                        <h3 className="text-2xl font-semibold leading-none tracking-tight">All Tasks Completed!</h3>
-                        <p className="text-sm text-muted-foreground mt-2">
-                           You're all set. Keep earning!
-                        </p>
-                    </div>
-                )
+                ) : null
             ) : (
                 <div className="flex flex-col items-center justify-center text-center h-full">
                     <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>

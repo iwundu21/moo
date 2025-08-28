@@ -15,7 +15,7 @@ export default function ReferralsPage() {
       return null; // Or a loading spinner
     }
 
-    const referralLink = `https://t.me/moo_app_bot?start=ref${userProfile.id}`;
+    const referralLink = `https://t.me/Moo_airdrop_bot?start=ref${userProfile.id}`;
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(referralLink);

@@ -210,7 +210,7 @@ export default function Home() {
                         {hasPurchasedBoosts ? "Purchase More Boosts" : "Boost Earning"}
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="glass-card">
+                <DialogContent>
                     <DialogHeader>
                     <DialogTitle>Boost Your Chat Earning</DialogTitle>
                     <DialogDescription>

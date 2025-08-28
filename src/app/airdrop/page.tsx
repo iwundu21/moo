@@ -94,7 +94,7 @@ export default function AirdropPage() {
                     <DialogTrigger asChild>
                     <Button disabled={mainBalance === 0}>Claim</Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px] glass-card">
+                    <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Claim Your Allocation</DialogTitle>
                         <DialogDescription>

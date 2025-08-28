@@ -81,14 +81,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.1), transparent 40%),
-                      radial-gradient(circle at 80% 70%, hsl(var(--accent) / 0.1), transparent 40%);
   }
 }
 
 @layer components {
     .glass-card {
-        @apply bg-card border shadow-lg;
+        @apply bg-card/80 backdrop-blur border shadow-lg;
     }
 
     .flip-card {

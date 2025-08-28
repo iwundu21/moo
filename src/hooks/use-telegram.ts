@@ -49,8 +49,6 @@ const useTelegram = () => {
     setIsClient(true);
     
     let isMounted = true;
-    let pollCount = 0;
-    const maxPolls = 10;
 
     const initTelegram = () => {
       if (!isMounted) return;
@@ -84,7 +82,6 @@ const useTelegram = () => {
         let userProfile = store.getUserProfile(userId);
 
         if (!userProfile) {
-          // This is the corrected logic: merge defaults with new user data
           userProfile = {
             ...defaultUserProfile,
             id: userId,
@@ -112,16 +109,10 @@ const useTelegram = () => {
         
         updateUserState(userId);
 
-      } else if (pollCount < maxPolls) {
-        pollCount++;
-        setTimeout(initTelegram, 100);
       } else {
-         if (isMounted && !currentUserId) {
-          console.log("Telegram WebApp not found, initializing with default user for development.");
-          const devUserId = defaultUserProfile.id;
-          store.initialize(defaultUserProfile);
-          updateUserState(devUserId);
-        }
+        // If Telegram Web App is not available, do nothing.
+        // The app will wait for a real user.
+        console.log("Telegram WebApp not found. App will not initialize data.");
       }
 
       return () => {

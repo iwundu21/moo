@@ -88,6 +88,7 @@ const useTelegram = () => {
               isPremium: !!telegramUser.is_premium,
               purchasedBoosts: [],
               isLicenseActive: false,
+              completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             };
           } else {
              // Fallback for development if user data isn't available
@@ -100,6 +101,7 @@ const useTelegram = () => {
                 isPremium: true,
                 purchasedBoosts: ['2x'],
                 isLicenseActive: false, // Start as inactive
+                completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             };
           }
           notifyListeners();
@@ -121,6 +123,7 @@ const useTelegram = () => {
                 isPremium: true,
                 purchasedBoosts: ['2x'],
                 isLicenseActive: false, // Start as inactive
+                completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             };
             notifyListeners();
             setLeaderboard(mockLeaderboard);

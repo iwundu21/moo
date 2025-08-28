@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, ShieldCheck, Twitter, Send, Users } from 'lucide-react';
+import { Star, Hourglass, Rocket, ShieldCheck, Twitter, Send, Users, CheckCircle, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,18 @@ const boosts = [
   { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 50 MOO per message' },
 ];
 
+type TaskStatus = 'idle' | 'verifying' | 'completed';
+type SocialTasks = {
+    [key: string]: TaskStatus;
+};
+
+const initialTasks: SocialTasks = {
+  twitter: 'idle',
+  telegram: 'idle',
+  community: 'idle',
+};
+
+
 export default function Home() {
   const { userProfile, addDistributionRecord, updateUserProfile } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
@@ -33,6 +45,7 @@ export default function Home() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
   const [isLicenseActive, setIsLicenseActive] = useState(false);
+  const [socialTasks, setSocialTasks] = useState<SocialTasks>(initialTasks);
 
   useEffect(() => {
     if(userProfile) {
@@ -40,6 +53,7 @@ export default function Home() {
       setPendingBalance(userProfile.pendingBalance);
       setActivatedBoosts(userProfile.purchasedBoosts);
       setIsLicenseActive(userProfile.isLicenseActive);
+      setSocialTasks(userProfile.completedSocialTasks || initialTasks);
     }
   }, [userProfile]);
 
@@ -76,13 +90,12 @@ export default function Home() {
       if (now.getMinutes() === 0 && now.getSeconds() === 0 && pendingBalance > 0) { // Top of the hour
         const amountToCredit = pendingBalance;
         
-        // Use functional updates to ensure correct state transitions
-        setMainBalance((prev) => prev + amountToCredit);
+        const newMainBalance = mainBalance + amountToCredit;
+        setMainBalance(newMainBalance);
         setPendingBalance(0);
 
-        // Update the global state
         updateUserProfile({ 
-            mainBalance: (userProfile?.mainBalance || 0) + amountToCredit, 
+            mainBalance: newMainBalance, 
             pendingBalance: 0 
         });
 
@@ -97,7 +110,7 @@ export default function Home() {
     const countdownInterval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(countdownInterval);
-  }, [userProfile, pendingBalance, addDistributionRecord, updateUserProfile]);
+  }, [userProfile, pendingBalance, addDistributionRecord, updateUserProfile, mainBalance]);
 
 
   const handleBoostPurchase = (boostId: string) => {
@@ -109,9 +122,35 @@ export default function Home() {
 
   const handleLicenseActivation = () => {
     if (isLicenseActive) return;
-    setIsLicenseActive(true);
-    updateUserProfile({ isLicenseActive: true });
+    const cost = 150;
+    if (mainBalance >= cost) {
+        const newMainBalance = mainBalance - cost;
+        setMainBalance(newMainBalance);
+        setIsLicenseActive(true);
+        updateUserProfile({ isLicenseActive: true, mainBalance: newMainBalance });
+    } else {
+        // Optionally, show a toast or message that they don't have enough balance
+        console.log("Not enough balance to activate license.");
+    }
   }
+
+  const handleConfirmTask = (taskId: string) => {
+    setSocialTasks(prev => ({...prev, [taskId]: 'verifying'}));
+
+    setTimeout(() => {
+        const newMainBalance = mainBalance + 100;
+        const newSocialTasks = {...socialTasks, [taskId]: 'completed'};
+        setMainBalance(newMainBalance);
+        setSocialTasks(newSocialTasks);
+        updateUserProfile({ mainBalance: newMainBalance, completedSocialTasks: newSocialTasks });
+    }, 6000); // 6 seconds
+  }
+
+  const socialTaskList = [
+    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile' },
+    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/your-channel' },
+    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/your-community' },
+  ];
   
   if (!userProfile) {
     return null; // Or a loading spinner
@@ -126,6 +165,8 @@ export default function Home() {
   };
   
   const hasPurchasedBoosts = activatedBoosts.length > 0;
+  const allTasksCompleted = useMemo(() => Object.values(socialTasks).every(s => s === 'completed'), [socialTasks]);
+
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -147,7 +188,7 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+         <div className="space-y-4 rounded-lg border bg-card/80 backdrop-blur border shadow-lg p-6">
             <div className="flex flex-row items-center justify-between">
                 <h3 className="text-2xl font-semibold leading-none tracking-tight">Pending Balance</h3>
                 <div className="text-xs text-amber-500 flex items-center">
@@ -162,34 +203,54 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
             </div>
          </div>
-         <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+         <div className="space-y-4 rounded-lg border bg-card/80 backdrop-blur border shadow-lg p-6">
             {isLicenseActive ? (
-                <div>
-                    <h3 className="text-2xl font-semibold leading-none tracking-tight">Social Tasks</h3>
-                    <p className="text-sm text-muted-foreground pt-1.5">
-                        Complete tasks to earn more rewards.
-                    </p>
-                    <div className="space-y-3 pt-4">
-                        <Button asChild className="w-full justify-start" variant="outline">
-                            <Link href="https://x.com/your-profile" target="_blank">
-                                <Twitter className="mr-3" />
-                                Follow on X
-                            </Link>
-                        </Button>
-                        <Button asChild className="w-full justify-start" variant="outline">
-                            <Link href="https://t.me/your-channel" target="_blank">
-                                <Send className="mr-3" />
-                                Subscribe Telegram
-                            </Link>
-                        </Button>
-                        <Button asChild className="w-full justify-start" variant="outline">
-                            <Link href="https://t.me/your-community" target="_blank">
-                                <Users className="mr-3" />
-                                Join MOO Community
-                            </Link>
-                        </Button>
+                !allTasksCompleted ? (
+                    <div>
+                        <h3 className="text-2xl font-semibold leading-none tracking-tight">Social Tasks</h3>
+                        <p className="text-sm text-muted-foreground pt-1.5">
+                            Complete tasks to earn more rewards.
+                        </p>
+                        <div className="space-y-3 pt-4">
+                            {socialTaskList.map(task => {
+                                const status = socialTasks[task.id];
+                                return (
+                                    <div key={task.id} className="flex items-center gap-2">
+                                        <Button asChild className="flex-1 justify-start" variant="outline" disabled={status !== 'idle'}>
+                                            <Link href={task.link} target="_blank">
+                                                <task.icon className="mr-3" />
+                                                {task.text}
+                                            </Link>
+                                        </Button>
+                                        <Button 
+                                            onClick={() => handleConfirmTask(task.id)}
+                                            disabled={status !== 'idle'}
+                                            className="w-28"
+                                        >
+                                            {status === 'idle' && (
+                                                <>
+                                                 <span className='flex items-center'>
+                                                    100 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500 w-3 h-3" />
+                                                </span>
+                                                </>
+                                            )}
+                                            {status === 'verifying' && <Loader2 className="animate-spin" />}
+                                            {status === 'completed' && <CheckCircle />}
+                                        </Button>
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-center h-full">
+                        <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+                        <h3 className="text-2xl font-semibold leading-none tracking-tight">All Tasks Completed!</h3>
+                        <p className="text-sm text-muted-foreground mt-2">
+                           You're all set. Keep earning!
+                        </p>
+                    </div>
+                )
             ) : (
                 <div className="flex flex-col items-center justify-center text-center h-full">
                     <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>
@@ -197,7 +258,7 @@ export default function Home() {
                         <p className="text-sm text-muted-foreground mb-4">
                             Activate your license to start mining MOO.
                         </p>
-                        <Button className="w-full" onClick={handleLicenseActivation}>
+                        <Button className="w-full" onClick={handleLicenseActivation} disabled={mainBalance < 150}>
                             Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
                         </Button>
                     </div>
@@ -206,7 +267,7 @@ export default function Home() {
          </div>
       </div>
 
-      <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+      <div className="space-y-4 rounded-lg border bg-card/80 backdrop-blur border shadow-lg p-6">
         <div>
             <h3 className="text-2xl font-semibold leading-none tracking-tight">Boost Chat Earning</h3>
             <p className="text-sm text-muted-foreground pt-1.5">
@@ -244,7 +305,7 @@ export default function Home() {
                                 key={boost.id}
                                 variant="default"
                                 className="w-full justify-between"
-                                disabled={isActivated}
+                                disabled={isActivated || mainBalance < boost.cost}
                                 onClick={() => handleBoostPurchase(boost.id)}
                             >
                                 {isActivated ? (

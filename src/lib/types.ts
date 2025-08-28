@@ -7,6 +7,7 @@ export type UserProfile = {
   isPremium: boolean;
   purchasedBoosts: string[];
   isLicenseActive: boolean;
+  completedSocialTasks?: { [key: string]: 'idle' | 'verifying' | 'completed' };
 };
 
 export type LeaderboardEntry = {

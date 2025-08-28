@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, ShieldCheck } from 'lucide-react';
+import { Star, Hourglass, Rocket, ShieldCheck, Twitter, Send, Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 
 const boosts = [
@@ -74,9 +75,17 @@ export default function Home() {
 
       if (now.getMinutes() === 0 && now.getSeconds() === 0 && pendingBalance > 0) { // Top of the hour
         const amountToCredit = pendingBalance;
+        
+        // Use functional updates to ensure correct state transitions
         setMainBalance((prev) => prev + amountToCredit);
-        updateUserProfile({ mainBalance: mainBalance + amountToCredit, pendingBalance: 0 });
         setPendingBalance(0);
+
+        // Update the global state
+        updateUserProfile({ 
+            mainBalance: (userProfile?.mainBalance || 0) + amountToCredit, 
+            pendingBalance: 0 
+        });
+
         addDistributionRecord({
           timestamp: new Date(),
           amount: amountToCredit,
@@ -88,7 +97,8 @@ export default function Home() {
     const countdownInterval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(countdownInterval);
-  }, [userProfile, pendingBalance, addDistributionRecord, mainBalance, updateUserProfile]);
+  }, [userProfile, pendingBalance, addDistributionRecord, updateUserProfile]);
+
 
   const handleBoostPurchase = (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
@@ -152,31 +162,45 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
             </div>
          </div>
-         <div className={cn("space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6 flex flex-col items-center justify-center text-center", isLicenseActive && "bg-green-900/50 border-green-500/50 relative overflow-hidden")}>
-            {isLicenseActive && (
-              <>
-                <div className="absolute inset-0 bg-grid-green-500/30 [mask-image:linear-gradient(to_bottom,white_40%,transparent_90%)]"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.4),transparent_60%)]"></div>
-              </>
-            )}
-            <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>
-            
+         <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
             {isLicenseActive ? (
-                <div className='flex flex-col items-center justify-center h-full text-center z-10 pt-2'>
-                      <div className="p-3 mb-2 rounded-full bg-white/20">
-                        <ShieldCheck className="w-10 h-10 text-white" />
+                <div>
+                    <h3 className="text-2xl font-semibold leading-none tracking-tight">Social Tasks</h3>
+                    <p className="text-sm text-muted-foreground pt-1.5">
+                        Complete tasks to earn more rewards.
+                    </p>
+                    <div className="space-y-3 pt-4">
+                        <Button asChild className="w-full justify-start" variant="outline">
+                            <Link href="https://x.com/your-profile" target="_blank">
+                                <Twitter className="mr-3" />
+                                Follow on X
+                            </Link>
+                        </Button>
+                        <Button asChild className="w-full justify-start" variant="outline">
+                            <Link href="https://t.me/your-channel" target="_blank">
+                                <Send className="mr-3" />
+                                Subscribe Telegram
+                            </Link>
+                        </Button>
+                        <Button asChild className="w-full justify-start" variant="outline">
+                            <Link href="https://t.me/your-community" target="_blank">
+                                <Users className="mr-3" />
+                                Join MOO Community
+                            </Link>
+                        </Button>
                     </div>
-                    <p className="font-semibold text-white">License Active</p>
-                    <p className="text-xs text-white/80">(1x Earning Unlocked)</p>
                 </div>
             ) : (
-                <div className="pt-2">
-                    <p className="text-sm text-muted-foreground mb-4">
-                        Activate your license to start mining MOO.
-                    </p>
-                    <Button className="w-full" onClick={handleLicenseActivation}>
-                        Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
-                    </Button>
+                <div className="flex flex-col items-center justify-center text-center h-full">
+                    <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>
+                    <div className="pt-2">
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Activate your license to start mining MOO.
+                        </p>
+                        <Button className="w-full" onClick={handleLicenseActivation}>
+                            Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
+                        </Button>
+                    </div>
                 </div>
             )}
          </div>

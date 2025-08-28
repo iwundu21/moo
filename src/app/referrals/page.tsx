@@ -2,12 +2,13 @@
 'use client'
 
 import { Button } from '@/components/ui/button';
-import { Copy, UserPlus, Share2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Copy, UserPlus, Share2, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegram } from '@/hooks/use-telegram';
 
 export default function ReferralsPage() {
-    const { userProfile } = useTelegram();
+    const { userProfile, referrals } = useTelegram();
     const { toast } = useToast();
     
     if (!userProfile) {
@@ -26,7 +27,7 @@ export default function ReferralsPage() {
     };
 
     const shareOnTelegram = () => {
-        const shareText = `Join me on MOO and let's earn together! Use my referral code: ${userReferralCode}`;
+        const shareText = `Join me on MOO and let's earn together! Use my referral code to get a head start: ${userReferralCode}`;
         const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
         window.open(telegramShareUrl, '_blank');
     };
@@ -55,6 +56,29 @@ export default function ReferralsPage() {
                 </Button>
             </div>
         </div>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-primary"/>
+                    How It Works
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground space-y-4">
+                <div className="flex items-start gap-4">
+                    <span className="font-bold text-primary">1.</span>
+                    <p>Share your unique referral code with your friends through social media, direct messages, or any way you like.</p>
+                </div>
+                <div className="flex items-start gap-4">
+                    <span className="font-bold text-primary">2.</span>
+                    <p>Your friend enters your referral code on the Home page after activating their license. They will instantly receive <span className="font-semibold text-foreground">100 MOO</span> as a welcome bonus!</p>
+                </div>
+                <div className="flex items-start gap-4">
+                    <span className="font-bold text-primary">3.</span>
+                    <p>As a thank you, you will also receive <span className="font-semibold text-foreground">100 MOO</span> in your main balance for each successful referral. The more friends you invite, the more you earn!</p>
+                </div>
+            </CardContent>
+        </Card>
 
       </div>
     </div>

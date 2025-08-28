@@ -76,8 +76,7 @@ const useTelegram = () => {
   const addReferral = (referrerId: string, refereeProfile: UserProfile) => {
     const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
     const allReferrals: {[key: string]: Referral[]} = storedData.referrals || {};
-    const allUserProfiles: {[key: string]: UserProfile} = storedData.userProfiles || {};
-
+    
     if (!allReferrals[referrerId]) {
       allReferrals[referrerId] = [];
     }
@@ -87,40 +86,51 @@ const useTelegram = () => {
           profilePictureUrl: refereeProfile.profilePictureUrl,
       });
 
-      // Update referrer's profile if they exist
-      if(allUserProfiles[referrerId]) {
-        // You could add a referral bonus here if you want
-      }
-      
-      saveData({ referrals: allReferrals, userProfiles: allUserProfiles });
+      saveData({ referrals: allReferrals });
       return true;
     }
     return false;
   };
+  
+  const updateUserProfile = useCallback((updates: Partial<UserProfile>, userIdToUpdate?: string) => {
+    const id = userIdToUpdate || userProfile?.id;
+    if (!id) return;
 
-  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
-    setUserProfile(currentProfile => {
-        if (!currentProfile) return null;
+    const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    const allUserProfiles = storedData.userProfiles || {};
+    const profileToUpdate = allUserProfiles[id];
+    
+    if (!profileToUpdate) return;
+    
+    const updatedProfile = { ...profileToUpdate, ...updates };
+    allUserProfiles[id] = updatedProfile;
 
-        const updatedProfile = { ...currentProfile, ...updates };
-        
-        const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-        const allUserProfiles = storedData.userProfiles || {};
-        allUserProfiles[currentProfile.id] = updatedProfile;
+    let currentLeaderboard = storedData.leaderboard || [];
+    const userIndexInLeaderboard = currentLeaderboard.findIndex((p: LeaderboardEntry) => p.username === updatedProfile.telegramUsername);
+    
+    if (userIndexInLeaderboard !== -1) {
+        currentLeaderboard[userIndexInLeaderboard].balance = updatedProfile.mainBalance;
+    } else {
+        // This case handles updating a user who might not be on the leaderboard yet,
+        // which can happen if the referrer is not the current user.
+        currentLeaderboard.push({
+            rank: 0, // Rank will be recalculated below
+            username: updatedProfile.telegramUsername,
+            balance: updatedProfile.mainBalance,
+            profilePictureUrl: updatedProfile.profilePictureUrl
+        });
+    }
+    currentLeaderboard.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.balance - a.balance).forEach((p: LeaderboardEntry, i: number) => p.rank = i + 1);
+    
+    // If the update is for the currently logged-in user, update their state
+    if (id === userProfile?.id) {
+        setUserProfile(updatedProfile);
+        setLeaderboard(currentLeaderboard);
+    }
+    
+    saveData({ userProfiles: allUserProfiles, leaderboard: currentLeaderboard });
+  }, [userProfile]);
 
-        let currentLeaderboard = storedData.leaderboard || [];
-        const userIndexInLeaderboard = currentLeaderboard.findIndex((p: LeaderboardEntry) => p.username === updatedProfile.telegramUsername);
-        
-        if (userIndexInLeaderboard !== -1) {
-            currentLeaderboard[userIndexInLeaderboard].balance = updatedProfile.mainBalance;
-            currentLeaderboard.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.balance - a.balance).forEach((p: LeaderboardEntry, i: number) => p.rank = i + 1);
-            setLeaderboard(currentLeaderboard);
-        }
-
-        saveData({ userProfiles: allUserProfiles, leaderboard: currentLeaderboard });
-        return updatedProfile;
-    });
-  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -157,7 +167,6 @@ const useTelegram = () => {
         };
         allUserProfiles[userId] = currentUserProfile;
     } else if (!currentUserProfile.referralCode) {
-        // This is the fix: assign a code to existing users who don't have one.
         const newReferralCode = generateReferralCode(existingReferralCodes);
         currentUserProfile.referralCode = newReferralCode;
         allUserProfiles[userId] = currentUserProfile;
@@ -171,8 +180,9 @@ const useTelegram = () => {
             balance: currentUserProfile.mainBalance,
             profilePictureUrl: currentUserProfile.profilePictureUrl
         });
-        currentLeaderboard.sort((a,b) => b.balance - a.balance).forEach((p, i) => p.rank = i + 1);
     }
+    currentLeaderboard.sort((a,b) => b.balance - a.balance).forEach((p, i) => p.rank = i + 1);
+
 
     // Handle referral from URL
     const startParam = tg.initDataUnsafe.start_param;
@@ -181,8 +191,22 @@ const useTelegram = () => {
         const referrerProfile = Object.values(allUserProfiles).find(p => p.referralCode === referrerCode);
         if (referrerProfile && referrerProfile.id !== userId) {
             if(!currentUserProfile.referredBy) {
-              addReferral(referrerProfile.id, currentUserProfile);
-              currentUserProfile.referredBy = referrerProfile.id;
+              const wasAdded = addReferral(referrerProfile.id, currentUserProfile);
+              if (wasAdded) {
+                  currentUserProfile.referredBy = referrerProfile.id;
+                  // Reward referrer
+                  const newReferrerBalance = referrerProfile.mainBalance + 100;
+                  referrerProfile.mainBalance = newReferrerBalance;
+                  allUserProfiles[referrerProfile.id] = referrerProfile;
+
+                  // Reward referee
+                  const newRefereeBalance = currentUserProfile.mainBalance + 100;
+                  currentUserProfile.mainBalance = newRefereeBalance;
+                  currentUserProfile.completedSocialTasks = {
+                    ...currentUserProfile.completedSocialTasks,
+                    referral: 'completed'
+                  };
+              }
               allUserProfiles[userId] = currentUserProfile;
             }
         }
@@ -195,7 +219,6 @@ const useTelegram = () => {
     setReferrals(allReferrals[userId] || []);
     setIsAirdropLive(currentAirdropStatus);
 
-    // Save initial state to localStorage
     saveData({ 
         userProfiles: allUserProfiles, 
         referrals: allReferrals, 
@@ -229,7 +252,13 @@ const useTelegram = () => {
     const wasAdded = addReferral(referrerProfile.id, userProfile);
 
     if (wasAdded) {
-      updateUserProfile({ referredBy: referrerProfile.id });
+      // Reward referee
+      updateUserProfile({ referredBy: referrerProfile.id, mainBalance: userProfile.mainBalance + 100 });
+      
+      // Reward referrer
+      const newReferrerBalance = referrerProfile.mainBalance + 100;
+      updateUserProfile({ mainBalance: newReferrerBalance }, referrerProfile.id);
+
       return {success: true, message: "Referral code redeemed successfully!", referrerId: referrerProfile.id};
     } else {
       return {success: false, message: "Referral could not be added. You might have already been referred."};

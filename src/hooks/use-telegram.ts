@@ -72,7 +72,7 @@ const generateReferralCode = async (): Promise<string> => {
 
 
 const useTelegram = () => {
-  const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -107,21 +107,22 @@ const useTelegram = () => {
   }, [userProfile]);
 
   useEffect(() => {
-    setIsClient(true);
     const tg = window.Telegram?.WebApp;
     if (!tg) {
+        setIsLoading(false);
         return;
     }
     
     tg.ready();
 
-    if (!tg.initDataUnsafe?.user) {
-        return;
-    }
-
     const fetchInitialData = async () => {
-        const telegramUser = tg.initDataUnsafe.user;
-        if (!telegramUser) return;
+        setIsLoading(true);
+
+        const telegramUser = tg.initDataUnsafe?.user;
+        if (!telegramUser) {
+            setIsLoading(false);
+            return;
+        }
         
         const userId = telegramUser.id.toString();
 
@@ -138,7 +139,7 @@ const useTelegram = () => {
 
         if (!userDoc.exists()) {
             const newReferralCode = await generateReferralCode();
-            const safeUsername = telegramUser.username || `${telegramUser.first_name || 'User'} ${telegramUser.last_name || ''}`.trim();
+            const safeUsername = telegramUser.username || `${telegramUser.first_name || 'User'} ${telegramUser.last_name || ''}`.trimEnd();
 
             currentUserProfile = {
                 id: userId,
@@ -221,6 +222,8 @@ const useTelegram = () => {
         const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
         const claimsSnapshot = await getDocs(claimsQuery);
         setClaimedAirdrops(claimsSnapshot.docs.map(d => d.data() as AirdropClaim));
+
+        setIsLoading(false);
     };
 
     fetchInitialData().catch(console.error);
@@ -329,6 +332,7 @@ const useTelegram = () => {
   }, []);
 
   return { 
+    isLoading,
     userProfile, 
     leaderboard, 
     referrals, 
@@ -340,9 +344,10 @@ const useTelegram = () => {
     addDistributionRecord, 
     updateUserProfile, 
     addClaimRecord,
-    redeemReferralCode, 
-    isClient
+    redeemReferralCode
   };
 };
 
 export { useTelegram };
+
+    

@@ -23,6 +23,7 @@ import Confetti from 'react-confetti';
 import { createPayment } from '@/ai/flows/payment-flow';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
 
 
 const boosts = [
@@ -45,7 +46,7 @@ const initialTasks: SocialTasks = {
 
 
 export default function Home() {
-  const { userProfile, addDistributionRecord, updateUserProfile, redeemReferralCode } = useTelegram();
+  const { userProfile, addDistributionRecord, updateUserProfile, redeemReferralCode, isLoading } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -247,8 +248,16 @@ export default function Home() {
     return social && referral;
   }, [socialTasks]);
 
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+  
   if (!userProfile) {
-    return null; // Or a loading spinner
+    return (
+      <div className="container mx-auto p-4 flex flex-col items-center justify-center h-screen">
+          <p className="text-destructive text-center">Could not load user profile. Please try again.</p>
+      </div>
+    );
   }
 
   const isReadyToEarn = isLicenseActive && allTasksCompleted;
@@ -473,4 +482,6 @@ export default function Home() {
     </div>
   );
 }
+    
+
     

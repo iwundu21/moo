@@ -34,16 +34,27 @@ declare global {
 }
 
 const useTelegram = () => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(store.getUserProfile());
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(store.getLeaderboard());
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
-  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
+  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(store.getClaimedAirdrops());
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(store.getAirdropStatus());
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    
+    const handleStoreUpdate = () => {
+      setUserProfile(store.getUserProfile());
+      setLeaderboard(store.getLeaderboard());
+      setClaimedAirdrops(store.getClaimedAirdrops());
+      setIsAirdropLive(store.getAirdropStatus());
+    };
+
+    store.subscribe(handleStoreUpdate);
+
+    // Initial check in case store is already populated
     if (!store.getUserProfile()) {
       let isMounted = true;
       let pollCount = 0;
@@ -71,7 +82,7 @@ const useTelegram = () => {
               };
           
           store.initialize(initialProfile, mockLeaderboard);
-          setReferrals(mockReferrals);
+          setReferrals(mockReferrals); // Referrals are static for now
         } else if (pollCount < maxPolls) {
           pollCount++;
           setTimeout(initTelegram, 100);
@@ -87,23 +98,14 @@ const useTelegram = () => {
       initTelegram();
       
       return () => { isMounted = false; };
+    } else {
+        handleStoreUpdate(); // Ensure state is synced on mount if store is already initialized
     }
-  }, []);
 
-  useEffect(() => {
-    const handleUpdate = () => {
-      setUserProfile(store.getUserProfile());
-      setLeaderboard(store.getLeaderboard());
-      setClaimedAirdrops(store.getClaimedAirdrops());
-      setIsAirdropLive(store.getAirdropStatus());
+     return () => {
+      store.unsubscribe(handleStoreUpdate);
     };
 
-    store.subscribe(handleUpdate);
-    handleUpdate();
-
-    return () => {
-      store.unsubscribe(handleUpdate);
-    };
   }, []);
 
 

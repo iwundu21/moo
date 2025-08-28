@@ -25,7 +25,7 @@ export default function AdminPage() {
     const headers = ['Wallet Address', 'Amount'];
     const csvContent = [
       headers.join(','),
-      ...claimedAirdrops.map(claim => 
+      ...claimedAirops.map(claim => 
         [claim.walletAddress, claim.amount].join(',')
       )
     ].join('\n');

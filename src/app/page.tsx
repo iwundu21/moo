@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import Confetti from 'react-confetti';
 
 
 const boosts = [
@@ -46,6 +47,7 @@ export default function Home() {
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
   const [isLicenseActive, setIsLicenseActive] = useState(false);
   const [socialTasks, setSocialTasks] = useState<SocialTasks>(initialTasks);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if(userProfile) {
@@ -128,6 +130,7 @@ export default function Home() {
         setMainBalance(newMainBalance);
         setIsLicenseActive(true);
         updateUserProfile({ isLicenseActive: true, mainBalance: newMainBalance });
+        setShowConfetti(true);
     } else {
         // Optionally, show a toast or message that they don't have enough balance
         console.log("Not enough balance to activate license.");
@@ -169,6 +172,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
+      {showConfetti && <Confetti recycle={false} onConfettiComplete={() => setShowConfetti(false)} />}
       <header className="flex items-center space-x-4 pt-4">
         <Avatar className="w-16 h-16 border-2 border-primary">
           <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.telegramUsername} data-ai-hint="profile picture" />
@@ -187,7 +191,7 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div className="space-y-4 rounded-lg border bg-card/80 backdrop-blur border shadow-lg p-6">
+         <div className="space-y-4 rounded-lg p-6">
             <div className="flex flex-row items-center justify-between">
                 <h3 className="text-2xl font-semibold leading-none tracking-tight">Pending Balance</h3>
                 <div className="text-xs text-amber-500 flex items-center">
@@ -202,7 +206,7 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
             </div>
          </div>
-         <div className="space-y-4 rounded-lg border bg-card/80 backdrop-blur border shadow-lg p-6">
+         <div className="space-y-4 rounded-lg p-6">
             {isLicenseActive ? (
                 !allTasksCompleted ? (
                     <div>
@@ -266,7 +270,7 @@ export default function Home() {
          </div>
       </div>
 
-      <div className="space-y-4 rounded-lg border bg-card/80 backdrop-blur border shadow-lg p-6">
+      <div className="space-y-4 rounded-lg p-6">
         <div>
             <h3 className="text-2xl font-semibold leading-none tracking-tight">Boost Chat Earning</h3>
             <p className="text-sm text-muted-foreground pt-1.5">

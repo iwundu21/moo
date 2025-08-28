@@ -16,6 +16,7 @@ export function DailyEarningsChart() {
     const chartData = useMemo(() => {
         const data = [];
         const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today to the start of the day
         const dayOfWeek = today.getDay(); // Sunday - 0, Monday - 1, ...
         const daysToMonday = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
         
@@ -29,9 +30,12 @@ export function DailyEarningsChart() {
             date.setDate(startOfWeek.getDate() + i);
             const dayOfMonth = date.getDate();
 
-            // Simulate earnings, with today having a potentially partial amount
-            const isToday = date.toDateString() === today.toDateString();
-            const earnings = Math.floor(Math.random() * (isToday ? 300 : 500)) + (isToday ? 50 : 100);
+            let earnings: number | null = null;
+            if (date <= today) {
+                // Simulate earnings only for past and current days
+                const isToday = date.getTime() === today.getTime();
+                earnings = Math.floor(Math.random() * (isToday ? 300 : 500)) + (isToday ? 50 : 100);
+            }
 
             data.push({
                 day: days[i],
@@ -66,7 +70,8 @@ export function DailyEarningsChart() {
                     <ChartTooltip
                         cursor={false}
                         content={<ChartTooltipContent 
-                            labelFormatter={(label, payload) => `${label} - ${payload?.[0]?.payload?.date || ''}`} 
+                            labelFormatter={(label, payload) => `${label} - ${payload?.[0]?.payload?.date || ''}`}
+                            formatter={(value) => value === null ? 'No data' : `$${(value as number).toLocaleString()}`} 
                         />}
                     />
                     <Bar dataKey="earnings" radius={8} />

@@ -63,23 +63,20 @@ export default function Home() {
   }, [userProfile]);
 
   useEffect(() => {
-    if (!userProfile || !isLicenseActive || activatedBoosts.length === 0) return;
+    if (!userProfile || !isLicenseActive) return;
 
-    let earnRate = 0; // Base rate is 0, must purchase a boost to earn
+    // The logic for earning is now removed from the client-side simulation.
+    // A backend service connected to a Telegram bot would be responsible for
+    // updating the user's pendingBalance in the database.
+    // For now, the pending balance will not increase automatically.
 
-    const twoX = activatedBoosts.includes('2x');
-    const fiveX = activatedBoosts.includes('5x');
-    const tenX = activatedBoosts.includes('10x');
+    let earnRate = 0; // Base rate is 0 until a boost is purchased
+    if (activatedBoosts.includes('10x')) earnRate = 50;
+    else if (activatedBoosts.includes('5x')) earnRate = 25;
+    else if (activatedBoosts.includes('2x')) earnRate = 10;
+    else if (isLicenseActive) earnRate = 5; // Default rate after license activation
 
-    if (tenX) earnRate = 50;
-    else if (fiveX) earnRate = 25;
-    else if (twoX) earnRate = 10;
-    
-    const earnInterval = setInterval(() => {
-      setPendingBalance((prev) => prev + (Math.random() * earnRate) / 5 );
-    }, 2000);
 
-    return () => clearInterval(earnInterval);
   }, [userProfile, activatedBoosts, isLicenseActive]);
 
   useEffect(() => {
@@ -289,7 +286,14 @@ export default function Home() {
                             })}
                         </div>
                     </div>
-                ) : null
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-center h-full">
+                         <h3 className="text-xl font-semibold leading-none tracking-tight">Ready to Earn</h3>
+                        <p className="text-xs text-muted-foreground pt-1.5">
+                            Your license is active and tasks are complete. Start sending messages in designated group chats to earn MOO.
+                        </p>
+                    </div>
+                )
             ) : (
                 <div className="flex flex-col items-center justify-center text-center h-full">
                     <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>

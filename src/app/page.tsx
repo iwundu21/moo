@@ -65,7 +65,7 @@ export default function Home() {
       setActivatedBoosts(userProfile.purchasedBoosts);
       setIsLicenseActive(userProfile.isLicenseActive);
       
-      const initialSocialTasks = {
+      const initialSocialTasks: SocialTasks = {
         twitter: userProfile.completedSocialTasks?.twitter || 'idle',
         telegram: userProfile.completedSocialTasks?.telegram || 'idle',
         community: userProfile.completedSocialTasks?.community || 'idle',
@@ -218,8 +218,10 @@ export default function Home() {
 
       if (result.success) {
         setReferralCodeInput('');
+        const newMainBalance = mainBalance + 100;
+        setMainBalance(newMainBalance);
+        updateUserProfile({ mainBalance: newMainBalance, referredBy: result.referrerId });
         setSocialTasks(prev => ({...prev, referral: 'completed' }));
-        updateUserProfile({ mainBalance: mainBalance + 100 });
       }
     };
 
@@ -239,7 +241,11 @@ export default function Home() {
 
   const hasPurchasedBoosts = activatedBoosts.length > 0;
   
-  const allTasksCompleted = useMemo(() => Object.values(socialTasks).every(s => s === 'completed'), [socialTasks]);
+  const allTasksCompleted = useMemo(() => {
+    const social = socialTaskList.every(task => socialTasks[task.id] === 'completed');
+    const referral = socialTasks.referral === 'completed';
+    return social && referral;
+  }, [socialTasks]);
 
   if (!userProfile) {
     return null; // Or a loading spinner
@@ -281,7 +287,7 @@ export default function Home() {
           </div>
       </div>
       
-      {!isLicenseActive ? (
+      {!isLicenseActive && (
         <div className="space-y-4">
             <Alert>
                 <Info className="h-4 w-4" />
@@ -306,7 +312,9 @@ export default function Home() {
                 </div>
             </div>
         </div>
-      ) : (
+      )}
+
+      {isLicenseActive && (
         <>
           <div className="space-y-4 rounded-lg p-6">
             <div>

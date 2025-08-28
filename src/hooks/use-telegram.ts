@@ -204,9 +204,9 @@ const useTelegram = () => {
         isAirdropLive: currentAirdropStatus,
     });
 
-  }, [updateUserProfile]);
+  }, []);
 
-  const redeemReferralCode = useCallback((referralCode: string): {success: boolean, message: string} => {
+  const redeemReferralCode = useCallback((referralCode: string): {success: boolean, message: string, referrerId?: string} => {
     if (!userProfile) return {success: false, message: "User profile not loaded."};
 
     if (referralCode === userProfile.referralCode) {
@@ -230,7 +230,7 @@ const useTelegram = () => {
 
     if (wasAdded) {
       updateUserProfile({ referredBy: referrerProfile.id });
-      return {success: true, message: "Referral code redeemed successfully!"};
+      return {success: true, message: "Referral code redeemed successfully!", referrerId: referrerProfile.id};
     } else {
       return {success: false, message: "Referral could not be added. You might have already been referred."};
     }

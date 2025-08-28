@@ -23,8 +23,8 @@ import { DailyEarningsChart } from '@/components/DailyEarningsChart';
 
 const boosts = [
   { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message' },
-  { id: '5x', multiplier: 5, cost: 200, description: 'Earn 25 MOO per message' },
-  { id: '10x', multiplier: 10, cost: 350, description: 'Earn 50 MOO per message' },
+  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 25 MOO per message' },
+  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 50 MOO per message' },
 ];
 
 export default function Home() {
@@ -144,27 +144,27 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Pending Balance</CardTitle>
+         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <div className="flex flex-row items-center justify-between pb-6">
+                <h3 className="text-2xl font-semibold leading-none tracking-tight">Pending Balance</h3>
                 <div className="text-xs text-amber-500 flex items-center">
                     <Hourglass className="mr-2 animate-spin h-4 w-4" />
                     {formatCountdown(countdown)}
                 </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
                 <p className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                     {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                 </p>
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
-            </CardContent>
-         </Card>
-         <Card className={cn(isLicenseActive && "bg-green-500/20 border-green-500/50 relative overflow-hidden")}>
+            </div>
+         </div>
+         <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm p-6", isLicenseActive && "bg-green-500/20 border-green-500/50 relative overflow-hidden")}>
             {isLicenseActive && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-400/30 to-transparent opacity-50"></div>}
-            <CardHeader>
-                <CardTitle>Mining License</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <div className="pb-6">
+                <h3 className="text-2xl font-semibold leading-none tracking-tight">Mining License</h3>
+            </div>
+            <div>
                 {isLicenseActive ? (
                     <div className='flex flex-col items-center justify-center h-full text-center'>
                          <div className="p-3 mb-2 rounded-full bg-white/20">
@@ -183,18 +183,18 @@ export default function Home() {
                         </Button>
                     </>
                 )}
-            </CardContent>
-         </Card>
+            </div>
+         </div>
       </div>
 
-        <Card>
-        <CardHeader>
-            <CardTitle>Boost Chat Earning</CardTitle>
-            <CardDescription>
+      <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+        <div>
+            <h3 className="text-2xl font-semibold leading-none tracking-tight">Boost Chat Earning</h3>
+            <p className="text-sm text-muted-foreground pt-1.5">
                 Increase your earning speed per message in group chats.
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
+            </p>
+        </div>
+        <div className="pt-2">
             {hasPurchasedBoosts && (
                 <div className="flex flex-wrap gap-2 mb-4">
                     <span className="text-sm font-semibold">Active boosts:</span>
@@ -248,19 +248,21 @@ export default function Home() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </CardContent>
-        </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Daily Earnings</CardTitle>
-          <CardDescription>Your MOO earnings for the current week.</CardDescription>
-        </CardHeader>
-        <CardContent className="pl-2">
+      <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+        <div>
+          <h3 className="text-2xl font-semibold leading-none tracking-tight">Daily Earnings</h3>
+          <p className="text-sm text-muted-foreground pt-1.5">Your MOO earnings for the current week.</p>
+        </div>
+        <div className="pl-2 pt-2">
             <DailyEarningsChart />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
     </div>
   );
 }
+
+    

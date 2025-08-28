@@ -35,7 +35,7 @@ export default function LeaderboardPage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <header className="text-center space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
+        <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-xs text-muted-foreground">See who's at the top of the MOO-niverse!</p>
       </header>
 
@@ -43,17 +43,17 @@ export default function LeaderboardPage() {
         <div className="rounded-lg border border-primary bg-primary/20 p-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <span className="text-base font-bold w-8 text-center">{userRank.rank}</span>
+                <span className="text-sm font-bold w-8 text-center">{userRank.rank}</span>
                 <Avatar>
                   <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
                   <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</AvatarFallback>
                 </Avatar>
-                <div className="font-semibold">
+                <div className="font-semibold text-sm">
                   <p>You</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold text-base bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{userRank.balance.toLocaleString()}</p>
+                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{userRank.balance.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">MOO</p>
               </div>
             </div>
@@ -72,7 +72,7 @@ export default function LeaderboardPage() {
             <TableBody>
               {leaderboard.map((entry) => (
                 <TableRow key={entry.rank} className={cn(entry.username === userProfile.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
-                  <TableCell className="font-bold">
+                  <TableCell className="font-bold text-xs">
                     <div className="flex items-center justify-center">
                         {entry.rank <= 3 ? <Trophy className={cn("w-4 h-4 mr-2", entry.rank === 1 && "text-yellow-400", entry.rank === 2 && "text-gray-400", entry.rank === 3 && "text-yellow-600")} /> : null}
                         {entry.rank}
@@ -84,10 +84,10 @@ export default function LeaderboardPage() {
                         <AvatarImage src={entry.profilePictureUrl} data-ai-hint="profile picture" />
                         <AvatarFallback>{entry.username.substring(0, 1)}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium truncate">@{entry.username}</span>
+                      <span className="font-medium truncate text-xs">@{entry.username}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{entry.balance.toLocaleString()}</TableCell>
+                  <TableCell className="text-right font-semibold text-xs bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{entry.balance.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

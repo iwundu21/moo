@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord } from '@/lib/types';
+import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord, AirdropClaim } from '@/lib/types';
 import { mockLeaderboard, mockReferrals, mockDistributionHistory } from '@/lib/data';
 
 interface TelegramUser {
@@ -32,62 +32,82 @@ declare global {
   }
 }
 
-// Store the profile in a variable that persists across hook instances
+// Store data in variables that persist across hook instances
 let globalUserProfile: UserProfile | null = null;
 const profileListeners: Set<(profile: UserProfile | null) => void> = new Set();
+
 let globalLeaderboard: LeaderboardEntry[] = [];
+const leaderboardListeners: Set<(leaderboard: LeaderboardEntry[]) => void> = new Set();
+
+let globalClaimedAirdrops: AirdropClaim[] = [];
+const claimListeners: Set<(claims: AirdropClaim[]) => void> = new Set();
 
 const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(globalUserProfile);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(globalLeaderboard);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
+  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(globalClaimedAirdrops);
 
-  const notifyListeners = () => {
+
+  const notifyProfileListeners = useCallback(() => {
     for (const listener of profileListeners) {
       listener(globalUserProfile);
     }
-  };
+  }, []);
+
+  const notifyLeaderboardListeners = useCallback(() => {
+    for (const listener of leaderboardListeners) {
+      listener([...globalLeaderboard]);
+    }
+  }, []);
+  
+  const notifyClaimListeners = useCallback(() => {
+    for (const listener of claimListeners) {
+      listener([...globalClaimedAirdrops]);
+    }
+  }, []);
+
+  const addClaimRecord = useCallback((claim: AirdropClaim) => {
+    globalClaimedAirdrops.push(claim);
+    notifyClaimListeners();
+  }, [notifyClaimListeners]);
 
   const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
     if (globalUserProfile) {
       const wasLeaderboardUpdated = 'mainBalance' in updates;
       globalUserProfile = { ...globalUserProfile, ...updates };
-      notifyListeners();
+      notifyProfileListeners();
 
       if (wasLeaderboardUpdated) {
-        // Update user in leaderboard or add if not present
         const userInLeaderboardIndex = globalLeaderboard.findIndex(u => u.username === globalUserProfile!.telegramUsername);
         if (userInLeaderboardIndex !== -1) {
             globalLeaderboard[userInLeaderboardIndex].balance = globalUserProfile.mainBalance;
-        } else {
-             globalLeaderboard.push({
-                rank: 0, // Rank will be recalculated
-                username: globalUserProfile.telegramUsername,
-                profilePictureUrl: globalUserProfile.profilePictureUrl,
-                balance: globalUserProfile.mainBalance,
-            });
         }
         
-        // Re-sort and re-rank
         globalLeaderboard.sort((a, b) => b.balance - a.balance);
         globalLeaderboard.forEach((user, index) => {
             user.rank = index + 1;
         });
 
-        setLeaderboard([...globalLeaderboard]);
+        notifyLeaderboardListeners();
       }
     }
-  }, []);
+  }, [notifyProfileListeners, notifyLeaderboardListeners]);
 
   const addDistributionRecord = useCallback((record: DistributionRecord) => {
     setDistributionHistory(prevHistory => [record, ...prevHistory]);
   }, []);
 
   useEffect(() => {
-    // Register listener
-    const listener = (profile: UserProfile | null) => setUserProfile(profile);
-    profileListeners.add(listener);
+    // Register listeners
+    const profileListener = (profile: UserProfile | null) => setUserProfile(profile);
+    const leaderboardListener = (leaderboard: LeaderboardEntry[]) => setLeaderboard(leaderboard);
+    const claimListener = (claims: AirdropClaim[]) => setClaimedAirdrops(claims);
+
+    profileListeners.add(profileListener);
+    leaderboardListeners.add(leaderboardListener);
+    claimListeners.add(claimListener);
 
     // Initial load logic should only run once
     if (!globalUserProfile) {
@@ -114,9 +134,9 @@ const useTelegram = () => {
               purchasedBoosts: [],
               isLicenseActive: false,
               completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
+              hasClaimedAirdrop: false,
             };
           } else {
-             // Fallback for development if user data isn't available
             globalUserProfile = {
                 id: '0000',
                 telegramUsername: 'telegram_user',
@@ -125,32 +145,29 @@ const useTelegram = () => {
                 pendingBalance: 750.25,
                 isPremium: true,
                 purchasedBoosts: [],
-                isLicenseActive: false, // Start as inactive
+                isLicenseActive: false,
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
+                hasClaimedAirdrop: false,
             };
           }
 
-          // Initialize leaderboard
           const userInMock = mockLeaderboard.some(u => u.username === globalUserProfile!.telegramUsername);
-          let initialLeaderboard = [...mockLeaderboard];
+          globalLeaderboard = [...mockLeaderboard];
           if (!userInMock) {
-              initialLeaderboard.push({
-                  rank: 0, // temp rank
+              globalLeaderboard.push({
+                  rank: 0,
                   username: globalUserProfile!.telegramUsername,
                   profilePictureUrl: globalUserProfile!.profilePictureUrl,
                   balance: globalUserProfile!.mainBalance
               });
           }
-           // Sort by balance and assign ranks
-          initialLeaderboard.sort((a, b) => b.balance - a.balance);
-          initialLeaderboard.forEach((user, index) => {
+          globalLeaderboard.sort((a, b) => b.balance - a.balance);
+          globalLeaderboard.forEach((user, index) => {
               user.rank = index + 1;
           });
-
-          globalLeaderboard = initialLeaderboard;
           
-          notifyListeners();
-          setLeaderboard(globalLeaderboard);
+          notifyProfileListeners();
+          notifyLeaderboardListeners();
           setReferrals(mockReferrals);
 
         } else if (pollCount < maxPolls) {
@@ -167,29 +184,28 @@ const useTelegram = () => {
                 pendingBalance: 750.25,
                 isPremium: true,
                 purchasedBoosts: [],
-                isLicenseActive: false, // Start as inactive
+                isLicenseActive: false,
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
+                hasClaimedAirdrop: false,
             };
 
             const userInMock = mockLeaderboard.some(u => u.username === globalUserProfile!.telegramUsername);
-            let initialLeaderboard = [...mockLeaderboard];
+            globalLeaderboard = [...mockLeaderboard];
             if (!userInMock) {
-                initialLeaderboard.push({
-                    rank: 0, // temp rank
+                globalLeaderboard.push({
+                    rank: 0,
                     username: globalUserProfile!.telegramUsername,
                     profilePictureUrl: globalUserProfile!.profilePictureUrl,
                     balance: globalUserProfile!.mainBalance
                 });
             }
-             // Sort by balance and assign ranks
-            initialLeaderboard.sort((a, b) => b.balance - a.balance);
-            initialLeaderboard.forEach((user, index) => {
+            globalLeaderboard.sort((a, b) => b.balance - a.balance);
+            globalLeaderboard.forEach((user, index) => {
                 user.rank = index + 1;
             });
-            globalLeaderboard = initialLeaderboard;
-
-            notifyListeners();
-            setLeaderboard(globalLeaderboard);
+            
+            notifyProfileListeners();
+            notifyLeaderboardListeners();
             setReferrals(mockReferrals);
           }
         }
@@ -202,15 +218,15 @@ const useTelegram = () => {
       };
     }
 
-    // Cleanup listener
+    // Cleanup listeners
     return () => {
-      profileListeners.delete(listener);
+      profileListeners.delete(profileListener);
+      leaderboardListeners.delete(leaderboardListener);
+      claimListeners.delete(claimListener);
     };
   }, []);
 
-  return { userProfile, leaderboard, referrals, distributionHistory, addDistributionRecord, updateUserProfile };
+  return { userProfile, leaderboard, referrals, distributionHistory, claimedAirdrops, addDistributionRecord, updateUserProfile, addClaimRecord };
 };
 
 export { useTelegram };
-
-    

@@ -28,12 +28,12 @@ export default function ReferralsPage() {
     return (
     <div className="container mx-auto p-4 space-y-8">
       <header className="text-center space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Refer a Friend</h1>
+        <h1 className="text-xl font-bold tracking-tight">Refer a Friend</h1>
         <p className="text-xs text-muted-foreground">Earn more MOO for every friend you invite!</p>
       </header>
 
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <h2 className="text-xl font-semibold leading-none tracking-tight">Your Referral Link</h2>
+        <h2 className="text-base font-semibold leading-none tracking-tight">Your Referral Link</h2>
         <div className="space-y-4 pt-2">
           <div className="p-3 border rounded-md bg-secondary/50 text-xs break-all">
             {referralLink}
@@ -49,7 +49,7 @@ export default function ReferralsPage() {
 
       <div className="space-y-4">
         <div className='px-2'>
-          <h2 className="text-xl font-semibold leading-none tracking-tight">Your Referrals ({referrals.length})</h2>
+          <h2 className="text-base font-semibold leading-none tracking-tight">Your Referrals ({referrals.length})</h2>
           <p className="text-xs text-muted-foreground pt-1.5">Friends who have joined using your link.</p>
         </div>
         <div className='rounded-lg border bg-card text-card-foreground shadow-sm p-4'>
@@ -61,12 +61,12 @@ export default function ReferralsPage() {
                                 <AvatarImage src={ref.profilePictureUrl} data-ai-hint="profile picture" />
                                 <AvatarFallback>{ref.username.substring(0, 2)}</AvatarFallback>
                             </Avatar>
-                            <span className="font-semibold">@{ref.username}</span>
+                            <span className="font-semibold text-xs">@{ref.username}</span>
                         </li>
                     ))}
                 </ul>
             ) : (
-                <p className="text-center text-muted-foreground py-4">You haven't referred anyone yet.</p>
+                <p className="text-center text-muted-foreground py-4 text-xs">You haven't referred anyone yet.</p>
             )}
         </div>
       </div>

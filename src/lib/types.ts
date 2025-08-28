@@ -8,6 +8,7 @@ export type UserProfile = {
   purchasedBoosts: string[];
   isLicenseActive: boolean;
   completedSocialTasks?: { [key: string]: 'idle' | 'verifying' | 'completed' };
+  hasClaimedAirdrop?: boolean;
 };
 
 export type LeaderboardEntry = {
@@ -24,5 +25,11 @@ export type Referral = {
 
 export type DistributionRecord = {
   timestamp: Date;
+  amount: number;
+};
+
+export type AirdropClaim = {
+  username: string;
+  walletAddress: string;
   amount: number;
 };

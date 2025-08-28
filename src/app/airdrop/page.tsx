@@ -33,7 +33,7 @@ type EligibilityCriterion = {
 };
 
 export default function AirdropPage() {
-  const { userProfile, referrals } = useTelegram();
+  const { userProfile, referrals, addClaimRecord, updateUserProfile } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
   const [isClaimed, setIsClaimed] = useState(false);
@@ -45,9 +45,10 @@ export default function AirdropPage() {
   useEffect(() => {
     if (userProfile) {
       setMainBalance(userProfile.mainBalance);
-      // If balance is 0, it means it has been claimed.
-      if (userProfile.mainBalance === 0) {
+      // Check if this user has already claimed by checking if balance is 0
+      if (userProfile.hasClaimedAirdrop) {
           setIsClaimed(true);
+          setClaimedAmount(userProfile.mainBalance); // Assuming last balance was the claimed amount
       }
 
       const criteria: EligibilityCriterion[] = [
@@ -91,14 +92,22 @@ export default function AirdropPage() {
         });
         return;
     }
+    if (!userProfile) return;
 
     const amountToClaim = mainBalance;
     setClaimedAmount(amountToClaim);
-    // Here you would typically send the data to your backend
-    console.log('Claiming', amountToClaim, 'to wallet', walletAddress);
     
+    // Save claim data
+    addClaimRecord({
+        username: userProfile.telegramUsername,
+        walletAddress: walletAddress,
+        amount: amountToClaim,
+    });
+    
+    // Update user profile to reflect claim
+    updateUserProfile({ mainBalance: 0, hasClaimedAirdrop: true });
+
     setMainBalance(0);
-    if(userProfile) userProfile.mainBalance = 0;
     setWalletAddress('');
     setIsClaimed(true);
   };
@@ -111,28 +120,28 @@ export default function AirdropPage() {
   return (
     <div className="container mx-auto p-4 space-y-8">
       <header className="text-center space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Airdrop</h1>
+        <h1 className="text-xl font-bold tracking-tight">Airdrop</h1>
       </header>
       
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <h2 className="text-xl font-semibold leading-none tracking-tight">Your Main Balance</h2>
+          <h2 className="text-base font-semibold leading-none tracking-tight">Your Main Balance</h2>
           
         {isClaimed ? (
             <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Claim Submitted for Processing</AlertTitle>
                 <AlertDescription className="text-xs">
-                    Your request to claim {claimedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
+                    Your request to claim your airdrop allocation has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
                 </AlertDescription>
             </Alert>
         ) : (
             <div className="flex items-center justify-between">
-            <p className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+            <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                 {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
             </p>
             <Dialog>
                 <DialogTrigger asChild>
-                <Button disabled={mainBalance === 0 || !isEligible}>Claim</Button>
+                <Button size="sm" disabled={mainBalance === 0 || !isEligible}>Claim</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
@@ -168,7 +177,7 @@ export default function AirdropPage() {
 
       <div className="space-y-4">
         <div className='px-2'>
-          <h2 className="text-xl font-semibold leading-none tracking-tight">Airdrop Eligibility</h2>
+          <h2 className="text-base font-semibold leading-none tracking-tight">Airdrop Eligibility</h2>
           <p className="text-xs text-muted-foreground">Complete these tasks to be eligible for the upcoming moo airdrop.</p>
         </div>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -179,7 +188,7 @@ export default function AirdropPage() {
                            <div className={cn("p-2 rounded-lg", criterion.isCompleted ? 'bg-green-500/20' : 'bg-destructive/20')}>
                                 <criterion.icon className={cn("w-6 h-6", criterion.isCompleted ? 'text-green-500' : 'text-destructive')} />
                             </div>
-                            <CardTitle className="text-base">{criterion.title}</CardTitle>
+                            <CardTitle className="text-sm">{criterion.title}</CardTitle>
                         </div>
                         {criterion.isCompleted ? (
                             <CheckCircle className="w-5 h-5 text-green-500" />

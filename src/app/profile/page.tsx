@@ -69,12 +69,12 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex flex-col items-center space-y-2">
-        <Avatar className="w-32 h-32 border-4 border-primary shadow-lg">
+        <Avatar className="w-24 h-24 border-4 border-primary shadow-lg">
           <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.telegramUsername} data-ai-hint="profile picture" />
           <AvatarFallback>{userProfile.telegramUsername.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">@{userProfile.telegramUsername}</h1>
+            <h1 className="text-lg font-bold">@{userProfile.telegramUsername}</h1>
             {userProfile.isPremium && (
                 <Badge variant="default" className="bg-blue-500 hover:bg-blue-600 text-white">
                     <Gem className="mr-1 h-3 w-3" />
@@ -87,7 +87,7 @@ export default function ProfilePage() {
 
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
         <div>
-          <h2 className="text-xl font-semibold leading-none tracking-tight">Achievements</h2>
+          <h2 className="text-base font-semibold leading-none tracking-tight">Achievements</h2>
         </div>
         <div className="pt-2">
             {unlockedAchievements.length > 0 ? (
@@ -132,7 +132,7 @@ export default function ProfilePage() {
                     ))}
                 </div>
             ) : (
-                <p className="text-center text-muted-foreground py-4">No achievements unlocked yet.</p>
+                <p className="text-center text-muted-foreground py-4 text-xs">No achievements unlocked yet.</p>
             )}
         </div>
       </div>

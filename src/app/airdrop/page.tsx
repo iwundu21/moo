@@ -80,9 +80,9 @@ export default function AirdropPage() {
             {isClaimed ? (
                 <Alert>
                     <CheckCircle className="h-4 w-4" />
-                    <AlertTitle>Processing Airdrop</AlertTitle>
+                    <AlertTitle>Claim Submitted for Processing</AlertTitle>
                     <AlertDescription>
-                        Your MOO airdrop is processing. You can check the status in your wallet.
+                        Your request to claim {claimedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
                     </AlertDescription>
                 </Alert>
             ) : (

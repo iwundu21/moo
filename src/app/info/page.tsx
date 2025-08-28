@@ -1,7 +1,7 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
 
 export default function InfoPage() {
   return (
@@ -14,56 +14,90 @@ export default function InfoPage() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Introduction</CardTitle>
-            <CardDescription>What is MOO?</CardDescription>
+            <CardTitle>Abstract</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-4">
             <p>
-              MOO is a revolutionary decentralized protocol built on the Telegram Open Network (TON) that introduces a new paradigm for community engagement and rewards. By leveraging the social fabric of Telegram, MOO transforms everyday user interactions into a rewarding experience.
+              MOO 🐮 is a meme coin on the TON blockchain, created to unite communities through humor, virality, and decentralized technology. Inspired by the internet’s love for memes and the unstoppable cow energy, MOO is designed to be the funniest, friendliest, and most bullish meme coin on TON.
             </p>
             <p>
-              The core concept is simple: users earn MOO tokens by being active in their favorite Telegram groups. This creates a vibrant, self-sustaining ecosystem where community participation is directly incentivized.
+              MOO is not about governance or complicated mechanics — it’s about community, liquidity, and endless memeability.
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Tokenomics</CardTitle>
-             <CardDescription>Understanding the MOO Token</CardDescription>
+            <CardTitle>Vision & Mission</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-4">
-            <p>
-              The MOO token is the native utility token of the protocol. It serves multiple purposes within the ecosystem, including:
-            </p>
+            <p><span className="font-semibold text-foreground">Vision:</span> Become the #1 meme coin on TON, spreading joy, memes, and “cow power” across the blockchain.</p>
+            <p><span className="font-semibold text-foreground">Mission:</span> Build a fun, engaging, and rewarding ecosystem on TON, backed by strong liquidity, viral marketing, and meme-driven growth.</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Why TON?</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-4">
             <ul className="list-disc pl-5 space-y-2">
-              <li><span className="font-semibold text-foreground">Staking:</span> Users can stake MOO tokens to earn additional rewards and participate in governance.</li>
-              <li><span className="font-semibold text-foreground">Boosts:</span> MOO can be used to purchase in-app boosts, increasing a user's earning potential.</li>
-              <li><span className="font-semibold text-foreground">Governance:</span> Token holders can vote on proposals to shape the future development of the protocol.</li>
+                <li><span className="font-semibold text-foreground">Fast & Scalable:</span> TON is built for mass adoption with lightning-fast transactions.</li>
+                <li><span className="font-semibold text-foreground">Low Fees:</span> Micro-transactions make MOO trading cheap & accessible.</li>
+                <li><span className="font-semibold text-foreground">Ecosystem Growth:</span> TON is rapidly expanding with integrations into Telegram, the world’s largest messaging platform.</li>
             </ul>
+            <p className="font-semibold text-foreground pt-2">MOO is perfectly positioned to ride TON’s explosive growth.</p>
           </CardContent>
         </Card>
 
          <Card>
           <CardHeader>
-            <CardTitle>Roadmap</CardTitle>
-             <CardDescription>The Future of MOO</CardDescription>
+            <CardTitle>Roadmap 🗺️</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-4">
              <ol className="list-decimal pl-5 space-y-4">
                 <li>
-                    <span className="font-semibold text-foreground">Q3 2024: Protocol Launch</span>
-                    <p>Initial launch of the MOO Mini App, including core features like profile tracking, chat earning, and the referral program.</p>
+                    <span className="font-semibold text-foreground">Phase 1 – The Herd Awakens</span>
+                    <p>Brand & community launch. Meme campaigns (“Got MOO?” 🐮). Build strong Telegram & X communities. Viral marketing + meme contests. MOO integration into Telegram mini-apps (stickers, bots, tipping).</p>
                 </li>
                 <li>
-                    <span className="font-semibold text-foreground">Q4 2024: Governance & Staking</span>
-                    <p>Introduction of the MOO DAO, allowing token holders to vote on key protocol parameters. Staking pools will be launched.</p>
+                    <span className="font-semibold text-foreground">Phase 2 – The Big Stampede</span>
+                    <p>Token launch on TON (Jetton standard). Initial liquidity pool setup on TON-native DEXs. Top-tier CEX listings (Binance, OKX, Bybit target). Strategic airdrops to early community members. Global awareness campaign (“The Herd Takes Over”).</p>
                 </li>
                  <li>
-                    <span className="font-semibold text-foreground">Q1 2025: Expanded Ecosystem</span>
-                    <p>Integration with other TON-based DeFi protocols and launch of the MOO NFT marketplace for exclusive digital collectibles.</p>
+                    <span className="font-semibold text-foreground">Phase 3 – Farm Expansion</span>
+                    <p>Meme NFT collection (“Cows of MOO-verse”). Collaborations with TON ecosystem projects. Community-driven meme contests & rewards. Additional mid-tier CEX listings.</p>
+                </li>
+                <li>
+                    <span className="font-semibold text-foreground">Phase 4 – Global Domination</span>
+                    <p>IRL meme events & merch drops. Large-scale global meme campaigns. Expansion into cross-chain TON bridges.</p>
                 </li>
             </ol>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Security & Transparency</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-4">
+            <ul className="list-disc pl-5 space-y-2">
+                <li>Smart contracts deployed under Jetton standard.</li>
+                <li>Liquidity locked to ensure trust.</li>
+                <li>No governance: simple, meme-driven token.</li>
+                <li>Transparent distribution & open community channels.</li>
+            </ul>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Conclusion</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-4">
+            <p>
+              MOO 🐮 is a pure meme coin built on TON for speed, low fees, and massive Telegram-native adoption. By focusing on memes, virality, and community engagement, MOO aims to become the undisputed king of memes on TON.
+            </p>
           </CardContent>
         </Card>
       </div>

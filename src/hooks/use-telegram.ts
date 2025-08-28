@@ -71,19 +71,18 @@ const useTelegram = () => {
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(globalClaimedAirdrops);
   
   // Airdrop status state with proper initialization from localStorage
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    const storedValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
-    return storedValue === null ? true : storedValue === 'true';
-  });
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
 
-  
   useEffect(() => {
+    // This effect runs only on the client, after hydration
+    const storedValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
+    setIsAirdropLive(storedValue === null ? true : storedValue === 'true');
+    
     // Listener for storage events (from other tabs)
     const handleStorageChange = (event: StorageEvent) => {
         if (event.key === AIRDROP_STATUS_STORAGE_KEY) {
-            const storedValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
-            setIsAirdropLive(storedValue === null ? true : storedValue === 'true');
+            const newValue = event.newValue;
+            setIsAirdropLive(newValue === null ? true : newValue === 'true');
         }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -226,8 +225,15 @@ const useTelegram = () => {
 
   const setAirdropStatus = useCallback((isLive: boolean) => {
     if (typeof window !== 'undefined') {
-        window.localStorage.setItem(AIRDROP_STATUS_STORAGE_KEY, String(isLive));
+        const newValue = String(isLive);
+        window.localStorage.setItem(AIRDROP_STATUS_STORAGE_KEY, newValue);
+        // Manually update state for the current tab
         setIsAirdropLive(isLive);
+        // Dispatch a storage event to notify other tabs
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: AIRDROP_STATUS_STORAGE_KEY,
+            newValue: newValue
+        }));
     }
   }, []);
 

@@ -1,4 +1,3 @@
-
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -6,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 // IMPORTANT: Do not remove this object
 const firebaseConfig = {
-  apiKey: "FAKE_API_KEY",
-  authDomain: "FAKE_AUTH_DOMAIN",
-  projectId: "dev-prototyper-168a1",
-  storageBucket: "FAKE_STORAGE_BUCKET",
-  messagingSenderId: "FAKE_MESSAGING_SENDER_ID",
-  appId: "FAKE_APP_ID"
+    apiKey: "AIzaSyBARqwkgamSoLTFMZEfhELp28FJs1zU1ng",
+    authDomain: "moo-tele-2.firebaseapp.com",
+    projectId: "moo-tele-2",
+    storageBucket: "moo-tele-2.appspot.com",
+    messagingSenderId: "778910858623",
+    appId: "1:778910858623:web:67cccbc7373c0012ae6e4a"
 };
 
 

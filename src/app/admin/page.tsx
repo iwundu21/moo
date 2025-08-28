@@ -110,7 +110,7 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell className="text-xs">{claim.walletAddress}</TableCell>
                   <TableCell className="text-right font-semibold">
-                    {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                    {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
                   </TableCell>
                 </TableRow>
               ))

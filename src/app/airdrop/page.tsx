@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Zap, Ban } from 'lucide-react';
+import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -33,7 +33,7 @@ type EligibilityCriterion = {
 };
 
 export default function AirdropPage() {
-  const { userProfile, referrals, addClaimRecord, updateUserProfile, isAirdropLive } = useTelegram();
+  const { userProfile, referrals, addClaimRecord, updateUserProfile } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
   const [isClaimed, setIsClaimed] = useState(false);
@@ -80,7 +80,7 @@ export default function AirdropPage() {
       setEligibilityCriteria(criteria);
       setIsEligible(criteria.every(c => c.isCompleted));
     }
-  }, [userProfile, referrals, isAirdropLive]);
+  }, [userProfile, referrals]);
 
   const handleClaim = () => {
     if (!walletAddress.trim()) {
@@ -138,56 +138,39 @@ export default function AirdropPage() {
                 <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                     {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
                 </p>
-                {isAirdropLive ? (
-                     <Dialog>
-                        <DialogTrigger asChild>
-                        <Button size="sm" disabled={mainBalance === 0 || !isEligible}>Claim</Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Claim Your Allocation</DialogTitle>
-                            <DialogDescription>
-                            Enter your TON network wallet address to receive your MOO.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="wallet-address" className="text-right">
-                                Address
-                            </Label>
-                            <Input
-                                id="wallet-address"
-                                placeholder="Paste your TON wallet address"
-                                className="col-span-3"
-                                value={walletAddress}
-                                onChange={(e) => setWalletAddress(e.target.value)}
-                            />
-                            </div>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                    <Button size="sm" disabled={mainBalance === 0 || !isEligible}>Claim</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Claim Your Allocation</DialogTitle>
+                        <DialogDescription>
+                        Enter your TON network wallet address to receive your MOO.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="wallet-address" className="text-right">
+                            Address
+                        </Label>
+                        <Input
+                            id="wallet-address"
+                            placeholder="Paste your TON wallet address"
+                            className="col-span-3"
+                            value={walletAddress}
+                            onChange={(e) => setWalletAddress(e.target.value)}
+                        />
                         </div>
-                        <DialogFooter>
-                            <DialogClose asChild>
-                                <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
-                            </DialogClose>
-                        </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                ) : (
-                    <Button size="sm" disabled>Claim</Button>
-                )}
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
-        )}
-        {!isClaimed && (
-             <Alert variant={isAirdropLive ? "default" : "destructive"} className={cn(
-                isAirdropLive ? "border-green-500/50 bg-green-500/10 text-green-200" : "border-amber-500/50 bg-amber-500/10 text-amber-200"
-             )}>
-                {isAirdropLive ? <Zap className="h-4 w-4 text-green-500" /> : <Ban className="h-4 w-4 text-amber-500" />}
-                <AlertTitle className={cn(isAirdropLive ? "text-green-400" : "text-amber-400")}>
-                    {isAirdropLive ? 'Airdrop Claim is Live!' : 'Airdrop Claiming is Coming Soon'}
-                </AlertTitle>
-                <AlertDescription className="text-xs">
-                    {isAirdropLive ? 'Complete the eligibility tasks and claim your MOO tokens.' : 'The airdrop claim period has not started yet. Please check back later.'}
-                </AlertDescription>
-            </Alert>
         )}
       </div>
 

@@ -41,7 +41,6 @@ const useTelegram = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
 
   const saveData = (data: any) => {
@@ -74,7 +73,6 @@ const useTelegram = () => {
     const allReferrals: {[key: string]: Referral[]} = storedData.referrals || {};
     let currentLeaderboard: LeaderboardEntry[] = storedData.leaderboard || [];
     const currentClaimedAirdrops: AirdropClaim[] = storedData.claimedAirdrops || [];
-    const currentAirdropStatus: boolean = storedData.isAirdropLive === undefined ? true : storedData.isAirdropLive;
 
     let currentUserProfile = allUserProfiles[userId];
 
@@ -121,7 +119,6 @@ const useTelegram = () => {
     setUserProfile(currentUserProfile);
     setLeaderboard(currentLeaderboard);
     setClaimedAirdrops(currentClaimedAirdrops);
-    setIsAirdropLive(currentAirdropStatus);
     setReferrals(allReferrals[userId] || []);
 
     // Save initial state to localStorage
@@ -130,14 +127,8 @@ const useTelegram = () => {
         referrals: allReferrals, 
         leaderboard: currentLeaderboard, 
         claimedAirdrops: currentClaimedAirdrops,
-        isAirdropLive: currentAirdropStatus
     });
 
-  }, []);
-
-  const setAirdropStatus = useCallback((isLive: boolean) => {
-    setIsAirdropLive(isLive);
-    saveData({ isAirdropLive: isLive });
   }, []);
 
   const addClaimRecord = useCallback((claim: AirdropClaim) => {
@@ -182,11 +173,9 @@ const useTelegram = () => {
     referrals, 
     distributionHistory, 
     claimedAirdrops, 
-    isAirdropLive, 
     addDistributionRecord, 
     updateUserProfile, 
     addClaimRecord, 
-    setAirdropStatus,
     isClient
   };
 };

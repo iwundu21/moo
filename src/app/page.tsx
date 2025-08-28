@@ -229,9 +229,8 @@ export default function Home() {
                                             <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
                                                 <task.icon className="mr-3" />
                                                 <span className="flex-1 text-left">{task.text}</span>
-                                                 <Badge variant="secondary" className="flex items-center gap-1">
-                                                    +{task.reward}
-                                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-500" />
+                                                 <Badge variant="secondary">
+                                                    +{task.reward} MOO
                                                  </Badge>
                                             </Link>
                                         </Button>
@@ -340,3 +339,5 @@ export default function Home() {
   );
 }
  
+
+    

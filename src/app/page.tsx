@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper } from 'lucide-react';
+import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Zap } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -127,7 +127,7 @@ export default function Home() {
       const invoiceLink = await createPayment({
         userId: userProfile.id,
         boostId: boost.id,
-        price: boost.price
+        price: boost.cost // Use `cost` for the price in Stars
       });
 
       if (invoiceLink && window.Telegram?.WebApp) {
@@ -287,7 +287,7 @@ export default function Home() {
                             Activate your license to start mining MOO.
                         </p>
                         <Button className="w-full" onClick={handleLicenseActivation} disabled={mainBalance < 150}>
-                            Activate for 150 <Star className="ml-2 fill-yellow-400 text-yellow-500" />
+                            Activate for 150 MOO <Star className="ml-2 fill-yellow-400 text-yellow-500" />
                         </Button>
                     </div>
                 </div>
@@ -362,7 +362,7 @@ export default function Home() {
                                         <p className="text-xs text-primary-foreground/80">{boost.description}</p>
                                     </div>
                                     <span className='flex items-center'>
-                                        ${boost.price.toFixed(2)}{' '}
+                                        {boost.cost} <Zap className="ml-2 w-4 h-4 text-yellow-400" />
                                     </span>
                                 </>
                                 )}
@@ -378,5 +378,4 @@ export default function Home() {
     </div>
   );
 }
-
     

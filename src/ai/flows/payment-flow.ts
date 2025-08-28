@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A flow for creating Telegram payment invoices.
+ * @fileOverview A flow for creating Telegram payment invoices using Telegram Stars.
  *
  * - createPayment - A function that handles the payment invoice creation process.
  * - CreatePaymentInput - The input type for the createPayment function.
@@ -17,7 +17,7 @@ import 'dotenv/config';
 const CreatePaymentInputSchema = z.object({
   userId: z.string().describe("The user's Telegram ID."),
   boostId: z.string().describe('The ID of the boost being purchased.'),
-  price: z.number().describe('The price of the item in USD.'),
+  price: z.number().describe('The price of the item in Telegram Stars (XTR).'),
 });
 export type CreatePaymentInput = z.infer<typeof CreatePaymentInputSchema>;
 
@@ -35,13 +35,9 @@ const createPaymentFlow = ai.defineFlow(
   },
   async (input) => {
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const PAYMENT_PROVIDER_TOKEN = process.env.PAYMENT_PROVIDER_TOKEN;
 
     if (!TELEGRAM_BOT_TOKEN) {
       throw new Error('TELEGRAM_BOT_TOKEN is not configured.');
-    }
-    if (!PAYMENT_PROVIDER_TOKEN) {
-      throw new Error('PAYMENT_PROVIDER_TOKEN is not configured. Please get one from @BotFather.');
     }
 
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`;
@@ -50,9 +46,8 @@ const createPaymentFlow = ai.defineFlow(
         title: `MOO Boost ${input.boostId}`,
         description: `Purchase a ${input.boostId} boost for your MOO mining.`,
         payload: `boost-${input.boostId}-${input.userId}`,
-        provider_token: PAYMENT_PROVIDER_TOKEN,
-        currency: 'USD',
-        prices: [{ label: `${input.boostId} Boost`, amount: Math.round(input.price * 100) }] // Price in cents
+        currency: 'XTR', // Use XTR for Telegram Stars
+        prices: [{ label: `${input.boostId} Boost`, amount: input.price }] // Price in Stars
     };
 
     const response = await fetch(url, {
@@ -73,5 +68,4 @@ const createPaymentFlow = ai.defineFlow(
     return data.result;
   }
 );
-
     

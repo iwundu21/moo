@@ -10,11 +10,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Power } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export default function AdminPage() {
-  const { claimedAirdrops } = useTelegram();
+  const { claimedAirdrops, isAirdropLive, setAirdropStatus } = useTelegram();
 
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
@@ -51,6 +54,27 @@ export default function AdminPage() {
           <Download className="mr-2 h-4 w-4" />
           Download CSV
         </Button>
+      </div>
+
+       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-4">
+        <h3 className="text-base font-semibold">Airdrop Controls</h3>
+        <div className="flex items-center space-x-4 p-4 rounded-md bg-secondary/50">
+            <Power className={cn("w-6 h-6", isAirdropLive ? "text-green-500" : "text-destructive")} />
+            <div className="flex-1">
+                <Label htmlFor="airdrop-switch" className="font-semibold">
+                    Airdrop Claiming
+                </Label>
+                <p className={cn("text-xs", isAirdropLive ? 'text-green-400' : 'text-yellow-500')}>
+                    {isAirdropLive ? 'Live - Users can claim their airdrop.' : 'Disabled - Claiming is currently paused.'}
+                </p>
+            </div>
+            <Switch
+                id="airdrop-switch"
+                checked={isAirdropLive}
+                onCheckedChange={setAirdropStatus}
+                aria-label="Toggle airdrop claiming"
+            />
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">

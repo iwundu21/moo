@@ -42,12 +42,16 @@ const leaderboardListeners: Set<(leaderboard: LeaderboardEntry[]) => void> = new
 let globalClaimedAirdrops: AirdropClaim[] = [];
 const claimListeners: Set<(claims: AirdropClaim[]) => void> = new Set();
 
+let globalAirdropLiveStatus: boolean = true;
+const airdropStatusListeners: Set<(isLive: boolean) => void> = new Set();
+
 const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(globalUserProfile);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(globalLeaderboard);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(globalClaimedAirdrops);
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(globalAirdropLiveStatus);
 
 
   const notifyProfileListeners = useCallback(() => {
@@ -67,6 +71,17 @@ const useTelegram = () => {
       listener([...globalClaimedAirdrops]);
     }
   }, []);
+  
+  const notifyAirdropStatusListeners = useCallback(() => {
+    for (const listener of airdropStatusListeners) {
+      listener(globalAirdropLiveStatus);
+    }
+  }, []);
+  
+  const setAirdropStatus = useCallback((isLive: boolean) => {
+    globalAirdropLiveStatus = isLive;
+    notifyAirdropStatusListeners();
+  }, [notifyAirdropStatusListeners]);
 
   const addClaimRecord = useCallback((claim: AirdropClaim) => {
     globalClaimedAirdrops.push(claim);
@@ -104,10 +119,12 @@ const useTelegram = () => {
     const profileListener = (profile: UserProfile | null) => setUserProfile(profile);
     const leaderboardListener = (leaderboard: LeaderboardEntry[]) => setLeaderboard(leaderboard);
     const claimListener = (claims: AirdropClaim[]) => setClaimedAirdrops(claims);
+    const airdropStatusListener = (isLive: boolean) => setIsAirdropLive(isLive);
 
     profileListeners.add(profileListener);
     leaderboardListeners.add(leaderboardListener);
     claimListeners.add(claimListener);
+    airdropStatusListeners.add(airdropStatusListener);
 
     // Initial load logic should only run once
     if (!globalUserProfile) {
@@ -223,10 +240,11 @@ const useTelegram = () => {
       profileListeners.delete(profileListener);
       leaderboardListeners.delete(leaderboardListener);
       claimListeners.delete(claimListener);
+      airdropStatusListeners.delete(airdropStatusListener);
     };
   }, []);
 
-  return { userProfile, leaderboard, referrals, distributionHistory, claimedAirdrops, addDistributionRecord, updateUserProfile, addClaimRecord };
+  return { userProfile, leaderboard, referrals, distributionHistory, claimedAirdrops, isAirdropLive, addDistributionRecord, updateUserProfile, addClaimRecord, setAirdropStatus };
 };
 
 export { useTelegram };

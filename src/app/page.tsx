@@ -294,7 +294,7 @@ export default function Home() {
                 <AlertTitle>How It Works</AlertTitle>
                 <AlertDescription className="text-xs space-y-1">
                   <p>1. Activate your license to unlock earning tasks.</p>
-                  <p>2. Complete social tasks to become active to earn.</p>
+                  <p>2. Complete social tasks & redeem a referral code.</p>
                   <p>3. Send messages in designated group chats to earn MOO.</p>
                 </AlertDescription>
             </Alert>

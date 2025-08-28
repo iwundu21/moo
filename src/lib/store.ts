@@ -1,11 +1,12 @@
 
-import type { UserProfile, LeaderboardEntry, AirdropClaim } from './types';
+import type { UserProfile, LeaderboardEntry, AirdropClaim, Referral } from './types';
 
 type Listener = () => void;
 
 class AppStore {
   private userProfile: UserProfile | null = null;
   private leaderboard: LeaderboardEntry[] = [];
+  private referrals: Referral[] = [];
   private claimedAirdrops: AirdropClaim[] = [];
   private isAirdropLive: boolean = true;
   private listeners: Set<Listener> = new Set();
@@ -26,13 +27,15 @@ class AppStore {
   }
 
   // --- Initialization ---
-  initialize(profile: UserProfile, mockLeaderboard: LeaderboardEntry[]): void {
+  initialize(profile: UserProfile, mockLeaderboard: LeaderboardEntry[], mockReferrals: Referral[]): void {
     if (this.userProfile) return; // Already initialized
 
     this.userProfile = profile;
-    
-    const userInMock = mockLeaderboard.some(u => u.username === this.userProfile!.telegramUsername);
     this.leaderboard = [...mockLeaderboard];
+    this.referrals = [...mockReferrals];
+    
+    const userInMock = this.leaderboard.some(u => u.username === this.userProfile!.telegramUsername);
+
     if (!userInMock) {
       this.leaderboard.push({
         rank: 0,
@@ -48,6 +51,7 @@ class AppStore {
   // --- Getters ---
   getUserProfile = (): UserProfile | null => this.userProfile;
   getLeaderboard = (): LeaderboardEntry[] => [...this.leaderboard];
+  getReferrals = (): Referral[] => [...this.referrals];
   getClaimedAirdrops = (): AirdropClaim[] => [...this.claimedAirdrops];
   getAirdropStatus = (): boolean => this.isAirdropLive;
 

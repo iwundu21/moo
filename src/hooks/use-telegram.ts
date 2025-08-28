@@ -36,20 +36,23 @@ declare global {
 const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(store.getUserProfile());
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(store.getLeaderboard());
-  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>(store.getReferrals());
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(store.getClaimedAirdrops());
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(store.getAirdropStatus());
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true); // Default to true, will be updated from store
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    // Initialize state from store only on the client
+    setIsAirdropLive(store.getAirdropStatus());
     
     const handleStoreUpdate = () => {
       setUserProfile(store.getUserProfile());
       setLeaderboard(store.getLeaderboard());
       setClaimedAirdrops(store.getClaimedAirdrops());
       setIsAirdropLive(store.getAirdropStatus());
+      setReferrals(store.getReferrals());
     };
 
     store.subscribe(handleStoreUpdate);
@@ -81,16 +84,16 @@ const useTelegram = () => {
                 hasClaimedAirdrop: false,
               };
           
-          store.initialize(initialProfile, mockLeaderboard);
-          setReferrals(mockReferrals); // Referrals are static for now
+          store.initialize(initialProfile, mockLeaderboard, mockReferrals);
         } else if (pollCount < maxPolls) {
           pollCount++;
           setTimeout(initTelegram, 100);
         } else {
-          console.log("Telegram WebApp not found, using mock data from db.json.");
-          if (isMounted) {
-            store.initialize(defaultUserProfile, mockLeaderboard);
-            setReferrals(mockReferrals);
+          console.log("Telegram WebApp not found. App will wait for real user data.");
+          // In a real scenario, you might want to show a message to the user
+          // For now, we initialize with a null/default state, and the UI should handle it.
+           if (isMounted) {
+            store.initialize(defaultUserProfile, [], []);
           }
         }
       };

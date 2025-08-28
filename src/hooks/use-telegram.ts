@@ -33,7 +33,7 @@ declare global {
   }
 }
 
-const STORE_KEY = 'moo-app-data';
+const STORE_KEY = 'moo-app-data-v2';
 
 const useTelegram = () => {
   const [isClient, setIsClient] = useState(false);
@@ -61,7 +61,6 @@ const useTelegram = () => {
 
     const tg = window.Telegram?.WebApp;
     if (!tg?.initDataUnsafe?.user) {
-        console.log("Telegram Web App user data not available. App will not initialize.");
         return;
     }
 

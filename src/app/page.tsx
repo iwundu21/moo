@@ -19,12 +19,13 @@ import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Confetti from 'react-confetti';
+import { createPayment } from '@/ai/flows/payment-flow';
 
 
 const boosts = [
-  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message' },
-  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 25 MOO per message' },
-  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 50 MOO per message' },
+  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message', price: 1.00 },
+  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 25 MOO per message', price: 2.00 },
+  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 50 MOO per message', price: 3.50 },
 ];
 
 type TaskStatus = 'idle' | 'verifying' | 'completed';
@@ -116,11 +117,32 @@ export default function Home() {
     return () => clearInterval(countdownInterval);
   }, [userProfile, pendingBalance, addDistributionRecord, updateUserProfile, mainBalance]);
 
-  const handleBoostPurchase = (boostId: string) => {
+  const handleBoostPurchase = async (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
-    const newBoosts = [...activatedBoosts, boostId];
-    setActivatedBoosts(newBoosts);
-    updateUserProfile({ purchasedBoosts: newBoosts });
+
+    const boost = boosts.find(b => b.id === boostId);
+    if (!boost || !userProfile) return;
+
+    try {
+      const invoiceLink = await createPayment({
+        userId: userProfile.id,
+        boostId: boost.id,
+        price: boost.price
+      });
+
+      if (invoiceLink && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.openInvoice(invoiceLink, (status) => {
+          if (status === 'paid') {
+            const newBoosts = [...activatedBoosts, boostId];
+            setActivatedBoosts(newBoosts);
+            updateUserProfile({ purchasedBoosts: newBoosts });
+            window.Telegram.WebApp.close();
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Payment creation failed:", error);
+    }
   };
 
   const handleLicenseActivation = () => {
@@ -328,7 +350,7 @@ export default function Home() {
                                 key={boost.id}
                                 variant="default"
                                 className="w-full justify-between"
-                                disabled={isActivated || mainBalance < boost.cost}
+                                disabled={isActivated}
                                 onClick={() => handleBoostPurchase(boost.id)}
                             >
                                 {isActivated ? (
@@ -340,8 +362,7 @@ export default function Home() {
                                         <p className="text-xs text-primary-foreground/80">{boost.description}</p>
                                     </div>
                                     <span className='flex items-center'>
-                                        {boost.cost}{' '}
-                                        <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500" />
+                                        ${boost.price.toFixed(2)}{' '}
                                     </span>
                                 </>
                                 )}
@@ -357,7 +378,5 @@ export default function Home() {
     </div>
   );
 }
- 
-    
 
     

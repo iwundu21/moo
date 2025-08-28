@@ -17,7 +17,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
-import { DailyEarningsChart } from '@/components/DailyEarningsChart';
 
 
 const boosts = [
@@ -247,18 +246,6 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <div>
-          <h3 className="text-2xl font-semibold leading-none tracking-tight">Daily Earnings</h3>
-          <p className="text-sm text-muted-foreground pt-1.5">Your MOO earnings for the current week.</p>
-        </div>
-        <div className="pl-2 pt-2">
-            <DailyEarningsChart />
-        </div>
-      </div>
-
     </div>
   );
 }
-
-    

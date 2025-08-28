@@ -75,13 +75,6 @@ export default function AirdropPage() {
           isCompleted: referrals.length > 0,
           link: '/referrals'
         },
-        {
-          id: 'premium',
-          title: 'Telegram Premium',
-          description: 'Be a premium Telegram user.',
-          icon: Gem,
-          isCompleted: userProfile.isPremium,
-        },
       ];
 
       setEligibilityCriteria(criteria);

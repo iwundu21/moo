@@ -48,6 +48,7 @@ export default function Home() {
   const [isLicenseActive, setIsLicenseActive] = useState(false);
   const [socialTasks, setSocialTasks] = useState<SocialTasks>(initialTasks);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [openedTasks, setOpenedTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if(userProfile) {
@@ -137,6 +138,10 @@ export default function Home() {
     }
   }
 
+  const handleTaskOpen = (taskId: string) => {
+    setOpenedTasks(prev => new Set(prev).add(taskId));
+  };
+
   const handleConfirmTask = (taskId: string) => {
     setSocialTasks(prev => ({...prev, [taskId]: 'verifying'}));
 
@@ -217,29 +222,30 @@ export default function Home() {
                         <div className="space-y-3 pt-4">
                             {socialTaskList.map(task => {
                                 const status = socialTasks[task.id];
+                                const isOpened = openedTasks.has(task.id);
                                 return (
                                     <div key={task.id} className="flex items-center gap-2">
                                         <Button asChild className="flex-1 justify-start" variant="outline" disabled={status !== 'idle'}>
-                                            <Link href={task.link} target="_blank">
+                                            <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
                                                 <task.icon className="mr-3" />
                                                 {task.text}
                                             </Link>
                                         </Button>
-                                        <Button 
-                                            onClick={() => handleConfirmTask(task.id)}
-                                            disabled={status !== 'idle'}
-                                            className="w-28"
-                                        >
-                                            {status === 'idle' && (
-                                                <>
-                                                 <span className='flex items-center'>
-                                                    100 <Star className="inline-block ml-1 fill-yellow-400 text-yellow-500 w-3 h-3" />
-                                                </span>
-                                                </>
-                                            )}
-                                            {status === 'verifying' && <Loader2 className="animate-spin" />}
-                                            {status === 'completed' && <CheckCircle />}
-                                        </Button>
+                                        {(isOpened || status !== 'idle') && (
+                                            <Button 
+                                                onClick={() => handleConfirmTask(task.id)}
+                                                disabled={status !== 'idle'}
+                                                className="w-28"
+                                            >
+                                                {status === 'idle' && (
+                                                    <span className='flex items-center'>
+                                                        Confirm
+                                                    </span>
+                                                )}
+                                                {status === 'verifying' && <Loader2 className="animate-spin" />}
+                                                {status === 'completed' && <CheckCircle />}
+                                            </Button>
+                                        )}
                                     </div>
                                 )
                             })}

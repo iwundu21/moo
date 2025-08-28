@@ -116,7 +116,6 @@ export default function Home() {
     return () => clearInterval(countdownInterval);
   }, [userProfile, pendingBalance, addDistributionRecord, updateUserProfile, mainBalance]);
 
-
   const handleBoostPurchase = (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
     const newBoosts = [...activatedBoosts, boostId];
@@ -169,8 +168,9 @@ export default function Home() {
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${h}:${m}:${s}`;
   };
-  
+
   const hasPurchasedBoosts = activatedBoosts.length > 0;
+  
   const allTasksCompleted = useMemo(() => Object.values(socialTasks).every(s => s === 'completed'), [socialTasks]);
 
   if (!userProfile) {
@@ -215,20 +215,7 @@ export default function Home() {
          </div>
          <div className="space-y-4 rounded-lg p-6">
             {isLicenseActive ? (
-                showActivationSuccess ? (
-                    <div className="flex flex-col items-center justify-center text-center h-full">
-                        <PartyPopper className="w-16 h-16 text-yellow-500 mb-4" />
-                        <h3 className="text-xl font-semibold leading-none tracking-tight">Congratulations! 🎊</h3>
-                        <div className="pt-2">
-                            <p className="text-xs text-muted-foreground mb-4">
-                                Your mining license is active! You can now earn rewards by sending messages in group chats. Complete one final step to supercharge your earnings.
-                            </p>
-                            <Button className="w-full" onClick={() => setShowActivationSuccess(false)}>
-                                Continue
-                            </Button>
-                        </div>
-                    </div>
-                ) : !allTasksCompleted ? (
+                !allTasksCompleted ? (
                     <div>
                         <h3 className="text-xl font-semibold leading-none tracking-tight">Social Tasks</h3>
                         <p className="text-xs text-muted-foreground pt-1.5">
@@ -285,6 +272,23 @@ export default function Home() {
             )}
          </div>
       </div>
+
+      <Dialog open={showActivationSuccess} onOpenChange={setShowActivationSuccess}>
+        <DialogContent>
+          <DialogHeader>
+              <div className="flex flex-col items-center justify-center text-center p-6">
+                  <PartyPopper className="w-16 h-16 text-yellow-500 mb-4" />
+                  <DialogTitle className="text-xl">Congratulations! 🎊</DialogTitle>
+                  <DialogDescription className="pt-2 text-center text-xs">
+                      Your mining license is active! You can now earn rewards by sending messages in group chats. Complete one final step to supercharge your earnings.
+                  </DialogDescription>
+              </div>
+          </DialogHeader>
+          <Button className="w-full" onClick={() => setShowActivationSuccess(false)}>
+              Continue
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-4 rounded-lg p-6">
         <div>
@@ -354,5 +358,4 @@ export default function Home() {
   );
 }
  
-
     

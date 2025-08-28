@@ -176,7 +176,7 @@ export default function AirdropPage() {
       <div className="space-y-4">
         <div className='px-2'>
           <h2 className="text-xl font-semibold leading-none tracking-tight">Airdrop Eligibility</h2>
-          <p className="text-xs text-muted-foreground">Complete these tasks to be eligible for the next airdrop.</p>
+          <p className="text-xs text-muted-foreground">Complete these tasks to be eligible for the upcoming moo airdrop.</p>
         </div>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             {eligibilityCriteria.map((criterion) => (

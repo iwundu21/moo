@@ -190,9 +190,9 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="text-center">
-          <p className="text-lg font-medium text-muted-foreground">Main Balance</p>
-          <p className="text-5xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+      <div className="text-center space-y-1">
+          <p className="text-sm font-medium text-muted-foreground">Main Balance</p>
+          <p className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
             {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
           </p>
       </div>
@@ -358,4 +358,6 @@ export default function Home() {
   );
 }
  
+    
+
     

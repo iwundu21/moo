@@ -75,10 +75,14 @@ export default function ProfilePage() {
         </Avatar>
         <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">@{userProfile.telegramUsername}</h1>
-            {userProfile.isPremium && (
+            {userProfile.isPremium ? (
                 <Badge variant="default" className="bg-blue-500 hover:bg-blue-600 text-white">
                     <Gem className="mr-1 h-3 w-3" />
                     Premium
+                </Badge>
+            ) : (
+                <Badge variant="secondary">
+                    Standard
                 </Badge>
             )}
         </div>

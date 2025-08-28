@@ -32,7 +32,7 @@ declare global {
   }
 }
 
-// Store data in variables that persist across hook instances
+// Store data in variables that persist across hook instances, except for the airdrop status.
 let globalUserProfile: UserProfile | null = null;
 const profileListeners: Set<(profile: UserProfile | null) => void> = new Set();
 
@@ -42,8 +42,15 @@ const leaderboardListeners: Set<(leaderboard: LeaderboardEntry[]) => void> = new
 let globalClaimedAirdrops: AirdropClaim[] = [];
 const claimListeners: Set<(claims: AirdropClaim[]) => void> = new Set();
 
-let globalAirdropLiveStatus: boolean = true;
-const airdropStatusListeners: Set<(isLive: boolean) => void> = new Set();
+const AIRDROP_STATUS_STORAGE_KEY = 'moo-airdrop-live-status';
+
+const getAirdropStatusFromStorage = (): boolean => {
+    if (typeof window === 'undefined') return true;
+    const storedValue = window.localStorage.getItem(AIRDROP_STATUS_STORAGE_KEY);
+    // Default to true if not set
+    return storedValue === null ? true : storedValue === 'true';
+};
+
 
 const notifyProfileListeners = () => {
     for (const listener of profileListeners) {
@@ -63,12 +70,6 @@ const notifyClaimListeners = () => {
     }
 };
 
-const notifyAirdropStatusListeners = () => {
-    for (const listener of airdropStatusListeners) {
-      listener(globalAirdropLiveStatus);
-    }
-};
-
 
 const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(globalUserProfile);
@@ -76,12 +77,18 @@ const useTelegram = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(globalClaimedAirdrops);
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(globalAirdropLiveStatus);
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(getAirdropStatusFromStorage());
 
   
   const setAirdropStatus = useCallback((isLive: boolean) => {
-    globalAirdropLiveStatus = isLive;
-    notifyAirdropStatusListeners();
+    if (typeof window !== 'undefined') {
+        window.localStorage.setItem(AIRDROP_STATUS_STORAGE_KEY, String(isLive));
+        // Manually dispatch a storage event to trigger updates in the same tab.
+        window.dispatchEvent(new StorageEvent('storage', {
+            key: AIRDROP_STATUS_STORAGE_KEY,
+            newValue: String(isLive),
+        }));
+    }
   }, []);
 
   const addClaimRecord = useCallback((claim: AirdropClaim) => {
@@ -116,22 +123,29 @@ const useTelegram = () => {
   }, []);
 
   useEffect(() => {
-    // Register listeners
+    // Listener for storage events (from other tabs or our manual dispatch)
+    const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === AIRDROP_STATUS_STORAGE_KEY) {
+            setIsAirdropLive(getAirdropStatusFromStorage());
+        }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+
+    // Register listeners for other global state
     const profileListener = (profile: UserProfile | null) => setUserProfile(profile);
     const leaderboardListener = (leaderboard: LeaderboardEntry[]) => setLeaderboard(leaderboard);
     const claimListener = (claims: AirdropClaim[]) => setClaimedAirdrops(claims);
-    const airdropStatusListener = (isLive: boolean) => setIsAirdropLive(isLive);
-
+   
     profileListeners.add(profileListener);
     leaderboardListeners.add(leaderboardListener);
     claimListeners.add(claimListener);
-    airdropStatusListeners.add(airdropStatusListener);
-
+   
     // Initial sync with global state on mount
     setUserProfile(globalUserProfile);
     setLeaderboard(globalLeaderboard);
     setClaimedAirdrops(globalClaimedAirdrops);
-    setIsAirdropLive(globalAirdropLiveStatus);
+    setIsAirdropLive(getAirdropStatusFromStorage());
 
 
     // Initial load logic should only run once
@@ -245,10 +259,10 @@ const useTelegram = () => {
 
     // Cleanup listeners
     return () => {
+      window.removeEventListener('storage', handleStorageChange);
       profileListeners.delete(profileListener);
       leaderboardListeners.delete(leaderboardListener);
       claimListeners.delete(claimListener);
-      airdropStatusListeners.delete(airdropStatusListener);
     };
   }, []);
 
@@ -256,3 +270,5 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    

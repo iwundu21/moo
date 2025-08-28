@@ -35,10 +35,11 @@ declare global {
 // Store the profile in a variable that persists across hook instances
 let globalUserProfile: UserProfile | null = null;
 const profileListeners: Set<(profile: UserProfile | null) => void> = new Set();
+let globalLeaderboard: LeaderboardEntry[] = [];
 
 const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(globalUserProfile);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(globalLeaderboard);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
 
@@ -50,8 +51,32 @@ const useTelegram = () => {
 
   const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
     if (globalUserProfile) {
+      const wasLeaderboardUpdated = 'mainBalance' in updates;
       globalUserProfile = { ...globalUserProfile, ...updates };
       notifyListeners();
+
+      if (wasLeaderboardUpdated) {
+        // Update user in leaderboard or add if not present
+        const userInLeaderboardIndex = globalLeaderboard.findIndex(u => u.username === globalUserProfile!.telegramUsername);
+        if (userInLeaderboardIndex !== -1) {
+            globalLeaderboard[userInLeaderboardIndex].balance = globalUserProfile.mainBalance;
+        } else {
+             globalLeaderboard.push({
+                rank: 0, // Rank will be recalculated
+                username: globalUserProfile.telegramUsername,
+                profilePictureUrl: globalUserProfile.profilePictureUrl,
+                balance: globalUserProfile.mainBalance,
+            });
+        }
+        
+        // Re-sort and re-rank
+        globalLeaderboard.sort((a, b) => b.balance - a.balance);
+        globalLeaderboard.forEach((user, index) => {
+            user.rank = index + 1;
+        });
+
+        setLeaderboard([...globalLeaderboard]);
+      }
     }
   }, []);
 
@@ -104,8 +129,28 @@ const useTelegram = () => {
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             };
           }
+
+          // Initialize leaderboard
+          const userInMock = mockLeaderboard.some(u => u.username === globalUserProfile!.telegramUsername);
+          let initialLeaderboard = [...mockLeaderboard];
+          if (!userInMock) {
+              initialLeaderboard.push({
+                  rank: 0, // temp rank
+                  username: globalUserProfile!.telegramUsername,
+                  profilePictureUrl: globalUserProfile!.profilePictureUrl,
+                  balance: globalUserProfile!.mainBalance
+              });
+          }
+           // Sort by balance and assign ranks
+          initialLeaderboard.sort((a, b) => b.balance - a.balance);
+          initialLeaderboard.forEach((user, index) => {
+              user.rank = index + 1;
+          });
+
+          globalLeaderboard = initialLeaderboard;
+          
           notifyListeners();
-          setLeaderboard(mockLeaderboard);
+          setLeaderboard(globalLeaderboard);
           setReferrals(mockReferrals);
 
         } else if (pollCount < maxPolls) {
@@ -125,8 +170,26 @@ const useTelegram = () => {
                 isLicenseActive: false, // Start as inactive
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             };
+
+            const userInMock = mockLeaderboard.some(u => u.username === globalUserProfile!.telegramUsername);
+            let initialLeaderboard = [...mockLeaderboard];
+            if (!userInMock) {
+                initialLeaderboard.push({
+                    rank: 0, // temp rank
+                    username: globalUserProfile!.telegramUsername,
+                    profilePictureUrl: globalUserProfile!.profilePictureUrl,
+                    balance: globalUserProfile!.mainBalance
+                });
+            }
+             // Sort by balance and assign ranks
+            initialLeaderboard.sort((a, b) => b.balance - a.balance);
+            initialLeaderboard.forEach((user, index) => {
+                user.rank = index + 1;
+            });
+            globalLeaderboard = initialLeaderboard;
+
             notifyListeners();
-            setLeaderboard(mockLeaderboard);
+            setLeaderboard(globalLeaderboard);
             setReferrals(mockReferrals);
           }
         }

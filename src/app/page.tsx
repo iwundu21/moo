@@ -59,6 +59,12 @@ export default function Home() {
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const { toast } = useToast();
 
+  const socialTaskList = [
+    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
+    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/your-channel', reward: 100 },
+    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/your-community', reward: 100 },
+  ];
+
   useEffect(() => {
     if(userProfile) {
       setMainBalance(userProfile.mainBalance);
@@ -76,14 +82,16 @@ export default function Home() {
     }
   }, [userProfile]);
 
+
+  const allTasksCompleted = useMemo(() => {
+    const social = socialTaskList.every(task => socialTasks[task.id] === 'completed');
+    const referral = socialTasks.referral === 'completed';
+    return social && referral;
+  }, [socialTasks, socialTaskList]);
+
   useEffect(() => {
-    if (!userProfile || !isLicenseActive) return;
-
-    // The logic for earning is now removed from the client-side simulation.
-    // A backend service connected to a Telegram bot would be responsible for
-    // updating the user's pendingBalance in the database.
-    // For now, the pending balance will not increase automatically.
-
+    // This logic is now only for determining the earn rate based on boosts.
+    // The actual earning simulation/crediting would happen on a backend.
     let earnRate = 0; // Base rate is 0
     
     // Determine the highest active boost
@@ -92,8 +100,7 @@ export default function Home() {
     else if (activatedBoosts.includes('2x')) earnRate = 10;
     else if (isLicenseActive && allTasksCompleted) earnRate = 5;
 
-
-  }, [userProfile, activatedBoosts, isLicenseActive]);
+  }, [activatedBoosts, isLicenseActive, allTasksCompleted]);
 
   useEffect(() => {
     if (!userProfile) return;
@@ -228,11 +235,6 @@ export default function Home() {
       }
     };
 
-  const socialTaskList = [
-    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
-    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/your-channel', reward: 100 },
-    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/your-community', reward: 100 },
-  ];
   
   const formatCountdown = (seconds: number | null) => {
     if (seconds === null) return '00:00:00';
@@ -244,11 +246,7 @@ export default function Home() {
 
   const hasPurchasedBoosts = activatedBoosts.length > 0;
   
-  const allTasksCompleted = useMemo(() => {
-    const social = socialTaskList.every(task => socialTasks[task.id] === 'completed');
-    const referral = socialTasks.referral === 'completed';
-    return social && referral;
-  }, [socialTasks]);
+  const isReadyToEarn = isLicenseActive && allTasksCompleted;
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -261,8 +259,6 @@ export default function Home() {
       </div>
     );
   }
-
-  const isReadyToEarn = isLicenseActive && allTasksCompleted;
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -484,5 +480,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

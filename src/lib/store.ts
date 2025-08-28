@@ -70,16 +70,16 @@ class AppStore {
     // If the user profile doesn't exist, it's a new user.
     if (!this.state.userProfiles[profile.id]) {
       this.state.userProfiles[profile.id] = profile;
+    }
       
-      const userInLeaderboard = this.state.leaderboard.some(u => u.username === profile.telegramUsername);
-      if (!userInLeaderboard) {
-        this.state.leaderboard.push({
-            rank: 0, 
-            username: profile.telegramUsername,
-            profilePictureUrl: profile.profilePictureUrl,
-            balance: profile.mainBalance
-        });
-      }
+    const userInLeaderboard = this.state.leaderboard.some(u => u.username === profile.telegramUsername);
+    if (!userInLeaderboard) {
+      this.state.leaderboard.push({
+          rank: 0, 
+          username: profile.telegramUsername,
+          profilePictureUrl: profile.profilePictureUrl,
+          balance: profile.mainBalance
+      });
       this.sortAndRankLeaderboard();
     }
     
@@ -123,27 +123,31 @@ class AppStore {
   }
 
   updateUserProfile(userId: string, updates: Partial<UserProfile>): void {
-    if (!this.state.userProfiles[userId]) return;
-
-    const wasLeaderboardUpdated = 'mainBalance' in updates;
-    this.state.userProfiles[userId] = { ...this.state.userProfiles[userId], ...updates };
-    
     const userProfile = this.state.userProfiles[userId];
+    if (!userProfile) return;
 
+    // Apply updates to the user's profile
+    this.state.userProfiles[userId] = { ...userProfile, ...updates };
+    const updatedProfile = this.state.userProfiles[userId];
+
+    // Check if the balance was updated and reflect it on the leaderboard
+    const wasLeaderboardUpdated = 'mainBalance' in updates;
     if (wasLeaderboardUpdated) {
-      const userInLeaderboardIndex = this.state.leaderboard.findIndex(u => u.username === userProfile.telegramUsername);
-      if (userInLeaderboardIndex !== -1) {
-        this.state.leaderboard[userInLeaderboardIndex].balance = userProfile.mainBalance;
-      } else {
-         this.state.leaderboard.push({
-            rank: 0,
-            username: userProfile.telegramUsername,
-            profilePictureUrl: userProfile.profilePictureUrl,
-            balance: userProfile.mainBalance
-        });
-      }
-      this.sortAndRankLeaderboard();
+        const userInLeaderboardIndex = this.state.leaderboard.findIndex(u => u.username === updatedProfile.telegramUsername);
+        if (userInLeaderboardIndex !== -1) {
+            this.state.leaderboard[userInLeaderboardIndex].balance = updatedProfile.mainBalance;
+        } else {
+            // This case handles if user wasn't on leaderboard for some reason
+            this.state.leaderboard.push({
+                rank: 0,
+                username: updatedProfile.telegramUsername,
+                profilePictureUrl: updatedProfile.profilePictureUrl,
+                balance: updatedProfile.mainBalance
+            });
+        }
+        this.sortAndRankLeaderboard();
     }
+
     this.saveToLocalStorage();
     this.notifyListeners();
   }

@@ -126,6 +126,13 @@ const useTelegram = () => {
     claimListeners.add(claimListener);
     airdropStatusListeners.add(airdropStatusListener);
 
+    // Initial sync with global state on mount
+    setUserProfile(globalUserProfile);
+    setLeaderboard(globalLeaderboard);
+    setClaimedAirdrops(globalClaimedAirdrops);
+    setIsAirdropLive(globalAirdropLiveStatus);
+
+
     // Initial load logic should only run once
     if (!globalUserProfile) {
       let isMounted = true;
@@ -242,7 +249,7 @@ const useTelegram = () => {
       claimListeners.delete(claimListener);
       airdropStatusListeners.delete(airdropStatusListener);
     };
-  }, []);
+  }, [notifyProfileListeners, notifyLeaderboardListeners, notifyClaimListeners, notifyAirdropStatusListeners]);
 
   return { userProfile, leaderboard, referrals, distributionHistory, claimedAirdrops, isAirdropLive, addDistributionRecord, updateUserProfile, addClaimRecord, setAirdropStatus };
 };

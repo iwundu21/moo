@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, ShieldCheck, Rocket, UserPlus, Gem, XCircle, Zap, Ban } from 'lucide-react';
+import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Zap, Ban } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -81,7 +81,7 @@ export default function AirdropPage() {
       setEligibilityCriteria(criteria);
       setIsEligible(criteria.every(c => c.isCompleted));
     }
-  }, [userProfile, referrals, isAirdropLive]);
+  }, [userProfile, referrals]);
 
   const handleClaim = () => {
     if (!walletAddress.trim()) {

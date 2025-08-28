@@ -152,10 +152,6 @@ export default function Home() {
     { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/your-community' },
   ];
   
-  if (!userProfile) {
-    return null; // Or a loading spinner
-  }
-
   const formatCountdown = (seconds: number | null) => {
     if (seconds === null) return '00:00:00';
     const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -167,6 +163,9 @@ export default function Home() {
   const hasPurchasedBoosts = activatedBoosts.length > 0;
   const allTasksCompleted = useMemo(() => Object.values(socialTasks).every(s => s === 'completed'), [socialTasks]);
 
+  if (!userProfile) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-8">

@@ -13,29 +13,31 @@ import { Label } from '@/components/ui/label';
 export default function ReferralsPage() {
     const { userProfile, referrals, redeemReferralCode } = useTelegram();
     const { toast } = useToast();
-    const [referralCode, setReferralCode] = useState('');
+    const [referralCodeInput, setReferralCodeInput] = useState('');
     
     if (!userProfile) {
       return null; // Or a loading spinner
     }
 
-    const referralLink = `https://t.me/Moo_airdrop_bot?start=ref${userProfile.id}`;
+    const userReferralCode = userProfile.id;
+    const referralLink = `https://t.me/Moo_airdrop_bot?start=ref${userReferralCode}`;
 
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(referralLink);
+        navigator.clipboard.writeText(userReferralCode);
         toast({
             title: "Copied!",
-            description: "Referral link copied to clipboard.",
+            description: "Referral code copied to clipboard.",
         });
     };
 
     const shareOnTelegram = () => {
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join me on MOO and let\'s earn together!')}`;
+        const shareText = `Join me on MOO and let's earn together! Use my referral code: ${userReferralCode}`;
+        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
         window.open(telegramShareUrl, '_blank');
     };
 
     const handleRedeemCode = () => {
-      if (!referralCode.trim()) {
+      if (!referralCodeInput.trim()) {
           toast({
               title: "Error",
               description: "Please enter a referral code.",
@@ -44,7 +46,7 @@ export default function ReferralsPage() {
           return;
       }
       
-      const result = redeemReferralCode(referralCode.trim());
+      const result = redeemReferralCode(referralCodeInput.trim());
 
       toast({
           title: result.success ? "Success!" : "Error",
@@ -53,7 +55,7 @@ export default function ReferralsPage() {
       });
 
       if (result.success) {
-        setReferralCode('');
+        setReferralCodeInput('');
       }
     };
 
@@ -71,12 +73,12 @@ export default function ReferralsPage() {
         <div className="space-y-4">
           <p className="text-sm font-semibold text-center">Redeem a Referral Code</p>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="referral-code" className="sr-only">Referral Code</Label>
+            <Label htmlFor="referral-code-input" className="sr-only">Referral Code</Label>
             <Input 
-              id="referral-code"
+              id="referral-code-input"
               placeholder="Enter friend's referral code (their ID)"
-              value={referralCode}
-              onChange={(e) => setReferralCode(e.target.value)}
+              value={referralCodeInput}
+              onChange={(e) => setReferralCodeInput(e.target.value)}
             />
             <Button onClick={handleRedeemCode}>
               <Ticket className="mr-2 h-4 w-4" /> Redeem Code
@@ -85,13 +87,13 @@ export default function ReferralsPage() {
         </div>
 
         <div className="space-y-4 text-center">
-            <p className="text-sm font-semibold">Your Referral Link</p>
-            <div className="p-4 border-dashed border-2 border-primary/50 rounded-lg bg-primary/10 text-primary font-mono text-xs break-all">
-                {referralLink}
+            <p className="text-sm font-semibold">Your Referral Code</p>
+            <div className="p-4 border-dashed border-2 border-primary/50 rounded-lg bg-primary/10 text-primary font-mono text-lg tracking-widest break-all">
+                {userReferralCode}
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <Button className="w-full" onClick={copyToClipboard}>
-                    <Copy className="mr-2 h-4 w-4" /> Copy
+                    <Copy className="mr-2 h-4 w-4" /> Copy Code
                 </Button>
                 <Button className="w-full" variant="outline" onClick={shareOnTelegram}>
                     <Share2 className="mr-2 h-4 w-4" /> Invite

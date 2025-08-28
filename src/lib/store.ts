@@ -1,164 +1,194 @@
+'use client';
 
-import type { UserProfile, LeaderboardEntry, AirdropClaim, Referral } from './types';
+import { useEffect, useState, useCallback } from 'react';
+import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord, AirdropClaim } from '@/lib/types';
+import { defaultUserProfile } from '@/lib/data';
 
-type Listener = () => void;
-
-const STORE_KEY = 'moo-app-store';
-
-interface AppState {
-  userProfiles: { [key: string]: UserProfile };
-  leaderboard: LeaderboardEntry[];
-  referrals: { [key: string]: Referral[] };
-  claimedAirdrops: AirdropClaim[];
-  isAirdropLive: boolean;
+interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  language_code: string;
+  is_premium?: boolean;
+  photo_url?: string;
 }
 
-class AppStore {
-  private state: AppState = {
-    userProfiles: {},
-    leaderboard: [],
-    referrals: {},
-    claimedAirdrops: [],
-    isAirdropLive: true,
+interface TelegramWebApp {
+  initDataUnsafe: {
+    user?: TelegramUser;
+    start_param?: string;
   };
-  private listeners: Set<Listener> = new Set();
-  private isInitialized = false;
+  ready: () => void;
+  onEvent: (eventType: string, eventHandler: () => void) => void;
+  isReady: boolean;
+}
 
-  constructor() {
-    this.loadFromLocalStorage();
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: TelegramWebApp;
+    };
   }
+}
 
-  private loadFromLocalStorage(): void {
-    if (typeof window === 'undefined') return;
-    try {
-      const storedState = window.localStorage.getItem(STORE_KEY);
-      if (storedState) {
-        this.state = JSON.parse(storedState);
-      }
-    } catch (error) {
-      console.error("Could not load state from localStorage", error);
+const STORE_KEY = 'moo-app-data';
+
+const useTelegram = () => {
+  const [isClient, setIsClient] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
+  const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
+
+  const saveData = (data: any) => {
+    if (typeof window !== 'undefined') {
+        try {
+            const currentData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+            const newData = { ...currentData, ...data };
+            localStorage.setItem(STORE_KEY, JSON.stringify(newData));
+        } catch (e) {
+            console.error("Failed to save data to localStorage", e);
+        }
     }
-  }
+  };
 
-  private saveToLocalStorage(): void {
-    if (typeof window === 'undefined') return;
-    try {
-      window.localStorage.setItem(STORE_KEY, JSON.stringify(this.state));
-    } catch (error) {
-      console.error("Could not save state to localStorage", error);
+  useEffect(() => {
+    setIsClient(true);
+
+    const tg = window.Telegram?.WebApp;
+    if (!tg?.initDataUnsafe?.user) {
+        console.log("Telegram Web App user data not available. App will not initialize.");
+        return;
     }
-  }
 
+    tg.ready();
+    const telegramUser = tg.initDataUnsafe.user;
+    const userId = telegramUser.id.toString();
 
-  // --- Subscription ---
-  subscribe(listener: Listener): void {
-    this.listeners.add(listener);
-  }
+    // Load all data from storage
+    const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    const allUserProfiles: {[key: string]: UserProfile} = storedData.userProfiles || {};
+    const allReferrals: {[key: string]: Referral[]} = storedData.referrals || {};
+    let currentLeaderboard: LeaderboardEntry[] = storedData.leaderboard || [];
+    const currentClaimedAirdrops: AirdropClaim[] = storedData.claimedAirdrops || [];
+    const currentAirdropStatus: boolean = storedData.isAirdropLive === undefined ? true : storedData.isAirdropLive;
 
-  unsubscribe(listener: Listener): void {
-    this.listeners.delete(listener);
-  }
+    let currentUserProfile = allUserProfiles[userId];
 
-  private notifyListeners(): void {
-    for (const listener of this.listeners) {
-      listener();
-    }
-  }
-
-  // --- Initialization ---
-  initialize(profile: UserProfile): void {
-    // If the user profile doesn't exist, it's a new user.
-    if (!this.state.userProfiles[profile.id]) {
-      this.state.userProfiles[profile.id] = profile;
-    }
-      
-    const userInLeaderboard = this.state.leaderboard.some(u => u.username === profile.telegramUsername);
-    if (!userInLeaderboard) {
-      this.state.leaderboard.push({
-          rank: 0, 
-          username: profile.telegramUsername,
-          profilePictureUrl: profile.profilePictureUrl,
-          balance: profile.mainBalance
-      });
-      this.sortAndRankLeaderboard();
+    if (!currentUserProfile) {
+        currentUserProfile = {
+            ...defaultUserProfile,
+            id: userId,
+            telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
+            profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${userId}/100/100`,
+            isPremium: !!telegramUser.is_premium,
+        };
+        allUserProfiles[userId] = currentUserProfile;
     }
     
-    this.isInitialized = true;
-    this.saveToLocalStorage();
-    this.notifyListeners();
-  }
-
-  // --- Getters ---
-  getUserProfile = (id: string): UserProfile | null => this.state.userProfiles[id] || null;
-  getAllUserProfiles = (): { [key: string]: UserProfile } => this.state.userProfiles;
-  getLeaderboard = (): LeaderboardEntry[] => [...this.state.leaderboard];
-  getReferrals = (id: string): Referral[] => this.state.referrals[id] || [];
-  getClaimedAirdrops = (): AirdropClaim[] => [...this.state.claimedAirdrops];
-  getAirdropStatus = (): boolean => this.state.isAirdropLive;
-
-  // --- Setters / Updaters ---
-  setAirdropStatus(isLive: boolean): void {
-    this.state.isAirdropLive = isLive;
-    this.saveToLocalStorage();
-    this.notifyListeners();
-  }
-
-  addClaimRecord(claim: AirdropClaim): void {
-    this.state.claimedAirdrops.push(claim);
-    this.saveToLocalStorage();
-    this.notifyListeners();
-  }
-  
-  addReferral(userId: string, referral: Referral): void {
-    if (!this.state.referrals[userId]) {
-        this.state.referrals[userId] = [];
+    // Add user to leaderboard if not present
+    if (!currentLeaderboard.some(p => p.username === currentUserProfile!.telegramUsername)) {
+        currentLeaderboard.push({
+            rank: 0,
+            username: currentUserProfile.telegramUsername,
+            balance: currentUserProfile.mainBalance,
+            profilePictureUrl: currentUserProfile.profilePictureUrl
+        });
+        currentLeaderboard.sort((a,b) => b.balance - a.balance).forEach((p, i) => p.rank = i + 1);
     }
-    // Prevent adding the same referral twice
-    const existingRef = this.state.referrals[userId].find(r => r.username === referral.username);
-    if (!existingRef) {
-        this.state.referrals[userId].push(referral);
-        this.saveToLocalStorage();
-        this.notifyListeners();
-    }
-  }
 
-  updateUserProfile(userId: string, updates: Partial<UserProfile>): void {
-    const userProfile = this.state.userProfiles[userId];
-    if (!userProfile) return;
-
-    // Apply updates to the user's profile
-    this.state.userProfiles[userId] = { ...userProfile, ...updates };
-    const updatedProfile = this.state.userProfiles[userId];
-
-    // Check if the balance was updated and reflect it on the leaderboard
-    const wasLeaderboardUpdated = 'mainBalance' in updates;
-    if (wasLeaderboardUpdated) {
-        const userInLeaderboardIndex = this.state.leaderboard.findIndex(u => u.username === updatedProfile.telegramUsername);
-        if (userInLeaderboardIndex !== -1) {
-            this.state.leaderboard[userInLeaderboardIndex].balance = updatedProfile.mainBalance;
-        } else {
-            // This case handles if user wasn't on leaderboard for some reason
-            this.state.leaderboard.push({
-                rank: 0,
-                username: updatedProfile.telegramUsername,
-                profilePictureUrl: updatedProfile.profilePictureUrl,
-                balance: updatedProfile.mainBalance
-            });
+    // Handle referral
+    const startParam = tg.initDataUnsafe.start_param;
+    if (startParam && startParam.startsWith('ref')) {
+        const referrerId = startParam.substring(3);
+        if (referrerId && referrerId !== userId) {
+            if (!allReferrals[referrerId]) {
+                allReferrals[referrerId] = [];
+            }
+            if (!allReferrals[referrerId].some(r => r.username === currentUserProfile.telegramUsername)) {
+                allReferrals[referrerId].push({
+                    username: currentUserProfile.telegramUsername,
+                    profilePictureUrl: currentUserProfile.profilePictureUrl,
+                });
+            }
         }
-        this.sortAndRankLeaderboard();
     }
 
-    this.saveToLocalStorage();
-    this.notifyListeners();
-  }
-  
-  private sortAndRankLeaderboard(): void {
-    this.state.leaderboard.sort((a, b) => b.balance - a.balance);
-    this.state.leaderboard.forEach((user, index) => {
-      user.rank = index + 1;
-    });
-  }
-}
+    // Set all states
+    setUserProfile(currentUserProfile);
+    setLeaderboard(currentLeaderboard);
+    setClaimedAirdrops(currentClaimedAirdrops);
+    setIsAirdropLive(currentAirdropStatus);
+    setReferrals(allReferrals[userId] || []);
 
-// Export a singleton instance of the store
-export const store = new AppStore();
+    // Save initial state to localStorage
+    saveData({ 
+        userProfiles: allUserProfiles, 
+        referrals: allReferrals, 
+        leaderboard: currentLeaderboard, 
+        claimedAirdrops: currentClaimedAirdrops,
+        isAirdropLive: currentAirdropStatus
+    });
+
+  }, []);
+
+  const setAirdropStatus = useCallback((isLive: boolean) => {
+    setIsAirdropLive(isLive);
+    saveData({ isAirdropLive: isLive });
+  }, []);
+
+  const addClaimRecord = useCallback((claim: AirdropClaim) => {
+    setClaimedAirdrops(prev => {
+        const newClaims = [...prev, claim];
+        saveData({ claimedAirdrops: newClaims });
+        return newClaims;
+    });
+  }, []);
+
+  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
+    setUserProfile(currentProfile => {
+        if (!currentProfile) return null;
+
+        const updatedProfile = { ...currentProfile, ...updates };
+        
+        const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+        const allUserProfiles = storedData.userProfiles || {};
+        allUserProfiles[currentProfile.id] = updatedProfile;
+
+        let currentLeaderboard = storedData.leaderboard || [];
+        const userIndexInLeaderboard = currentLeaderboard.findIndex((p: LeaderboardEntry) => p.username === updatedProfile.telegramUsername);
+        
+        if (userIndexInLeaderboard !== -1) {
+            currentLeaderboard[userIndexInLeaderboard].balance = updatedProfile.mainBalance;
+            currentLeaderboard.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.balance - a.balance).forEach((p: LeaderboardEntry, i: number) => p.rank = i + 1);
+            setLeaderboard(currentLeaderboard);
+        }
+
+        saveData({ userProfiles: allUserProfiles, leaderboard: currentLeaderboard });
+        return updatedProfile;
+    });
+  }, []);
+
+  const addDistributionRecord = useCallback((record: DistributionRecord) => {
+    setDistributionHistory(prevHistory => [record, ...prevHistory]);
+  }, []);
+
+  return { 
+    userProfile, 
+    leaderboard, 
+    referrals, 
+    distributionHistory, 
+    claimedAirdrops, 
+    isAirdropLive, 
+    addDistributionRecord, 
+    updateUserProfile, 
+    addClaimRecord, 
+    setAirdropStatus,
+    isClient
+  };
+};
+
+export { useTelegram };

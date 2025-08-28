@@ -57,6 +57,7 @@ const useTelegram = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
 
 
@@ -97,6 +98,29 @@ const useTelegram = () => {
     return false;
   };
 
+  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
+    setUserProfile(currentProfile => {
+        if (!currentProfile) return null;
+
+        const updatedProfile = { ...currentProfile, ...updates };
+        
+        const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+        const allUserProfiles = storedData.userProfiles || {};
+        allUserProfiles[currentProfile.id] = updatedProfile;
+
+        let currentLeaderboard = storedData.leaderboard || [];
+        const userIndexInLeaderboard = currentLeaderboard.findIndex((p: LeaderboardEntry) => p.username === updatedProfile.telegramUsername);
+        
+        if (userIndexInLeaderboard !== -1) {
+            currentLeaderboard[userIndexInLeaderboard].balance = updatedProfile.mainBalance;
+            currentLeaderboard.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.balance - a.balance).forEach((p: LeaderboardEntry, i: number) => p.rank = i + 1);
+            setLeaderboard(currentLeaderboard);
+        }
+
+        saveData({ userProfiles: allUserProfiles, leaderboard: currentLeaderboard });
+        return updatedProfile;
+    });
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -116,13 +140,13 @@ const useTelegram = () => {
     const allReferrals: {[key: string]: Referral[]} = storedData.referrals || {};
     let currentLeaderboard: LeaderboardEntry[] = storedData.leaderboard || [];
     const currentClaimedAirdrops: AirdropClaim[] = storedData.claimedAirdrops || [];
+    const currentAirdropStatus: boolean = storedData.isAirdropLive === undefined ? true : storedData.isAirdropLive;
 
     let currentUserProfile = allUserProfiles[userId];
+    const existingReferralCodes = new Set(Object.values(allUserProfiles).map(p => p.referralCode).filter(Boolean) as string[]);
 
     if (!currentUserProfile) {
-        const existingReferralCodes = new Set(Object.values(allUserProfiles).map(p => p.referralCode).filter(Boolean) as string[]);
         const newReferralCode = generateReferralCode(existingReferralCodes);
-
         currentUserProfile = {
             ...defaultUserProfile,
             id: userId,
@@ -131,6 +155,11 @@ const useTelegram = () => {
             isPremium: !!telegramUser.is_premium,
             referralCode: newReferralCode,
         };
+        allUserProfiles[userId] = currentUserProfile;
+    } else if (!currentUserProfile.referralCode) {
+        // This is the fix: assign a code to existing users who don't have one.
+        const newReferralCode = generateReferralCode(existingReferralCodes);
+        currentUserProfile.referralCode = newReferralCode;
         allUserProfiles[userId] = currentUserProfile;
     }
     
@@ -164,6 +193,7 @@ const useTelegram = () => {
     setLeaderboard(currentLeaderboard);
     setClaimedAirdrops(currentClaimedAirdrops);
     setReferrals(allReferrals[userId] || []);
+    setIsAirdropLive(currentAirdropStatus);
 
     // Save initial state to localStorage
     saveData({ 
@@ -171,9 +201,10 @@ const useTelegram = () => {
         referrals: allReferrals, 
         leaderboard: currentLeaderboard, 
         claimedAirdrops: currentClaimedAirdrops,
+        isAirdropLive: currentAirdropStatus,
     });
 
-  }, []);
+  }, [updateUserProfile]);
 
   const redeemReferralCode = useCallback((referralCode: string): {success: boolean, message: string} => {
     if (!userProfile) return {success: false, message: "User profile not loaded."};
@@ -203,7 +234,7 @@ const useTelegram = () => {
     } else {
       return {success: false, message: "Referral could not be added. You might have already been referred."};
     }
-  }, [userProfile]);
+  }, [userProfile, updateUserProfile]);
 
   const addClaimRecord = useCallback((claim: AirdropClaim) => {
     setClaimedAirdrops(prev => {
@@ -218,34 +249,14 @@ const useTelegram = () => {
     saveData({ claimedAirdrops: [] });
   }, []);
 
-  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
-    setUserProfile(currentProfile => {
-        if (!currentProfile) return null;
-
-        const updatedProfile = { ...currentProfile, ...updates };
-        
-        const storedData = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-        const allUserProfiles = storedData.userProfiles || {};
-        allUserProfiles[currentProfile.id] = updatedProfile;
-
-        let currentLeaderboard = storedData.leaderboard || [];
-        const userIndexInLeaderboard = currentLeaderboard.findIndex((p: LeaderboardEntry) => p.username === updatedProfile.telegramUsername);
-        
-        if (userIndexInLeaderboard !== -1) {
-            currentLeaderboard[userIndexInLeaderboard].balance = updatedProfile.mainBalance;
-            currentLeaderboard.sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.balance - a.balance).forEach((p: LeaderboardEntry, i: number) => p.rank = i + 1);
-            setLeaderboard(currentLeaderboard);
-        }
-
-        saveData({ userProfiles: allUserProfiles, leaderboard: currentLeaderboard });
-        return updatedProfile;
-    });
-  }, []);
-
   const addDistributionRecord = useCallback((record: DistributionRecord) => {
     setDistributionHistory(prevHistory => [record, ...prevHistory]);
   }, []);
   
+  const setAirdropStatus = useCallback((isLive: boolean) => {
+    setIsAirdropLive(isLive);
+    saveData({ isAirdropLive: isLive });
+  }, []);
 
   return { 
     userProfile, 
@@ -253,6 +264,8 @@ const useTelegram = () => {
     referrals, 
     distributionHistory, 
     claimedAirdrops,
+    isAirdropLive,
+    setAirdropStatus,
     clearAllClaims,
     addDistributionRecord, 
     updateUserProfile, 

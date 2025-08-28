@@ -79,6 +79,7 @@ const useTelegram = () => {
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
+  const [totalUserCount, setTotalUserCount] = useState<number>(0);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>, userIdToUpdate?: string) => {
     const id = userIdToUpdate || userProfile?.id;
@@ -212,6 +213,11 @@ const useTelegram = () => {
         const distributionSnapshot = await getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc')));
         setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
 
+        // Fetch leaderboard and total user count
+        const allUsersQuery = query(collection(db, 'userProfiles'));
+        const allUsersSnapshot = await getDocs(allUsersQuery);
+        setTotalUserCount(allUsersSnapshot.size);
+
         const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
         const leaderboardSnapshot = await getDocs(leaderboardQuery);
         setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
@@ -344,6 +350,7 @@ const useTelegram = () => {
     distributionHistory, 
     claimedAirdrops,
     isAirdropLive,
+    totalUserCount,
     setAirdropStatus,
     clearAllClaims,
     addDistributionRecord, 

@@ -24,6 +24,7 @@ export type LeaderboardEntry = {
 export type Referral = {
   username: string;
   profilePictureUrl: string;
+  timestamp: Date;
 };
 
 export type DistributionRecord = {
@@ -37,4 +38,5 @@ export type AirdropClaim = {
   walletAddress: string;
   amount: number;
   profilePictureUrl: string;
+  timestamp: Date;
 };

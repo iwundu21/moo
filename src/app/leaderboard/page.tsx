@@ -18,7 +18,7 @@ import type { LeaderboardEntry } from "@/lib/types";
 
 
 export default function LeaderboardPage() {
-  const { userProfile, leaderboard } = useTelegram();
+  const { userProfile, leaderboard, totalUserCount } = useTelegram();
   const [userRank, setUserRank] = useState<LeaderboardEntry | undefined>(undefined);
 
   useEffect(() => {
@@ -36,7 +36,9 @@ export default function LeaderboardPage() {
     <div className="container mx-auto p-4 space-y-6">
       <header className="text-center space-y-2">
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
-        <p className="text-xs text-muted-foreground">See who's at the top of the MOO-niverse!</p>
+        <p className="text-xs text-muted-foreground">
+            {totalUserCount > 0 ? `Based on ${totalUserCount.toLocaleString()} total players` : "See who's at the top of the MOO-niverse!"}
+        </p>
       </header>
 
       {userRank && (

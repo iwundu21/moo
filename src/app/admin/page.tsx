@@ -15,15 +15,9 @@ import { useTelegram } from '@/hooks/use-telegram';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
 
 export default function AdminPage() {
-  const { claimedAirdrops, isAirdropLive, setAirdropStatus } = useTelegram();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { claimedAirdrops, isAirdropLive, setAirdropStatus, isClient } = useTelegram();
 
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;

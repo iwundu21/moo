@@ -34,14 +34,16 @@ declare global {
 }
 
 const useTelegram = () => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(store.getUserProfile());
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(store.getLeaderboard());
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>(mockDistributionHistory);
-  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(store.getClaimedAirdrops());
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(store.getAirdropStatus());
+  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     // This effect runs only once on initial mount to load user data
     if (!store.getUserProfile()) {
       let isMounted = true;
@@ -52,30 +54,17 @@ const useTelegram = () => {
         if (!isMounted) return;
 
         const tg = window.Telegram?.WebApp;
-        if (tg && tg.initDataUnsafe) {
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
           tg.ready();
           const telegramUser = tg.initDataUnsafe.user;
 
-          const initialProfile: UserProfile = telegramUser
-            ? {
+          const initialProfile: UserProfile = {
                 id: telegramUser.id.toString(),
                 telegramUsername: telegramUser.username || `${telegramUser.first_name} ${telegramUser.last_name || ''}`.trim(),
                 profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${telegramUser.id}/100/100`,
                 mainBalance: 12500.75,
                 pendingBalance: 750.25,
                 isPremium: !!telegramUser.is_premium,
-                purchasedBoosts: [],
-                isLicenseActive: false,
-                completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
-                hasClaimedAirdrop: false,
-              }
-            : {
-                id: '0000',
-                telegramUsername: 'telegram_user',
-                profilePictureUrl: 'https://picsum.photos/100/100',
-                mainBalance: 12500.75,
-                pendingBalance: 750.25,
-                isPremium: true,
                 purchasedBoosts: [],
                 isLicenseActive: false,
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
@@ -133,6 +122,7 @@ const useTelegram = () => {
     };
   }, []);
 
+
   const setAirdropStatus = useCallback((isLive: boolean) => {
     store.setAirdropStatus(isLive);
   }, []);
@@ -160,7 +150,8 @@ const useTelegram = () => {
     addDistributionRecord, 
     updateUserProfile, 
     addClaimRecord, 
-    setAirdropStatus 
+    setAirdropStatus,
+    isClient
   };
 };
 

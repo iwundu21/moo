@@ -31,6 +31,10 @@ export default function LeaderboardPage() {
     }
   }, [userProfile, leaderboard]);
 
+  if (!userProfile) {
+    return null; // Or a loading spinner
+  }
+
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = leaderboard.slice(indexOfFirstUser, indexOfLastUser);
@@ -48,10 +52,6 @@ export default function LeaderboardPage() {
       setCurrentPage(currentPage - 1);
     }
   };
-
-  if (!userProfile) {
-    return null; // Or a loading spinner
-  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -72,7 +72,7 @@ export default function LeaderboardPage() {
                         <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
                         <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</Fallback>
                     </Avatar>
-                    <BadgeCheck className={cn("absolute -bottom-1 -right-1 w-5 h-5", userProfile.isPremium ? "text-blue-500" : "text-destructive")} />
+                    {userProfile.isPremium && <BadgeCheck className="absolute -bottom-1 -right-1 w-5 h-5 text-blue-500" />}
                 </div>
                 <div className="font-semibold text-sm truncate">
                   <p>You</p>
@@ -110,7 +110,7 @@ export default function LeaderboardPage() {
                             <AvatarImage src={entry.profilePictureUrl} data-ai-hint="profile picture" />
                             <AvatarFallback>{entry.username.substring(0, 1)}</AvatarFallback>
                         </Avatar>
-                        <BadgeCheck className={cn("absolute -bottom-1 -right-1 w-4 h-4", entry.isPremium ? "text-blue-500" : "text-destructive")} />
+                         {entry.isPremium && <BadgeCheck className="absolute -bottom-1 -right-1 w-4 h-4 text-blue-500" />}
                       </div>
                       <span className="font-medium truncate text-xs">@{entry.username}</span>
                     </div>

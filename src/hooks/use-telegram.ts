@@ -23,6 +23,8 @@ interface TelegramWebApp {
   ready: () => void;
   onEvent: (eventType: string, eventHandler: () => void) => void;
   isReady: boolean;
+  openInvoice: (url: string, callback: (status: 'paid' | 'cancelled' | 'failed' | 'pending') => void) => void;
+  close: () => void;
 }
 
 declare global {
@@ -42,6 +44,8 @@ const useTelegram = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
+  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
+
 
   const saveData = (data: any) => {
     if (typeof window !== 'undefined') {
@@ -73,6 +77,7 @@ const useTelegram = () => {
     const allReferrals: {[key: string]: Referral[]} = storedData.referrals || {};
     let currentLeaderboard: LeaderboardEntry[] = storedData.leaderboard || [];
     const currentClaimedAirdrops: AirdropClaim[] = storedData.claimedAirdrops || [];
+    const airdropStatus = storedData.isAirdropLive === undefined ? true : storedData.isAirdropLive;
 
     let currentUserProfile = allUserProfiles[userId];
 
@@ -120,6 +125,7 @@ const useTelegram = () => {
     setLeaderboard(currentLeaderboard);
     setClaimedAirdrops(currentClaimedAirdrops);
     setReferrals(allReferrals[userId] || []);
+    setIsAirdropLive(airdropStatus);
 
     // Save initial state to localStorage
     saveData({ 
@@ -127,6 +133,7 @@ const useTelegram = () => {
         referrals: allReferrals, 
         leaderboard: currentLeaderboard, 
         claimedAirdrops: currentClaimedAirdrops,
+        isAirdropLive: airdropStatus,
     });
 
   }, []);
@@ -137,6 +144,11 @@ const useTelegram = () => {
         saveData({ claimedAirdrops: newClaims });
         return newClaims;
     });
+  }, []);
+
+  const clearAllClaims = useCallback(() => {
+    setClaimedAirdrops([]);
+    saveData({ claimedAirdrops: [] });
   }, []);
 
   const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
@@ -166,13 +178,21 @@ const useTelegram = () => {
   const addDistributionRecord = useCallback((record: DistributionRecord) => {
     setDistributionHistory(prevHistory => [record, ...prevHistory]);
   }, []);
+  
+  const setAirdropStatus = useCallback((isLive: boolean) => {
+    setIsAirdropLive(isLive);
+    saveData({ isAirdropLive: isLive });
+  }, []);
 
   return { 
     userProfile, 
     leaderboard, 
     referrals, 
     distributionHistory, 
-    claimedAirdrops, 
+    claimedAirdrops,
+    isAirdropLive,
+    setAirdropStatus,
+    clearAllClaims,
     addDistributionRecord, 
     updateUserProfile, 
     addClaimRecord, 

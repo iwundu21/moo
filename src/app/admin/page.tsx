@@ -10,12 +10,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Power, Trash2 } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 export default function AdminPage() {
-  const { claimedAirdrops } = useTelegram();
+  const { claimedAirdrops, isAirdropLive, setAirdropStatus, clearAllClaims } = useTelegram();
 
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
@@ -46,15 +61,69 @@ export default function AdminPage() {
       <div className="flex justify-between items-center">
         <header className="space-y-2">
           <h1 className="text-xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-xs text-muted-foreground">Airdrop Claim Submissions</p>
+          <p className="text-xs text-muted-foreground">Manage airdrop claims and settings</p>
         </header>
-        <Button onClick={downloadCSV} disabled={claimedAirdrops.length === 0}>
-          <Download className="mr-2 h-4 w-4" />
-          Download CSV
-        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-base font-semibold">Airdrop Control</h3>
+                    <p className="text-xs text-muted-foreground">Enable or disable claims for all users.</p>
+                </div>
+                 <Switch
+                    id="airdrop-status"
+                    checked={isAirdropLive}
+                    onCheckedChange={setAirdropStatus}
+                />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Current Status:</span>
+                <Badge variant={isAirdropLive ? "default" : "destructive"}>
+                    {isAirdropLive ? "Live" : "Paused"}
+                </Badge>
+            </div>
+        </div>
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-4">
+           <div>
+                <h3 className="text-base font-semibold">Data Management</h3>
+                <p className="text-xs text-muted-foreground">Download or clear claim data.</p>
+            </div>
+            <div className="flex gap-4">
+                <Button onClick={downloadCSV} disabled={claimedAirdrops.length === 0} className="w-full">
+                    <Download className="mr-2" />
+                    Download CSV
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={claimedAirdrops.length === 0} className="w-full">
+                        <Trash2 className="mr-2" />
+                        Clear Claims
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete all
+                        airdrop claim submissions.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={clearAllClaims}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+        <div className="p-6">
+            <h3 className="text-base font-semibold">Claim Submissions ({claimedAirdrops.length})</h3>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>

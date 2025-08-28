@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2 } from 'lucide-react';
+import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,7 @@ export default function Home() {
   const [isLicenseActive, setIsLicenseActive] = useState(false);
   const [socialTasks, setSocialTasks] = useState<SocialTasks>(initialTasks);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showActivationSuccess, setShowActivationSuccess] = useState(false);
   const [openedTasks, setOpenedTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -132,6 +133,7 @@ export default function Home() {
         setIsLicenseActive(true);
         updateUserProfile({ isLicenseActive: true, mainBalance: newMainBalance });
         setShowConfetti(true);
+        setShowActivationSuccess(true);
     } else {
         // Optionally, show a toast or message that they don't have enough balance
         console.log("Not enough balance to activate license.");
@@ -213,7 +215,20 @@ export default function Home() {
          </div>
          <div className="space-y-4 rounded-lg p-6">
             {isLicenseActive ? (
-                !allTasksCompleted ? (
+                showActivationSuccess ? (
+                    <div className="flex flex-col items-center justify-center text-center h-full">
+                        <PartyPopper className="w-16 h-16 text-yellow-500 mb-4" />
+                        <h3 className="text-2xl font-semibold leading-none tracking-tight">Congratulations! 🎊</h3>
+                        <div className="pt-2">
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Your mining license is active! You can now earn rewards by sending messages in group chats. Complete one final step to supercharge your earnings.
+                            </p>
+                            <Button className="w-full" onClick={() => setShowActivationSuccess(false)}>
+                                Continue
+                            </Button>
+                        </div>
+                    </div>
+                ) : !allTasksCompleted ? (
                     <div>
                         <h3 className="text-2xl font-semibold leading-none tracking-tight">Social Tasks</h3>
                         <p className="text-sm text-muted-foreground pt-1.5">

@@ -1,13 +1,15 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Gift, Users, Trophy, User as ProfileIcon, Info } from 'lucide-react';
+import { Home, Gift, Users, Trophy, User as ProfileIcon, Info, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/airdrop', icon: Gift, label: 'Airdrop' },
+  { href: '/history', icon: History, label: 'History' },
   { href: '/referrals', icon: Users, label: 'Refs' },
   { href: '/leaderboard', icon: Trophy, label: 'Top' },
   { href: '/info', icon: Info, label: 'Info' },

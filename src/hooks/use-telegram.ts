@@ -203,9 +203,14 @@ const useTelegram = () => {
 
         setUserProfile(currentUserProfile);
         
+        // Fetch collections for the user
         const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
         const referralSnapshot = await getDocs(query(referralsCol, orderBy('timestamp', 'desc')));
         setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
+
+        const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
+        const distributionSnapshot = await getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc')));
+        setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
 
         const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
         const leaderboardSnapshot = await getDocs(leaderboardQuery);
@@ -321,8 +326,8 @@ const useTelegram = () => {
   const addDistributionRecord = useCallback(async (record: DistributionRecord) => {
     if (!userProfile) return;
     const distDocRef = doc(collection(db, 'userProfiles', userProfile.id, 'distributionHistory'));
-    await setDoc(distDocRef, record);
-    setDistributionHistory(prevHistory => [record, ...prevHistory]);
+    await setDoc(distDocRef, { ...record, timestamp: record.timestamp.toISOString() });
+    setDistributionHistory(prevHistory => [{ ...record, timestamp: record.timestamp.toISOString() }, ...prevHistory]);
   }, [userProfile]);
   
   const setAirdropStatus = useCallback(async (isLive: boolean) => {
@@ -349,5 +354,3 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
-
-    

@@ -27,13 +27,13 @@ export type Referral = {
 };
 
 export type DistributionRecord = {
-  timestamp: Date;
+  timestamp: string; // Stored as ISO string
   amount: number;
 };
 
 export type AirdropClaim = {
   userId: string;
-  username: string;
+  username:string;
   walletAddress: string;
   amount: number;
   profilePictureUrl: string;

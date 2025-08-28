@@ -113,9 +113,13 @@ class AppStore {
     if (!this.state.referrals[userId]) {
         this.state.referrals[userId] = [];
     }
-    this.state.referrals[userId].push(referral);
-    this.saveToLocalStorage();
-    this.notifyListeners();
+    // Prevent adding the same referral twice
+    const existingRef = this.state.referrals[userId].find(r => r.username === referral.username);
+    if (!existingRef) {
+        this.state.referrals[userId].push(referral);
+        this.saveToLocalStorage();
+        this.notifyListeners();
+    }
   }
 
   updateUserProfile(userId: string, updates: Partial<UserProfile>): void {

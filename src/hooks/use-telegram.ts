@@ -99,7 +99,7 @@ const useTelegram = () => {
                 mainBalance: 12500.75,
                 pendingBalance: 750.25,
                 isPremium: true,
-                purchasedBoosts: ['2x'],
+                purchasedBoosts: [],
                 isLicenseActive: false, // Start as inactive
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             };
@@ -121,7 +121,7 @@ const useTelegram = () => {
                 mainBalance: 12500.75,
                 pendingBalance: 750.25,
                 isPremium: true,
-                purchasedBoosts: ['2x'],
+                purchasedBoosts: [],
                 isLicenseActive: false, // Start as inactive
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle' },
             };

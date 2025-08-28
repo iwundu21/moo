@@ -58,9 +58,9 @@ export default function Home() {
   }, [userProfile]);
 
   useEffect(() => {
-    if (!userProfile || !isLicenseActive) return;
+    if (!userProfile || !isLicenseActive || activatedBoosts.length === 0) return;
 
-    let earnRate = 5; // Base rate for 1x boost from license
+    let earnRate = 0; // Base rate is 0, must purchase a boost to earn
 
     const twoX = activatedBoosts.includes('2x');
     const fiveX = activatedBoosts.includes('5x');

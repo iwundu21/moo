@@ -280,91 +280,103 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
             </div>
          </div>
-         <div className="space-y-4 rounded-lg p-6">
-            {isLicenseActive ? (
-                !allTasksCompleted ? (
-                    <div>
-                        <h3 className="text-xl font-semibold leading-none tracking-tight">Social Tasks</h3>
-                        <p className="text-xs text-muted-foreground pt-1.5">
-                            Complete tasks to earn more rewards.
-                        </p>
-                        <div className="space-y-3 pt-4">
-                            {socialTaskList.map(task => {
-                                const status = socialTasks[task.id];
-                                const isOpened = openedTasks.has(task.id);
-                                return (
-                                    <div key={task.id} className="flex items-center gap-2">
-                                        <Button asChild className="flex-1 justify-start" variant="outline" disabled={status !== 'idle'}>
-                                            <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
-                                                <task.icon className="mr-3" />
-                                                <span className="flex-1 text-left">{task.text}</span>
-                                                 <Badge variant="secondary">
-                                                    +{task.reward} MOO
-                                                 </Badge>
-                                            </Link>
-                                        </Button>
-                                        {(isOpened || status !== 'idle') && (
-                                            <Button 
-                                                onClick={() => handleConfirmTask(task.id)}
-                                                disabled={status !== 'idle'}
-                                                className="w-28"
-                                            >
-                                                {status === 'idle' && (
-                                                    <span className='flex items-center'>
-                                                        Confirm
-                                                    </span>
-                                                )}
-                                                {status === 'verifying' && <Loader2 className="animate-spin" />}
-                                                {status === 'completed' && <CheckCircle />}
-                                            </Button>
-                                        )}
-                                    </div>
-                                )
-                            })}
-                            {socialTasks.referral !== 'completed' && (
-                                <div className="space-y-2 pt-2">
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                        id="referral-code-input"
-                                        placeholder="Enter friend's referral code"
-                                        value={referralCodeInput}
-                                        onChange={(e) => setReferralCodeInput(e.target.value)}
-                                        className="uppercase flex-1"
-                                        disabled={socialTasks.referral === 'completed'}
-                                        />
-                                        <Button onClick={handleRedeemCode} disabled={socialTasks.referral === 'completed'} className="w-28">
-                                            <Ticket className="mr-2" />
-                                            Redeem
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground px-1">Redeem a code to get +100 MOO.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center text-center h-full">
-                         <h3 className="text-xl font-semibold leading-none tracking-tight">Ready to Earn</h3>
-                        <p className="text-xs text-muted-foreground pt-1.5">
-                            Your license is active and tasks are complete. Start sending messages in designated group chats to earn MOO.
-                        </p>
-                    </div>
-                )
-            ) : (
-                <div className="flex flex-col items-center justify-center text-center h-full">
-                    <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>
-                    <div className="pt-2">
-                        <p className="text-xs text-muted-foreground mb-4">
-                            Activate your license to start mining MOO.
-                        </p>
-                        <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
-                            Activate for 150 <Zap className="ml-2 w-4 h-4 text-yellow-400" />
-                        </Button>
-                    </div>
-                </div>
-            )}
+         <div className="space-y-4 rounded-lg p-6 flex flex-col">
+            <div className="flex-1">
+                <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>
+                <p className="text-xs text-muted-foreground pt-1.5">
+                    Activate your license to start mining MOO.
+                </p>
+            </div>
+            <div className="pt-2">
+                 <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
+                    {isLicenseActive ? (
+                        <span className='flex items-center'><CheckCircle className="mr-2"/> License Active</span>
+                    ) : (
+                        <span className='flex items-center'>Activate for 150 <Zap className="ml-2 w-4 h-4 text-yellow-400" /></span>
+                    )}
+                </Button>
+            </div>
          </div>
       </div>
+      
+       <div className="space-y-4 rounded-lg p-6">
+        <div>
+            <h3 className="text-xl font-semibold leading-none tracking-tight">Social Tasks</h3>
+            <p className="text-xs text-muted-foreground pt-1.5">
+                Complete tasks to earn more rewards.
+            </p>
+        </div>
+        {!allTasksCompleted ? (
+            <div className="space-y-3 pt-4">
+                {socialTaskList.map(task => {
+                    const status = socialTasks[task.id];
+                    const isOpened = openedTasks.has(task.id);
+                    return (
+                        <div key={task.id} className="flex items-center gap-2">
+                            <Button asChild className="flex-1 justify-start" variant="outline" disabled={status !== 'idle'}>
+                                <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
+                                    <task.icon className="mr-3" />
+                                    <span className="flex-1 text-left">{task.text}</span>
+                                     <Badge variant="secondary">
+                                        +{task.reward} MOO
+                                     </Badge>
+                                </Link>
+                            </Button>
+                            {(isOpened || status !== 'idle') && (
+                                <Button 
+                                    onClick={() => handleConfirmTask(task.id)}
+                                    disabled={status !== 'idle'}
+                                    className="w-28"
+                                >
+                                    {status === 'idle' && (
+                                        <span className='flex items-center'>
+                                            Confirm
+                                        </span>
+                                    )}
+                                    {status === 'verifying' && <Loader2 className="animate-spin" />}
+                                    {status === 'completed' && <CheckCircle />}
+                                </Button>
+                            )}
+                        </div>
+                    )
+                })}
+                {socialTasks.referral !== 'completed' && (
+                    <div className="space-y-2 pt-2">
+                        <div className="flex items-center gap-2">
+                            <Input
+                            id="referral-code-input"
+                            placeholder="Enter friend's referral code"
+                            value={referralCodeInput}
+                            onChange={(e) => setReferralCodeInput(e.target.value)}
+                            className="uppercase flex-1"
+                            disabled={socialTasks.referral === 'completed'}
+                            />
+                            <Button onClick={handleRedeemCode} disabled={socialTasks.referral === 'completed'} className="w-28">
+                                <Ticket className="mr-2" />
+                                Redeem
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground px-1">Redeem a code to get +100 MOO.</p>
+                    </div>
+                )}
+            </div>
+        ) : (
+            <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">All social tasks completed!</p>
+            </div>
+        )}
+       </div>
+
+
+      {isLicenseActive && allTasksCompleted && (
+          <div className="text-center rounded-lg p-6 border border-dashed">
+             <h3 className="text-xl font-semibold leading-none tracking-tight">Ready to Earn</h3>
+            <p className="text-xs text-muted-foreground pt-1.5">
+                Your license is active and tasks are complete. Start sending messages in designated group chats to earn MOO.
+            </p>
+        </div>
+      )}
+
 
       <Dialog open={showActivationSuccess} onOpenChange={setShowActivationSuccess}>
         <DialogContent>

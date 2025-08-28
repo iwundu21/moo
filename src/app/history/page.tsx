@@ -10,11 +10,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTelegram } from "@/hooks/use-telegram";
-import { History, Coins } from "lucide-react";
+import { History, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from 'date-fns';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function HistoryPage() {
   const { distributionHistory } = useTelegram();
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 6;
+
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = distributionHistory.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  const totalPages = Math.ceil(distributionHistory.length / recordsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -34,8 +56,8 @@ export default function HistoryPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {distributionHistory.length > 0 ? (
-              distributionHistory.map((record, index) => (
+            {currentRecords.length > 0 ? (
+              currentRecords.map((record, index) => (
                 <TableRow key={index}>
                   <TableCell className="text-xs">
                     {format(new Date(record.timestamp), 'MMM dd, yyyy')}
@@ -59,6 +81,32 @@ export default function HistoryPage() {
           </TableBody>
         </Table>
       </div>
+
+       {totalPages > 1 && (
+        <div className="flex items-center justify-center space-x-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="mr-2" />
+            Previous
+          </Button>
+          <span className="text-sm font-medium">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="ml-2" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -45,10 +45,9 @@ export default function AirdropPage() {
   useEffect(() => {
     if (userProfile) {
       setMainBalance(userProfile.mainBalance);
-      // Check if this user has already claimed by checking if balance is 0
       if (userProfile.hasClaimedAirdrop) {
           setIsClaimed(true);
-          setClaimedAmount(userProfile.mainBalance); // Assuming last balance was the claimed amount
+          setClaimedAmount(userProfile.mainBalance);
       }
 
       const criteria: EligibilityCriterion[] = [
@@ -81,7 +80,7 @@ export default function AirdropPage() {
       setEligibilityCriteria(criteria);
       setIsEligible(criteria.every(c => c.isCompleted));
     }
-  }, [userProfile, referrals]);
+  }, [userProfile, referrals, isAirdropLive]);
 
   const handleClaim = () => {
     if (!walletAddress.trim()) {
@@ -97,14 +96,12 @@ export default function AirdropPage() {
     const amountToClaim = mainBalance;
     setClaimedAmount(amountToClaim);
     
-    // Save claim data
     addClaimRecord({
         username: userProfile.telegramUsername,
         walletAddress: walletAddress,
         amount: amountToClaim,
     });
     
-    // Update user profile to reflect claim
     updateUserProfile({ mainBalance: 0, hasClaimedAirdrop: true });
 
     setMainBalance(0);

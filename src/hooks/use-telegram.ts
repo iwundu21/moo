@@ -45,6 +45,31 @@ const claimListeners: Set<(claims: AirdropClaim[]) => void> = new Set();
 let globalAirdropLiveStatus: boolean = true;
 const airdropStatusListeners: Set<(isLive: boolean) => void> = new Set();
 
+const notifyProfileListeners = () => {
+    for (const listener of profileListeners) {
+      listener(globalUserProfile);
+    }
+};
+
+const notifyLeaderboardListeners = () => {
+    for (const listener of leaderboardListeners) {
+      listener([...globalLeaderboard]);
+    }
+};
+
+const notifyClaimListeners = () => {
+    for (const listener of claimListeners) {
+      listener([...globalClaimedAirdrops]);
+    }
+};
+
+const notifyAirdropStatusListeners = () => {
+    for (const listener of airdropStatusListeners) {
+      listener(globalAirdropLiveStatus);
+    }
+};
+
+
 const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(globalUserProfile);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(globalLeaderboard);
@@ -53,40 +78,16 @@ const useTelegram = () => {
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>(globalClaimedAirdrops);
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(globalAirdropLiveStatus);
 
-
-  const notifyProfileListeners = useCallback(() => {
-    for (const listener of profileListeners) {
-      listener(globalUserProfile);
-    }
-  }, []);
-
-  const notifyLeaderboardListeners = useCallback(() => {
-    for (const listener of leaderboardListeners) {
-      listener([...globalLeaderboard]);
-    }
-  }, []);
-  
-  const notifyClaimListeners = useCallback(() => {
-    for (const listener of claimListeners) {
-      listener([...globalClaimedAirdrops]);
-    }
-  }, []);
-  
-  const notifyAirdropStatusListeners = useCallback(() => {
-    for (const listener of airdropStatusListeners) {
-      listener(globalAirdropLiveStatus);
-    }
-  }, []);
   
   const setAirdropStatus = useCallback((isLive: boolean) => {
     globalAirdropLiveStatus = isLive;
     notifyAirdropStatusListeners();
-  }, [notifyAirdropStatusListeners]);
+  }, []);
 
   const addClaimRecord = useCallback((claim: AirdropClaim) => {
     globalClaimedAirdrops.push(claim);
     notifyClaimListeners();
-  }, [notifyClaimListeners]);
+  }, []);
 
   const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
     if (globalUserProfile) {
@@ -108,7 +109,7 @@ const useTelegram = () => {
         notifyLeaderboardListeners();
       }
     }
-  }, [notifyProfileListeners, notifyLeaderboardListeners]);
+  }, []);
 
   const addDistributionRecord = useCallback((record: DistributionRecord) => {
     setDistributionHistory(prevHistory => [record, ...prevHistory]);
@@ -249,7 +250,7 @@ const useTelegram = () => {
       claimListeners.delete(claimListener);
       airdropStatusListeners.delete(airdropStatusListener);
     };
-  }, [notifyProfileListeners, notifyLeaderboardListeners, notifyClaimListeners, notifyAirdropStatusListeners]);
+  }, []);
 
   return { userProfile, leaderboard, referrals, distributionHistory, claimedAirdrops, isAirdropLive, addDistributionRecord, updateUserProfile, addClaimRecord, setAirdropStatus };
 };

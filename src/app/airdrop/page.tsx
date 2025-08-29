@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Ban, Info } from 'lucide-react';
+import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Ban, Info, Loader2 } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -41,6 +41,9 @@ export default function AirdropPage() {
   const { toast } = useToast();
   const [eligibilityCriteria, setEligibilityCriteria] = useState<EligibilityCriterion[]>([]);
   const [isEligible, setIsEligible] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -63,8 +66,7 @@ export default function AirdropPage() {
           id: 'boost',
           title: 'Purchase 2x Boost',
           description: 'Boost your earning potential.',
-          icon: Rocket,
-          isCompleted: userProfile.purchasedBoosts.includes('2x'),
+          icon: userProfile.purchasedBoosts.includes('2x'),
           link: '/'
         },
         {
@@ -82,7 +84,15 @@ export default function AirdropPage() {
     }
   }, [userProfile, referrals]);
 
-  const handleClaim = () => {
+  const handleInitialClaimClick = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsDialogOpen(true);
+    }, 4000);
+  };
+
+  const handleSubmitClaim = () => {
     if (!walletAddress.trim()) {
         toast({
             title: "Error",
@@ -93,23 +103,29 @@ export default function AirdropPage() {
     }
     if (!userProfile) return;
 
-    const amountToClaim = mainBalance;
-    setClaimedAmount(amountToClaim);
-    
-    addClaimRecord({
-        userId: userProfile.id,
-        username: userProfile.telegramUsername,
-        walletAddress: walletAddress,
-        amount: amountToClaim,
-        profilePictureUrl: userProfile.profilePictureUrl,
-        timestamp: new Date(),
-    });
-    
-    updateUserProfile({ mainBalance: 0, hasClaimedAirdrop: true });
+    setIsSubmitting(true);
 
-    setMainBalance(0);
-    setWalletAddress('');
-    setIsClaimed(true);
+    setTimeout(() => {
+      const amountToClaim = mainBalance;
+      setClaimedAmount(amountToClaim);
+      
+      addClaimRecord({
+          userId: userProfile.id,
+          username: userProfile.telegramUsername,
+          walletAddress: walletAddress,
+          amount: amountToClaim,
+          profilePictureUrl: userProfile.profilePictureUrl,
+          timestamp: new Date(),
+      });
+      
+      updateUserProfile({ mainBalance: 0, hasClaimedAirdrop: true });
+
+      setMainBalance(0);
+      setWalletAddress('');
+      setIsClaimed(true);
+      setIsSubmitting(false);
+      setIsDialogOpen(false);
+    }, 4000);
   };
 
 
@@ -140,15 +156,24 @@ export default function AirdropPage() {
                     {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                     <span className="text-base ml-1">MOO</span>
                 </p>
-                 <Dialog>
+                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                    <Button size="sm" disabled={mainBalance === 0 || !isEligible || !isAirdropLive}>Claim</Button>
+                    <Button size="sm" disabled={mainBalance === 0 || !isEligible || !isAirdropLive || isProcessing} onClick={handleInitialClaimClick}>
+                        {isProcessing ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Processing...
+                            </>
+                        ) : (
+                           "Claim"
+                        )}
+                    </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Claim Your Allocation</DialogTitle>
                         <DialogDescription>
-                        Enter your TON network wallet address to receive your MOO.
+                         You are about to claim <span className="font-bold text-primary">{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO</span>. Enter your TON network wallet address to receive your allocation.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -166,9 +191,16 @@ export default function AirdropPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="submit" onClick={handleClaim}>Claim Your Allocation</Button>
-                        </DialogClose>
+                        <Button type="submit" onClick={handleSubmitClaim} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Submitting...
+                                </>
+                            ) : (
+                                "Submit"
+                            )}
+                        </Button>
                     </DialogFooter>
                     </DialogContent>
                 </Dialog>

@@ -42,13 +42,28 @@ export default function AdminPage() {
     const fetchClaims = async () => {
       const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
       const claimsSnapshot = await getDocs(claimsQuery);
-      setClaimedAirdrops(claimsSnapshot.docs.map(d => {
+      const claims = claimsSnapshot.docs.map(d => {
         const data = d.data();
         const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
             ? data.timestamp.toDate() 
             : new Date(); // Fallback
         return { ...data, timestamp } as AirdropClaim
-      }));
+      });
+      
+      // Sample Data for demonstration
+      if (claims.length === 0) {
+        claims.push({
+          userId: 'sample-user-123',
+          username: 'test_user',
+          walletAddress: 'UQDD...SAMPLE...WALLET...ADDRESS...1234',
+          amount: 1250.75,
+          profilePictureUrl: 'https://picsum.photos/seed/sample-user/100/100',
+          timestamp: new Date(),
+          status: 'processing'
+        });
+      }
+
+      setClaimedAirdrops(claims);
     };
     
     fetchClaims().catch(console.error);
@@ -86,6 +101,9 @@ export default function AdminPage() {
   };
 
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
+    // Prevent action on sample data
+    if (userId === 'sample-user-123') return; 
+
     await updateClaimStatus(userId, 'distributed', walletAddress, amount);
     // Refresh the claims list to show the updated status
     setClaimedAirdrops(prevClaims => 

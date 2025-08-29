@@ -113,8 +113,6 @@ export default function Home() {
         const secondsUntilNextHour = Math.floor((nextHour.getTime() - now.getTime()) / 1000);
         setCountdown(secondsUntilNextHour);
         
-        // This hourly check should ideally be handled by a backend cron job for reliability
-        // to avoid issues with client-side timers. For this simulation, we proceed.
         if (now.getMinutes() === 0 && now.getSeconds() === 0) {
             const amountToCredit = pendingBalance;
             addDistributionRecord({
@@ -340,7 +338,7 @@ export default function Home() {
                                         <task.icon className="mr-3" />
                                         <span className="flex-1 text-left">{task.text}</span>
                                         <Badge variant="secondary">
-                                            +100 MOO
+                                            Complete Task
                                         </Badge>
                                     </Link>
                                 </Button>
@@ -474,3 +472,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

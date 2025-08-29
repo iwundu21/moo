@@ -340,9 +340,9 @@ const useTelegram = () => {
   const addDistributionRecord = useCallback(async (record: DistributionRecord) => {
     if (!userProfile) return;
     const distDocRef = doc(collection(db, 'userProfiles', userProfile.id, 'distributionHistory'));
-    const newRecord = { ...record, timestamp: record.timestamp.toISOString() };
+    const newRecord = { ...record, timestamp: record.timestamp };
     await setDoc(distDocRef, newRecord);
-    setDistributionHistory(prevHistory => [newRecord, ...prevHistory]);
+    setDistributionHistory(prevHistory => [{ ...record, timestamp: record.timestamp.toString() }, ...prevHistory]);
   }, [userProfile]);
   
   const setAirdropStatus = useCallback(async (isLive: boolean) => {
@@ -371,3 +371,5 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    

@@ -215,18 +215,33 @@ const useTelegram = () => {
     }
   }, []);
 
+  const fetchDistributionHistory = useCallback(async (userId: string) => {
+    const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
+    const distributionSnapshot = await getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc')));
+    
+    const history = distributionSnapshot.docs.map(d => {
+        const data = d.data();
+        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+            ? data.timestamp.toDate() 
+            : new Date(data.timestamp);
+        return { ...data, timestamp } as DistributionRecord;
+    });
+    setDistributionHistory(history);
+  }, []);
+
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (!tg) {
       setIsLoading(false);
       return;
     }
-
-    if (userProfile || isFetching.current) return;
-        
-    tg.ready();
+    
+    if (!tg.isReady) {
+        tg.ready();
+    }
 
     const fetchInitialData = async () => {
+        if (isFetching.current) return;
         isFetching.current = true;
         setIsLoading(true);
 
@@ -285,26 +300,16 @@ const useTelegram = () => {
         setUserProfile(currentUserProfile);
         
         const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
-        const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
         const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
         
         const [
             referralSnapshot,
-            distributionSnapshot,
             leaderboardSnapshot
         ] = await Promise.all([
             getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
-            getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc'))),
-            getDocs(leaderboardQuery)
+            getDocs(leaderboardQuery),
+            fetchDistributionHistory(userId)
         ]);
-        
-        setDistributionHistory(distributionSnapshot.docs.map(d => {
-            const data = d.data();
-            const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-                ? data.timestamp.toDate() 
-                : new Date(data.timestamp); // Keep handling both cases
-            return { ...data, timestamp } as DistributionRecord;
-        }));
         
         setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
             const data = doc.data();
@@ -331,7 +336,7 @@ const useTelegram = () => {
 
     fetchInitialData().catch(console.error);
     
-  }, [userProfile]);
+  }, [fetchDistributionHistory]);
 
   // Separate useEffect to handle referral code from start_param after profile is loaded
   useEffect(() => {
@@ -428,3 +433,5 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    

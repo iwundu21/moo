@@ -16,7 +16,9 @@ import {
   writeBatch,
   runTransaction,
   where,
-  documentId
+  documentId,
+  collectionGroup,
+  getCountFromServer
 } from 'firebase/firestore';
 
 interface TelegramUser {
@@ -251,7 +253,7 @@ const useTelegram = () => {
         
         const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
         const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
-        const allUsersQuery = query(collection(db, 'userProfiles'));
+        const allUsersCol = collection(db, 'userProfiles');
         const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
         const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
         
@@ -260,18 +262,20 @@ const useTelegram = () => {
             distributionSnapshot,
             allUsersSnapshot,
             leaderboardSnapshot,
-            claimsSnapshot
+            claimsSnapshot,
+            userCountSnapshot
         ] = await Promise.all([
             getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
             getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc'))),
-            getDocs(allUsersQuery),
+            getDocs(query(allUsersCol)),
             getDocs(leaderboardQuery),
-            getDocs(claimsQuery)
+            getDocs(claimsQuery),
+            getCountFromServer(allUsersCol)
         ]);
         
         setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
         setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
-        setTotalUserCount(allUsersSnapshot.size);
+        setTotalUserCount(userCountSnapshot.data().count);
         
         let totalMoo = 0;
         allUsersSnapshot.forEach(doc => {
@@ -367,5 +371,3 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
-
-    

@@ -28,6 +28,10 @@ export default function ProfilePage() {
       '160 60% 45%',
       '30 80% 55%',
       '280 65% 60%',
+      '220 70% 50%',
+      '160 60% 45%',
+      '30 80% 55%',
+      '280 65% 60%',
     ];
 
     useEffect(() => {
@@ -41,6 +45,10 @@ export default function ProfilePage() {
                 { icon: Rocket, title: '5x Booster', description: 'Earn 20 MOO per message', unlocked: userProfile.purchasedBoosts.includes('5x') },
                 { icon: Rocket, title: '10x Booster', description: 'Earn 35 MOO per message', unlocked: userProfile.purchasedBoosts.includes('10x') },
                 { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
+                { icon: Award, title: 'Top 20 Player', description: 'Reached the top 20', unlocked: !!(userRank && userRank <= 20) },
+                { icon: Award, title: 'Top 40 Player', description: 'Reached the top 40', unlocked: !!(userRank && userRank <= 40) },
+                { icon: Award, title: 'Top 70 Player', description: 'Reached the top 70', unlocked: !!(userRank && userRank <= 70) },
+                { icon: Award, title: 'Top 100 Player', description: 'Reached the top 100', unlocked: !!(userRank && userRank <= 100) },
                 { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: referrals.length > 0 },
                 { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: userProfile.isPremium },
                 { icon: Twitter, title: 'X Follower', description: 'Followed on X', unlocked: userProfile.completedSocialTasks?.twitter === 'completed' },

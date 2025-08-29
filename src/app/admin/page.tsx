@@ -50,19 +50,6 @@ export default function AdminPage() {
         return { ...data, timestamp } as AirdropClaim
       });
       
-      // Sample Data for demonstration
-      if (claims.length === 0) {
-        claims.push({
-          userId: 'sample-user-123',
-          username: 'test_user',
-          walletAddress: 'UQDD...SAMPLE...WALLET...ADDRESS...1234',
-          amount: 1250.75,
-          profilePictureUrl: 'https://picsum.photos/seed/sample-user/100/100',
-          timestamp: new Date(),
-          status: 'processing'
-        });
-      }
-
       setClaimedAirdrops(claims);
     };
     
@@ -101,9 +88,6 @@ export default function AdminPage() {
   };
 
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
-    // Prevent action on sample data
-    if (userId === 'sample-user-123') return; 
-
     await updateClaimStatus(userId, 'distributed', walletAddress, amount);
     // Refresh the claims list to show the updated status
     setClaimedAirdrops(prevClaims => 
@@ -114,7 +98,7 @@ export default function AdminPage() {
   };
 
   const handleDistributeAll = async () => {
-    const pendingClaims = claimedAirdrops.filter(claim => claim.status === 'processing' && claim.userId !== 'sample-user-123');
+    const pendingClaims = claimedAirdrops.filter(claim => claim.status === 'processing');
     if (pendingClaims.length === 0) return;
 
     await batchUpdateClaimStatuses(pendingClaims);

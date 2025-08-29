@@ -32,6 +32,13 @@ type EligibilityCriterion = {
   link?: string;
 };
 
+const isValidTonAddress = (address: string) => {
+  // Basic validation: 48 characters, starts with E or U, base64 characters.
+  // This is not a foolproof cryptographic check but covers most user input errors.
+  const tonAddressRegex = /^(EQ|UQ)[A-Za-z0-9\-_]{46}$/;
+  return tonAddressRegex.test(address);
+};
+
 export default function AirdropPage() {
   const { userProfile, referrals, addClaimRecord, updateUserProfile, isAirdropLive } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
@@ -102,6 +109,16 @@ export default function AirdropPage() {
         });
         return;
     }
+    
+    if (!isValidTonAddress(walletAddress.trim())) {
+        toast({
+            title: "Invalid Address",
+            description: "Please enter a valid TON wallet address.",
+            variant: "destructive",
+        });
+        return;
+    }
+
     if (!userProfile) return;
 
     setIsSubmitting(true);

@@ -185,6 +185,38 @@ const useTelegram = () => {
   }, [userProfile, updateUserProfile]);
 
   useEffect(() => {
+    // This effect runs only on the client
+    const fetchAdminData = async () => {
+        if (window.location.pathname === '/admin') {
+            const allUsersCol = collection(db, 'userProfiles');
+            const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
+            
+            const [
+                allUsersSnapshot,
+                claimsSnapshot,
+                userCountSnapshot
+            ] = await Promise.all([
+                getDocs(query(allUsersCol)),
+                getDocs(claimsQuery),
+                getCountFromServer(allUsersCol)
+            ]);
+            
+            setTotalUserCount(userCountSnapshot.data().count);
+            
+            let totalMoo = 0;
+            allUsersSnapshot.forEach(doc => {
+              totalMoo += doc.data().mainBalance || 0;
+            });
+            setTotalMooGenerated(totalMoo);
+            
+            setClaimedAirdrops(claimsSnapshot.docs.map(d => d.data() as AirdropClaim));
+        }
+    };
+    
+    fetchAdminData().catch(console.error);
+  }, []);
+
+  useEffect(() => {
     if (isFetching.current) return;
         
     const tg = window.Telegram?.WebApp;
@@ -253,36 +285,21 @@ const useTelegram = () => {
         
         const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
         const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
-        const allUsersCol = collection(db, 'userProfiles');
         const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
-        const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
         
         const [
             referralSnapshot,
             distributionSnapshot,
-            allUsersSnapshot,
-            leaderboardSnapshot,
-            claimsSnapshot,
-            userCountSnapshot
+            leaderboardSnapshot
         ] = await Promise.all([
             getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
             getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc'))),
-            getDocs(query(allUsersCol)),
-            getDocs(leaderboardQuery),
-            getDocs(claimsQuery),
-            getCountFromServer(allUsersCol)
+            getDocs(leaderboardQuery)
         ]);
         
         setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
         setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
-        setTotalUserCount(userCountSnapshot.data().count);
         
-        let totalMoo = 0;
-        allUsersSnapshot.forEach(doc => {
-          totalMoo += doc.data().mainBalance || 0;
-        });
-        setTotalMooGenerated(totalMoo);
-
         setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
             const data = doc.data();
             return {
@@ -293,14 +310,15 @@ const useTelegram = () => {
                 isPremium: data.isPremium || false
             }
         }));
-        setClaimedAirdrops(claimsSnapshot.docs.map(d => d.data() as AirdropClaim));
 
         setIsLoading(false);
         isFetching.current = false;
     };
 
-    fetchInitialData().catch(console.error);
-  }, []);
+    if (!userProfile) {
+      fetchInitialData().catch(console.error);
+    }
+  }, [userProfile]);
 
   // Separate useEffect to handle referral code from start_param after profile is loaded
   useEffect(() => {

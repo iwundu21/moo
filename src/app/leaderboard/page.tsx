@@ -57,7 +57,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0 ml-4">
-                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{userRank.balance.toLocaleString()} MOO</p>
+                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent whitespace-nowrap">{userRank.balance.toLocaleString()} MOO</p>
               </div>
             </div>
         </div>

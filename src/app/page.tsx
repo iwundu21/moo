@@ -62,7 +62,7 @@ export default function Home() {
   const socialTaskList = [
     { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
     { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/your-channel', reward: 100 },
-    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/your-community', reward: 100 },
+    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn', reward: 100 },
   ];
 
   useEffect(() => {

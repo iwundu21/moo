@@ -183,7 +183,7 @@ export default function AdminPage() {
                       <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete all
                         airdrop claim submissions.
-                      </Description>
+                      </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -252,5 +252,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

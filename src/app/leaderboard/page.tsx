@@ -48,7 +48,7 @@ export default function LeaderboardPage() {
                  <div className="relative flex-shrink-0">
                     <Avatar>
                         <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
-                        <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</Fallback>
+                        <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</AvatarFallback>
                     </Avatar>
                     {userProfile.isPremium && <BadgeCheck className="absolute -bottom-1 -right-1 w-5 h-5 text-blue-500" />}
                 </div>

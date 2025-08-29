@@ -3,7 +3,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Copy, UserPlus, Share2, Gift } from 'lucide-react';
+import { Copy, UserPlus, Share2, Gift, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegram } from '@/hooks/use-telegram';
 
@@ -60,6 +60,19 @@ export default function ReferralsPage() {
         <Card>
             <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary"/>
+                    Your Referrals
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+                <p className="text-4xl font-bold">{referrals.length}</p>
+                <p className="text-xs text-muted-foreground">Total friends joined</p>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
                     <Gift className="w-5 h-5 text-primary"/>
                     How It Works
                 </CardTitle>
@@ -75,7 +88,7 @@ export default function ReferralsPage() {
                 </div>
                 <div className="flex items-start gap-4">
                     <span className="font-bold text-primary">3.</span>
-                    <p>As a thank you, you will receive <span className="font-semibold text-foreground">100 MOO</span> in your main balance for each successful referral. The more friends you invite, the more you earn!</p>
+                    <p>As a thank you, you will receive <span className="font-semibold text-foreground">100 MOO</span> in your main balance for each successful referral. The new user does not receive a MOO bonus for using the code. The more friends you invite, the more you earn!</p>
                 </div>
             </CardContent>
         </Card>

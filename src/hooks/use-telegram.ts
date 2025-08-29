@@ -169,9 +169,9 @@ const useTelegram = () => {
             });
         });
         
-        updateUserProfile({ 
+        await updateUserProfile({ 
             referredBy: referrerId, 
-            completedSocialTasks: { referral: 'completed' }
+            completedSocialTasks: { ...(userProfile.completedSocialTasks), referral: 'completed' }
         });
         
         return {success: true, message: "Referral code redeemed successfully!", referrerId: referrerId};
@@ -247,19 +247,6 @@ const useTelegram = () => {
              }
         }
         
-        const startParam = tg.initDataUnsafe.start_param;
-        if (startParam && startParam.startsWith('ref') && !currentUserProfile.referredBy) {
-            const referrerCode = startParam.substring(3);
-            const result = await redeemReferralCode(referrerCode);
-            if (result.success) {
-                // Manually update the profile state to reflect the successful referral
-                currentUserProfile.referredBy = result.referrerId;
-                if(currentUserProfile.completedSocialTasks) {
-                    currentUserProfile.completedSocialTasks.referral = 'completed';
-                }
-            }
-        }
-
         setUserProfile(currentUserProfile);
         
         const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
@@ -309,7 +296,23 @@ const useTelegram = () => {
     };
 
     fetchInitialData().catch(console.error);
-  }, [redeemReferralCode]);
+  }, []);
+
+  // Separate useEffect to handle referral code from start_param after profile is loaded
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+    if (!tg || !userProfile || userProfile.referredBy) {
+      return;
+    }
+
+    const startParam = tg.initDataUnsafe.start_param;
+    if (startParam && startParam.startsWith('ref')) {
+      const referrerCode = startParam.substring(3);
+      if (referrerCode !== userProfile.referralCode) {
+          redeemReferralCode(referrerCode).catch(console.error);
+      }
+    }
+  }, [userProfile, redeemReferralCode]);
 
 
   const addClaimRecord = useCallback(async (claim: AirdropClaim) => {
@@ -364,3 +367,5 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    

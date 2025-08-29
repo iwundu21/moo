@@ -10,11 +10,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Power, Trash2 } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -35,11 +34,11 @@ export default function AdminPage() {
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
 
-    const headers = ['User ID', 'Username', 'Wallet Address', 'Amount'];
+    const headers = ['User ID', 'Username', 'Wallet Address', 'Amount', 'Timestamp'];
     const csvContent = [
       headers.join(','),
       ...claimedAirdrops.map(claim => 
-        [claim.userId, claim.username, claim.walletAddress, claim.amount].join(',')
+        [claim.userId, claim.username, claim.walletAddress, claim.amount, claim.timestamp.toISOString()].join(',')
       )
     ].join('\n');
 

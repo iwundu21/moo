@@ -102,6 +102,7 @@ export default function AirdropPage() {
         walletAddress: walletAddress,
         amount: amountToClaim,
         profilePictureUrl: userProfile.profilePictureUrl,
+        timestamp: new Date(),
     });
     
     updateUserProfile({ mainBalance: 0, hasClaimedAirdrop: true });

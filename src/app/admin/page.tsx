@@ -85,7 +85,7 @@ export default function AdminPage() {
         status: claim?.status,
         claimTimestamp: claim?.timestamp
       }
-    }).sort((a, b) => (b.claimTimestamp?.getTime() || 0) - (a.claimTimestamp?.getTime() || 0));
+    }).sort((a, b) => (b.mainBalance || 0) - (a.mainBalance || 0));
   }, [allUsers, claims]);
 
   const downloadCSV = () => {
@@ -120,7 +120,6 @@ export default function AdminPage() {
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
     if (!walletAddress || amount <= 0) return;
     await updateClaimStatus(userId, 'distributed', walletAddress, amount);
-    // Refetch or update local state
     const newClaims = claims.map(c => c.userId === userId ? {...c, status: 'distributed'} : c);
     setClaims(newClaims);
   };
@@ -129,7 +128,7 @@ export default function AdminPage() {
     await deleteUser(userId);
     setAllUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     setClaims(prevClaims => prevClaims.filter(claim => claim.userId !== userId));
-    fetchAdminStats(); // Refresh stats after deletion
+    fetchAdminStats();
   };
 
   const handleDistributeAll = async () => {
@@ -146,7 +145,6 @@ export default function AdminPage() {
         timestamp: p.claimTimestamp || new Date()
     })));
 
-    // Refetch or update local state
     const newClaims = claims.map(claim => 
         pendingClaims.some(p => p.id === claim.userId) 
         ? { ...claim, status: 'distributed' } 
@@ -289,7 +287,7 @@ export default function AdminPage() {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Wallet / Status</TableHead>
-              <TableHead>Claim Amount</TableHead>
+              <TableHead>Main Balance</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -340,7 +338,7 @@ export default function AdminPage() {
                     )}
                   </TableCell>
                   <TableCell className="font-semibold text-xs">
-                    {user.amount > 0 ? `${user.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO` : 'N/A'}
+                    {`${user.mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO`}
                   </TableCell>
                   <TableCell className="text-right flex justify-end gap-2">
                     {user.status === 'processing' && (

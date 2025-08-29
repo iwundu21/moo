@@ -27,7 +27,7 @@ export default function ReferralsPage() {
     };
 
     const shareOnTelegram = () => {
-        const shareText = `Join me on MOO and let's earn together! Use my referral code to get a head start: ${userReferralCode}`;
+        const shareText = `Join me on MOO and let's earn together! Use my referral code: ${userReferralCode}`;
         const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
         window.open(telegramShareUrl, '_blank');
     };
@@ -37,7 +37,7 @@ export default function ReferralsPage() {
       <header className="text-center space-y-2">
         <UserPlus className="mx-auto h-12 w-12 text-primary" />
         <h1 className="text-xl font-bold tracking-tight">Refer a Friend</h1>
-        <p className="text-xs text-muted-foreground">Earn more MOO for every friend you invite!</p>
+        <p className="text-xs text-muted-foreground">Earn MOO for every friend you invite!</p>
       </header>
 
       <div className="space-y-6">
@@ -71,11 +71,11 @@ export default function ReferralsPage() {
                 </div>
                 <div className="flex items-start gap-4">
                     <span className="font-bold text-primary">2.</span>
-                    <p>Your friend enters your referral code on the Home page after activating their license. They will instantly receive <span className="font-semibold text-foreground">100 MOO</span> as a welcome bonus!</p>
+                    <p>Your friend enters your referral code on the Home page. This completes one of their social tasks.</p>
                 </div>
                 <div className="flex items-start gap-4">
                     <span className="font-bold text-primary">3.</span>
-                    <p>As a thank you, you will also receive <span className="font-semibold text-foreground">100 MOO</span> in your main balance for each successful referral. The more friends you invite, the more you earn!</p>
+                    <p>As a thank you, you will receive <span className="font-semibold text-foreground">100 MOO</span> in your main balance for each successful referral. The more friends you invite, the more you earn!</p>
                 </div>
             </CardContent>
         </Card>

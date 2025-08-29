@@ -230,10 +230,6 @@ export default function Home() {
 
       if (result.success && userProfile) {
         setReferralCodeInput('');
-        // Balance is updated via the hook, which re-fetches or optimistically updates.
-        // Let's ensure the local state reflects the change for responsiveness.
-        const newMainBalance = mainBalance + 100;
-        setMainBalance(newMainBalance);
         setSocialTasks(prev => ({...prev, referral: 'completed' }));
       }
     };
@@ -307,7 +303,7 @@ export default function Home() {
                 <Info className="h-4 w-4" />
                 <AlertTitle>How It Works</AlertTitle>
                 <AlertDescription className="text-xs space-y-1">
-                  <p>1. Activate your license to unlock earning tasks.</p>
+                  <p>1. Activate your license to get 5,000 MOO and unlock earning tasks.</p>
                   <p>2. Complete social tasks & redeem a referral code.</p>
                   <p>3. Send messages in designated group chats to earn MOO.</p>
                 </AlertDescription>
@@ -316,7 +312,7 @@ export default function Home() {
                 <div className="flex-1">
                     <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>
                     <p className="text-xs text-muted-foreground pt-1.5">
-                        Activate your license to start mining MOO.
+                        Activate your license to start mining MOO and get 5,000 MOO.
                     </p>
                 </div>
                 <div className="pt-4">
@@ -387,7 +383,7 @@ export default function Home() {
                                     Redeem
                                 </Button>
                             </div>
-                            <p className="text-xs text-muted-foreground px-1">Redeem a code to get +100 MOO.</p>
+                            <p className="text-xs text-muted-foreground px-1">Redeem a code to complete the task.</p>
                         </div>
                     )}
                 </div>
@@ -471,7 +467,7 @@ export default function Home() {
                   <PartyPopper className="w-16 h-16 text-yellow-500 mb-4" />
                   <DialogTitle className="text-xl">Congratulations! 🎊</DialogTitle>
                   <DialogDescription className="pt-2 text-center text-xs">
-                      Your mining license is active! You can now complete social tasks and purchase boosts to supercharge your earnings.
+                      Your mining license is active and you've received 5,000 MOO! You can now complete social tasks and purchase boosts to supercharge your earnings.
                   </DialogDescription>
               </div>
           </DialogHeader>
@@ -483,5 +479,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

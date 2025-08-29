@@ -107,6 +107,77 @@ const useTelegram = () => {
     }
   }, [userProfile]);
 
+  const redeemReferralCode = useCallback(async (referralCode: string, profileToUpdate?: UserProfile): Promise<{success: boolean, message: string, referrerId?: string}> => {
+    const profile = profileToUpdate || userProfile;
+    if (!profile) return {success: false, message: "User profile not loaded."};
+    
+    const upperCaseCode = referralCode.trim().toUpperCase();
+
+    if (upperCaseCode === profile.referralCode) {
+        return {success: false, message: "You cannot redeem your own referral code."};
+    }
+    
+    if (profile.referredBy) {
+        return {success: false, message: "You have already redeemed a referral code."};
+    }
+
+    const q = query(collection(db, 'userProfiles'), where("referralCode", "==", upperCaseCode));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return {success: false, message: "Invalid referral code. User not found."};
+    }
+
+    const referrerDoc = querySnapshot.docs[0];
+    const referrerId = referrerDoc.id;
+    const referrerProfile = referrerDoc.data() as UserProfile;
+
+    if (referrerId === profile.id) {
+        return {success: false, message: "You cannot redeem your own referral code."};
+    }
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const userDocRef = doc(db, 'userProfiles', profile.id);
+            const refereeDoc = await transaction.get(userDocRef);
+            const currentProfile = refereeDoc.data();
+
+            if (!refereeDoc.exists() || (currentProfile && currentProfile.referredBy)) {
+                throw new Error("User has already redeemed a code.");
+            }
+            
+            // The referee does NOT receive MOO, just marks the task as complete.
+            transaction.update(userDocRef, { 
+                referredBy: referrerId,
+                'completedSocialTasks.referral': 'completed'
+            });
+            
+            // The referrer receives 100 MOO
+            const newReferrerBalance = (referrerProfile.mainBalance || 0) + 100;
+            transaction.update(referrerDoc.ref, { mainBalance: newReferrerBalance });
+
+            const referralRecordRef = doc(collection(db, 'userProfiles', referrerId, 'referrals'));
+            transaction.set(referralRecordRef, { 
+                username: profile.telegramUsername, 
+                profilePictureUrl: profile.profilePictureUrl,
+                timestamp: new Date()
+            });
+        });
+        
+        setUserProfile(prev => prev ? {
+            ...prev,
+            referredBy: referrerId, 
+            completedSocialTasks: { ...(prev.completedSocialTasks || {}), referral: 'completed' }
+        } : null);
+        
+        return {success: true, message: "Referral code redeemed successfully!", referrerId: referrerId};
+    } catch (e: any) {
+        console.error("Referral redeem transaction failed: ", e);
+        return {success: false, message: e.message || "An error occurred during the transaction."};
+    }
+
+  }, [userProfile]);
+
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (!tg) {
@@ -169,19 +240,7 @@ const useTelegram = () => {
         const startParam = tg.initDataUnsafe.start_param;
         if (startParam && startParam.startsWith('ref') && !currentUserProfile.referredBy) {
             const referrerCode = startParam.substring(3);
-            const q = query(collection(db, 'userProfiles'), where("referralCode", "==", referrerCode));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                const referrerDoc = querySnapshot.docs[0];
-                const referrerId = referrerDoc.id;
-                
-                if (referrerId !== userId) {
-                    // This logic is now handled by redeemReferralCode, but we can keep it
-                    // for users who open the app for the first time with a ref link.
-                    await redeemReferralCode(referrerCode, currentUserProfile);
-                }
-            }
+             await redeemReferralCode(referrerCode, currentUserProfile);
         }
 
         // Re-fetch user profile after potential update from start_param
@@ -224,79 +283,8 @@ const useTelegram = () => {
     };
 
     fetchInitialData().catch(console.error);
-  }, []);
+  }, [redeemReferralCode]);
 
-  const redeemReferralCode = useCallback(async (referralCode: string, profileToUpdate?: UserProfile): Promise<{success: boolean, message: string, referrerId?: string}> => {
-    const profile = profileToUpdate || userProfile;
-    if (!profile) return {success: false, message: "User profile not loaded."};
-    
-    const upperCaseCode = referralCode.trim().toUpperCase();
-
-    if (upperCaseCode === profile.referralCode) {
-        return {success: false, message: "You cannot redeem your own referral code."};
-    }
-    
-    if (profile.referredBy) {
-        return {success: false, message: "You have already redeemed a referral code."};
-    }
-
-    const q = query(collection(db, 'userProfiles'), where("referralCode", "==", upperCaseCode));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-        return {success: false, message: "Invalid referral code. User not found."};
-    }
-
-    const referrerDoc = querySnapshot.docs[0];
-    const referrerId = referrerDoc.id;
-    const referrerProfile = referrerDoc.data() as UserProfile;
-
-    if (referrerId === profile.id) {
-        return {success: false, message: "You cannot redeem your own referral code."};
-    }
-
-    try {
-        await runTransaction(db, async (transaction) => {
-            const userDocRef = doc(db, 'userProfiles', profile.id);
-            const refereeDoc = await transaction.get(userDocRef);
-            const currentProfile = refereeDoc.data();
-
-            if (!refereeDoc.exists() || (currentProfile && currentProfile.referredBy)) {
-                throw new Error("User has already redeemed a code.");
-            }
-
-            const newRefereeBalance = (currentProfile?.mainBalance || 0) + 100;
-            transaction.update(userDocRef, { 
-                referredBy: referrerId,
-                mainBalance: newRefereeBalance,
-                'completedSocialTasks.referral': 'completed'
-            });
-
-            const newReferrerBalance = (referrerProfile.mainBalance || 0) + 100;
-            transaction.update(referrerDoc.ref, { mainBalance: newReferrerBalance });
-
-            const referralRecordRef = doc(collection(db, 'userProfiles', referrerId, 'referrals'));
-            transaction.set(referralRecordRef, { 
-                username: profile.telegramUsername, 
-                profilePictureUrl: profile.profilePictureUrl,
-                timestamp: new Date()
-            });
-        });
-        
-        setUserProfile(prev => prev ? {
-            ...prev,
-            referredBy: referrerId, 
-            mainBalance: prev.mainBalance + 100,
-            completedSocialTasks: { ...(prev.completedSocialTasks || {}), referral: 'completed' }
-        } : null);
-        
-        return {success: true, message: "Referral code redeemed successfully! You received 100 MOO.", referrerId: referrerId};
-    } catch (e: any) {
-        console.error("Referral redeem transaction failed: ", e);
-        return {success: false, message: e.message || "An error occurred during the transaction."};
-    }
-
-  }, [userProfile]);
 
   const addClaimRecord = useCallback(async (claim: AirdropClaim) => {
     const claimDocRef = doc(db, 'airdropClaims', claim.userId);
@@ -348,5 +336,3 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
-
-    

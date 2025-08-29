@@ -93,7 +93,7 @@ export default function AdminPage() {
         claim.userId === userId ? { ...claim, status: 'distributed' } : claim
       )
     );
-  }
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">

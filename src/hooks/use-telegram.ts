@@ -78,7 +78,6 @@ const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
   const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
@@ -240,13 +239,17 @@ const useTelegram = () => {
 
     const userId = telegramUser.id.toString();
 
+    const allUsersCol = collection(db, 'userProfiles');
     const settingsDocRef = doc(db, 'settings', 'app');
     const userDocRef = doc(db, 'userProfiles', userId);
 
-    let [settingsDoc, userDoc] = await Promise.all([
+    let [settingsDoc, userDoc, userCountSnapshot] = await Promise.all([
         getDoc(settingsDocRef),
-        getDoc(userDocRef)
+        getDoc(userDocRef),
+        getCountFromServer(allUsersCol)
     ]);
+    
+    setTotalUserCount(userCountSnapshot.data().count);
 
     const settingsData = settingsDoc.data() || {};
     setIsAirdropLive(settingsData.isAirdropLive === undefined ? true : settingsData.isAirdropLive);
@@ -341,8 +344,7 @@ const useTelegram = () => {
     const claimDocRef = doc(db, 'airdropClaims', claim.userId);
     const newClaim = { ...claim, timestamp: new Date(), walletAddress: claim.walletAddress || '' };
     if (newClaim.walletAddress) {
-        await setDoc(claimDocRef, newClaim);
-        setClaimedAirdrops(prev => [...prev.filter(c => c.userId !== claim.userId), newClaim].sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime()));
+        await setDoc(claimDocRef, newClaim, { merge: true });
     }
   }, []);
 

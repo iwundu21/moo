@@ -33,7 +33,7 @@ import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
-  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats } = useTelegram();
+  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   
   useEffect(() => {
@@ -95,6 +95,12 @@ export default function AdminPage() {
         claim.userId === userId ? { ...claim, status: 'distributed' } : claim
       )
     );
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    await deleteUser(userId);
+    setClaimedAirdrops(prevClaims => prevClaims.filter(claim => claim.userId !== userId));
+    fetchAdminStats(); // Refresh stats after deletion
   };
 
   const handleDistributeAll = async () => {
@@ -268,7 +274,7 @@ export default function AdminPage() {
                   <TableCell className="font-semibold text-xs">
                     {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right flex justify-end gap-2">
                     {claim.status === 'distributed' ? (
                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
                             <CheckCircle className="mr-2 h-4 w-4" />
@@ -279,6 +285,25 @@ export default function AdminPage() {
                             Distribute
                         </Button>
                     )}
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="destructive" size="icon" className="h-9 w-9">
+                              <Trash2 className="h-4 w-4" />
+                           </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete User: @{claim.username}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the user's profile and their airdrop claim.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteUser(claim.userId)}>Confirm & Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))
@@ -295,3 +320,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

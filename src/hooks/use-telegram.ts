@@ -17,7 +17,8 @@ import {
   runTransaction,
   where,
   getCountFromServer,
-  updateDoc
+  updateDoc,
+  deleteDoc
 } from 'firebase/firestore';
 
 interface TelegramUser {
@@ -362,9 +363,11 @@ const useTelegram = () => {
 
   const addClaimRecord = useCallback(async (claim: Omit<AirdropClaim, 'timestamp'> & { timestamp: Date }) => {
     const claimDocRef = doc(db, 'airdropClaims', claim.userId);
-    const newClaim = { ...claim, timestamp: new Date() };
-    await setDoc(claimDocRef, newClaim);
-    setClaimedAirdrops(prev => [...prev.filter(c => c.userId !== claim.userId), newClaim].sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    const newClaim = { ...claim, timestamp: new Date(), walletAddress: claim.walletAddress || '' };
+    if (newClaim.walletAddress) {
+        await setDoc(claimDocRef, newClaim);
+        setClaimedAirdrops(prev => [...prev.filter(c => c.userId !== claim.userId), newClaim].sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    }
   }, []);
 
   const updateClaimStatus = useCallback(async (userId: string, status: 'distributed', walletAddress: string, amount: number) => {
@@ -414,6 +417,23 @@ const useTelegram = () => {
     await setDoc(settingsDocRef, { isAirdropLive: isLive }, { merge: true });
     setIsAirdropLive(isLive);
   }, []);
+  
+  const deleteUser = useCallback(async (userId: string) => {
+    if (!userId) return;
+    const userDocRef = doc(db, 'userProfiles', userId);
+    const claimDocRef = doc(db, 'airdropClaims', userId);
+
+    try {
+      await deleteDoc(userDocRef);
+      // It's possible a user exists without a claim, so we check before deleting.
+      const claimDoc = await getDoc(claimDocRef);
+      if (claimDoc.exists()) {
+        await deleteDoc(claimDocRef);
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  }, []);
 
   return { 
     isLoading,
@@ -433,7 +453,8 @@ const useTelegram = () => {
     updateClaimStatus,
     batchUpdateClaimStatuses,
     redeemReferralCode,
-    fetchAdminStats
+    fetchAdminStats,
+    deleteUser
   };
 };
 

@@ -243,7 +243,7 @@ export default function Home() {
                   {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                   <span className="text-base ml-1">MOO</span>
               </p>
-              <p className="text-xs text-muted-foreground">This balance is updated periodically by the admin.</p>
+              <p className="text-xs text-muted-foreground">This balance is updated periodically from the backend.</p>
           </div>
       </div>
       

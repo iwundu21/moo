@@ -33,7 +33,7 @@ import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
-  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser, distributePendingBalances } = useTelegram();
+  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
   const [claims, setClaims] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -114,14 +114,6 @@ export default function AdminPage() {
     await fetchAllData();
   };
   
-  const handleDistributePending = async () => {
-    await distributePendingBalances();
-    // Optionally, refresh data to reflect changes
-    fetchAdminStats();
-    // Maybe show a toast notification
-  };
-
-
   const pendingClaimsCount = claims.filter(c => c.status === 'processing').length;
 
   return (
@@ -248,26 +240,6 @@ export default function AdminPage() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction onClick={handleDistributeAll}>Confirm & Distribute</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                 <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                     <Button variant="outline">
-                        <Zap className="mr-2" />
-                        Distribute Pending
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Distribute all pending balances?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will transfer all users' pending balances to their main balances. This action is designed to be run periodically.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDistributePending}>Confirm & Run</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

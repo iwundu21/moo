@@ -285,7 +285,7 @@ const useTelegram = () => {
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle', referral: 'idle' },
                 hasClaimedAirdrop: false,
                 referredBy: null,
-                referralCode: newReferralCode
+                referralCode: newReferralCode,
             };
             await setDoc(userDocRef, currentUserProfile);
         } else {
@@ -459,5 +459,3 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
-
-    

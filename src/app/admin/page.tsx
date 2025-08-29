@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -26,46 +26,68 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useEffect, useState } from "react";
-import { AirdropClaim } from "@/lib/types";
+import { useEffect, useState, useMemo } from "react";
+import type { AirdropClaim, UserProfile } from "@/lib/types";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
   const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
-  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
-  
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [claims, setClaims] = useState<AirdropClaim[]>([]);
+
   useEffect(() => {
     fetchAdminStats();
     
-    const fetchClaims = async () => {
+    const fetchAllData = async () => {
+      const usersQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'));
       const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
-      const claimsSnapshot = await getDocs(claimsQuery);
-      const claims = claimsSnapshot.docs.map(d => {
+      
+      const [usersSnapshot, claimsSnapshot] = await Promise.all([
+        getDocs(usersQuery),
+        getDocs(claimsQuery)
+      ]);
+      
+      const users = usersSnapshot.docs.map(d => d.data() as UserProfile);
+      setAllUsers(users);
+
+      const claimsData = claimsSnapshot.docs.map(d => {
         const data = d.data();
         const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
             ? data.timestamp.toDate() 
             : new Date(); // Fallback
         return { ...data, timestamp } as AirdropClaim
       });
-      
-      setClaimedAirdrops(claims);
+      setClaims(claimsData);
     };
     
-    fetchClaims().catch(console.error);
+    fetchAllData().catch(console.error);
     
   }, [fetchAdminStats]);
 
+  const usersWithClaims = useMemo(() => {
+    const claimsMap = new Map(claims.map(claim => [claim.userId, claim]));
+    return allUsers.map(user => {
+      const claim = claimsMap.get(user.id);
+      return {
+        ...user,
+        walletAddress: claim?.walletAddress || user.walletAddress || '',
+        amount: claim?.amount || 0,
+        status: claim?.status || (user.hasClaimedAirdrop ? user.airdropStatus : undefined),
+        claimTimestamp: claim?.timestamp
+      }
+    }).sort((a, b) => (b.claimTimestamp?.getTime() || 0) - (a.claimTimestamp?.getTime() || 0));
+  }, [allUsers, claims]);
 
   const downloadCSV = () => {
-    if (claimedAirdrops.length === 0) return;
+    if (usersWithClaims.length === 0) return;
 
-    const headers = ['User ID', 'Username', 'Wallet Address', 'Amount', 'Timestamp', 'Status'];
+    const headers = ['User ID', 'Username', 'Wallet Address', 'Claim Amount', 'Claim Status', 'Main Balance'];
     const csvContent = [
       headers.join(','),
-      ...claimedAirdrops.map(claim => 
-        [claim.userId, claim.username, claim.walletAddress, claim.amount, claim.timestamp.toISOString(), claim.status].join(',')
+      ...usersWithClaims.map(user => 
+        [user.id, user.telegramUsername, user.walletAddress, user.amount, user.status || 'N/A', user.mainBalance].join(',')
       )
     ].join('\n');
 
@@ -76,7 +98,7 @@ export default function AdminPage() {
     }
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.setAttribute('download', 'airdrop_claims.csv');
+    link.setAttribute('download', 'all_users.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -84,13 +106,13 @@ export default function AdminPage() {
   
   const handleClearClaims = async () => {
     await clearAllClaims();
-    setClaimedAirdrops([]);
+    setClaims([]);
   };
 
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
+    if (!walletAddress || amount <= 0) return;
     await updateClaimStatus(userId, 'distributed', walletAddress, amount);
-    // Refresh the claims list to show the updated status
-    setClaimedAirdrops(prevClaims => 
+    setClaims(prevClaims => 
       prevClaims.map(claim => 
         claim.userId === userId ? { ...claim, status: 'distributed' } : claim
       )
@@ -99,17 +121,18 @@ export default function AdminPage() {
 
   const handleDeleteUser = async (userId: string) => {
     await deleteUser(userId);
-    setClaimedAirdrops(prevClaims => prevClaims.filter(claim => claim.userId !== userId));
+    setAllUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+    setClaims(prevClaims => prevClaims.filter(claim => claim.userId !== userId));
     fetchAdminStats(); // Refresh stats after deletion
   };
 
   const handleDistributeAll = async () => {
-    const pendingClaims = claimedAirdrops.filter(claim => claim.status === 'processing');
+    const pendingClaims = claims.filter(claim => claim.status === 'processing');
     if (pendingClaims.length === 0) return;
 
     await batchUpdateClaimStatuses(pendingClaims);
 
-    setClaimedAirdrops(prevClaims =>
+    setClaims(prevClaims =>
       prevClaims.map(claim => 
         pendingClaims.some(p => p.userId === claim.userId) 
         ? { ...claim, status: 'distributed' } 
@@ -118,7 +141,7 @@ export default function AdminPage() {
     );
   };
 
-  const pendingClaimsCount = claimedAirdrops.filter(c => c.status === 'processing').length;
+  const pendingClaimsCount = claims.filter(c => c.status === 'processing').length;
 
 
   return (
@@ -192,13 +215,13 @@ export default function AdminPage() {
                 <p className="text-xs text-muted-foreground">Download or clear claim data.</p>
             </div>
             <div className="flex gap-4">
-                <Button onClick={downloadCSV} disabled={claimedAirdrops.length === 0} className="w-full">
+                <Button onClick={downloadCSV} disabled={usersWithClaims.length === 0} className="w-full">
                     <Download className="mr-2" />
                     Download CSV
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" disabled={claimedAirdrops.length === 0} className="w-full">
+                    <Button variant="destructive" disabled={claims.length === 0} className="w-full">
                         <Trash2 className="mr-2" />
                         Clear Claims
                     </Button>
@@ -224,8 +247,8 @@ export default function AdminPage() {
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="p-6 flex justify-between items-center">
             <div>
-              <h3 className="text-base font-semibold">Claim Submissions ({claimedAirdrops.length})</h3>
-              <p className="text-xs text-muted-foreground">{pendingClaimsCount} pending</p>
+              <h3 className="text-base font-semibold">User Submissions ({usersWithClaims.length})</h3>
+              <p className="text-xs text-muted-foreground">{pendingClaimsCount} pending claims</p>
             </div>
              <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -239,7 +262,7 @@ export default function AdminPage() {
                   <AlertDialogTitle>Distribute all pending claims?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This will mark all {pendingClaimsCount} pending claims as 'distributed' and update the user profiles. This action cannot be undone.
-                  </AlertDialogDescription>
+                  </Description>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -252,36 +275,52 @@ export default function AdminPage() {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
-              <TableHead>Wallet Address</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>Wallet / Status</TableHead>
+              <TableHead>Claim Amount</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {claimedAirdrops.length > 0 ? (
-              claimedAirdrops.map((claim) => (
-                <TableRow key={claim.userId}>
+            {usersWithClaims.length > 0 ? (
+              usersWithClaims.map((user) => (
+                <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
-                            <AvatarImage src={claim.profilePictureUrl} data-ai-hint="profile picture" />
-                            <AvatarFallback>{claim.username.substring(0, 1)}</AvatarFallback>
+                            <AvatarImage src={user.profilePictureUrl} data-ai-hint="profile picture" />
+                            <AvatarFallback>{user.telegramUsername.substring(0, 1)}</AvatarFallback>
                         </Avatar>
-                        <span className="font-medium text-xs">@{claim.username}</span>
+                        <span className="font-medium text-xs">@{user.telegramUsername}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs">{claim.walletAddress}</TableCell>
+                  <TableCell className="text-xs">
+                    {user.walletAddress ? (
+                      <div className="flex flex-col gap-1">
+                          <span>{user.walletAddress}</span>
+                           {user.status === 'distributed' ? (
+                             <Badge variant="default" className="w-fit bg-green-500 hover:bg-green-600">
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Distributed
+                              </Badge>
+                          ) : (
+                              <Badge variant="secondary" className="w-fit">
+                                  Processing
+                              </Badge>
+                          )}
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="w-fit">
+                          <Ban className="mr-2 h-4 w-4" />
+                          No Claim
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="font-semibold text-xs">
-                    {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
+                    {user.amount > 0 ? `${user.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO` : 'N/A'}
                   </TableCell>
                   <TableCell className="text-right flex justify-end gap-2">
-                    {claim.status === 'distributed' ? (
-                       <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Distributed
-                        </Badge>
-                    ) : (
-                        <Button size="sm" onClick={() => handleDistribute(claim.userId, claim.walletAddress, claim.amount)}>
+                    {user.status === 'processing' && (
+                        <Button size="sm" onClick={() => handleDistribute(user.id, user.walletAddress, user.amount)}>
                             Distribute
                         </Button>
                     )}
@@ -293,14 +332,14 @@ export default function AdminPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete User: @{claim.username}?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete User: @{user.telegramUsername}?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will permanently delete the user's profile and their airdrop claim.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteUser(claim.userId)}>Confirm & Delete</AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Confirm & Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -310,7 +349,7 @@ export default function AdminPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center">
-                  No claims submitted yet.
+                  No users found.
                 </TableCell>
               </TableRow>
             )}
@@ -320,5 +359,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

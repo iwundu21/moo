@@ -38,41 +38,39 @@ export default function AdminPage() {
   const [claims, setClaims] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchAllData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const usersQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'));
+      const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
+      
+      const [usersSnapshot, claimsSnapshot] = await Promise.all([
+        getDocs(usersQuery),
+        getDocs(claimsQuery)
+      ]);
+      
+      const users = usersSnapshot.docs.map(d => d.data() as UserProfile);
+      setAllUsers(users);
+
+      const claimsData = claimsSnapshot.docs.map(d => {
+        const data = d.data();
+        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+            ? data.timestamp.toDate() 
+            : new Date(); // Fallback
+        return { ...data, timestamp } as AirdropClaim
+      });
+      setClaims(claimsData);
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAdminStats();
-    
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      try {
-        const usersQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'));
-        const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
-        
-        const [usersSnapshot, claimsSnapshot] = await Promise.all([
-          getDocs(usersQuery),
-          getDocs(claimsQuery)
-        ]);
-        
-        const users = usersSnapshot.docs.map(d => d.data() as UserProfile);
-        setAllUsers(users);
-
-        const claimsData = claimsSnapshot.docs.map(d => {
-          const data = d.data();
-          const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-              ? data.timestamp.toDate() 
-              : new Date(); // Fallback
-          return { ...data, timestamp } as AirdropClaim
-        });
-        setClaims(claimsData);
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchAllData();
-    
-  }, [fetchAdminStats]);
+  }, [fetchAdminStats, fetchAllData]);
 
   const usersWithClaims = useMemo(() => {
     const claimsMap = new Map(claims.map(claim => [claim.userId, claim]));
@@ -120,8 +118,7 @@ export default function AdminPage() {
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
     if (!walletAddress || amount <= 0) return;
     await updateClaimStatus(userId, 'distributed', walletAddress, amount);
-    const newClaims = claims.map(c => c.userId === userId ? {...c, status: 'distributed'} : c);
-    setClaims(newClaims);
+    await fetchAllData();
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -145,12 +142,7 @@ export default function AdminPage() {
         timestamp: p.claimTimestamp || new Date()
     })));
 
-    const newClaims = claims.map(claim => 
-        pendingClaims.some(p => p.id === claim.userId) 
-        ? { ...claim, status: 'distributed' } 
-        : claim
-    );
-    setClaims(newClaims);
+    await fetchAllData();
   };
 
   const pendingClaimsCount = usersWithClaims.filter(c => c.status === 'processing').length;
@@ -338,7 +330,7 @@ export default function AdminPage() {
                     )}
                   </TableCell>
                   <TableCell className="font-semibold text-xs">
-                    {`${user.mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO`}
+                    {`${(user.mainBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO`}
                   </TableCell>
                   <TableCell className="text-right flex justify-end gap-2">
                     {user.status === 'processing' && (
@@ -381,5 +373,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

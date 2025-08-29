@@ -14,6 +14,7 @@ import { History, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from 'date-fns';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function HistoryPage() {
   const { distributionHistory } = useTelegram();
@@ -65,7 +66,10 @@ export default function HistoryPage() {
                    <TableCell className="text-xs">
                     {format(new Date(record.timestamp), 'p')}
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-xs text-green-500 flex items-center justify-end gap-1">
+                  <TableCell className={cn(
+                      "text-right text-xs flex items-center justify-end gap-1",
+                      record.amount > 0 ? "text-green-500 font-semibold" : "text-muted-foreground"
+                    )}>
                     + {record.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                     <span className="text-primary">MOO</span>
                   </TableCell>

@@ -116,12 +116,13 @@ export default function Home() {
         // This hourly check should ideally be handled by a backend cron job for reliability
         // to avoid issues with client-side timers. For this simulation, we proceed.
         if (now.getMinutes() === 0 && now.getSeconds() === 0) {
-            if (pendingBalance > 0) {
-                const amountToCredit = pendingBalance;
-                addDistributionRecord({
-                    timestamp: new Date(),
-                    amount: amountToCredit,
-                });
+            const amountToCredit = pendingBalance;
+            addDistributionRecord({
+                timestamp: new Date(),
+                amount: amountToCredit,
+            });
+
+            if (amountToCredit > 0) {
                 updateUserProfile({ 
                     mainBalance: mainBalance + amountToCredit, 
                     pendingBalance: 0 

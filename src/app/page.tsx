@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,7 @@ export default function Home() {
   const [openedTasks, setOpenedTasks] = useState<Set<string>>(new Set());
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const { toast } = useToast();
+  const hourlyTaskTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const socialTaskList = [
     { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
@@ -106,30 +107,53 @@ export default function Home() {
   useEffect(() => {
     if (!userProfile) return;
 
-    const interval = setInterval(() => {
+    const runHourlyTasks = () => {
+        const amountToCredit = pendingBalance;
+        
+        addDistributionRecord({
+            timestamp: new Date(),
+            amount: amountToCredit,
+        });
+
+        if (amountToCredit > 0) {
+            updateUserProfile({ 
+                mainBalance: mainBalance + amountToCredit, 
+                pendingBalance: 0 
+            });
+        } else {
+            updateUserProfile({ pendingBalance: 0 });
+        }
+        scheduleNextHourlyTask();
+    };
+    
+    const scheduleNextHourlyTask = () => {
+      if (hourlyTaskTimeout.current) {
+        clearTimeout(hourlyTaskTimeout.current);
+      }
+      const now = new Date();
+      const nextHour = new Date(now);
+      nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+      const msUntilNextHour = nextHour.getTime() - now.getTime();
+      
+      hourlyTaskTimeout.current = setTimeout(runHourlyTasks, msUntilNextHour);
+    };
+
+    scheduleNextHourlyTask();
+
+    const countdownInterval = setInterval(() => {
         const now = new Date();
         const nextHour = new Date(now);
         nextHour.setHours(now.getHours() + 1, 0, 0, 0);
-        const secondsUntilNextHour = Math.floor((nextHour.getTime() - now.getTime()) / 1000);
+        const secondsUntilNextHour = Math.round((nextHour.getTime() - now.getTime()) / 1000);
         setCountdown(secondsUntilNextHour);
-        
-        if (now.getMinutes() === 0 && now.getSeconds() === 0) {
-            const amountToCredit = pendingBalance;
-            addDistributionRecord({
-                timestamp: new Date(),
-                amount: amountToCredit,
-            });
-
-            if (amountToCredit > 0) {
-                updateUserProfile({ 
-                    mainBalance: mainBalance + amountToCredit, 
-                    pendingBalance: 0 
-                });
-            }
-        }
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(countdownInterval);
+      if (hourlyTaskTimeout.current) {
+        clearTimeout(hourlyTaskTimeout.current);
+      }
+    };
   }, [userProfile, pendingBalance, mainBalance, addDistributionRecord, updateUserProfile]);
 
   const handleBoostPurchase = async (boostId: string) => {
@@ -229,7 +253,7 @@ export default function Home() {
 
   
   const formatCountdown = (seconds: number | null) => {
-    if (seconds === null) return '00:00:00';
+    if (seconds === null || seconds < 0) return '00:00:00';
     const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
     const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');

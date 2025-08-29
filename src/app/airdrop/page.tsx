@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Ban } from 'lucide-react';
+import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Ban, Info } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -176,15 +176,26 @@ export default function AirdropPage() {
         )}
       </div>
       
-      {!isAirdropLive && !isClaimed && (
-        <Alert variant="destructive">
-            <Ban className="h-4 w-4" />
-            <AlertTitle>Airdrop Paused</AlertTitle>
-            <AlertDescription className="text-xs">
-                The airdrop claim is currently paused by the admin. Please check back later.
-            </AlertDescription>
-        </Alert>
+      {!isClaimed && (
+        !isAirdropLive ? (
+            <Alert variant="destructive">
+                <Ban className="h-4 w-4" />
+                <AlertTitle>Airdrop Claim Coming Soon</AlertTitle>
+                <AlertDescription className="text-xs">
+                    The airdrop is not yet live. Please check back for updates on when you can claim your allocation.
+                </AlertDescription>
+            </Alert>
+        ) : (
+            <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Airdrop Claim is Live!</AlertTitle>
+                <AlertDescription className="text-xs">
+                    Claim your MOO airdrop allocation by submitting your TON wallet address. Ensure you meet all eligibility requirements first.
+                </AlertDescription>
+            </Alert>
+        )
       )}
+
 
       <div className="space-y-4">
         <div className='px-2'>

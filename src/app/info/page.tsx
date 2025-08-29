@@ -8,7 +8,7 @@ export default function InfoPage() {
     <div className="container mx-auto p-4 space-y-6">
       <header className="text-center space-y-2">
         <h1 className="text-xl font-bold tracking-tight">MOO Whitepaper</h1>
-        <p className="text-xs text-muted-foreground">The official documentation for the MOO Protocol.</p>
+        <p className="text-xs text-muted-foreground">The official documentation for the MOO Cow.</p>
       </header>
 
       <div className="space-y-6">

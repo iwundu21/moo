@@ -36,33 +36,41 @@ export default function AdminPage() {
   const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [claims, setClaims] = useState<AirdropClaim[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchAdminStats();
     
     const fetchAllData = async () => {
-      const usersQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'));
-      const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
-      
-      const [usersSnapshot, claimsSnapshot] = await Promise.all([
-        getDocs(usersQuery),
-        getDocs(claimsQuery)
-      ]);
-      
-      const users = usersSnapshot.docs.map(d => d.data() as UserProfile);
-      setAllUsers(users);
+      setIsLoading(true);
+      try {
+        const usersQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'));
+        const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
+        
+        const [usersSnapshot, claimsSnapshot] = await Promise.all([
+          getDocs(usersQuery),
+          getDocs(claimsQuery)
+        ]);
+        
+        const users = usersSnapshot.docs.map(d => d.data() as UserProfile);
+        setAllUsers(users);
 
-      const claimsData = claimsSnapshot.docs.map(d => {
-        const data = d.data();
-        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-            ? data.timestamp.toDate() 
-            : new Date(); // Fallback
-        return { ...data, timestamp } as AirdropClaim
-      });
-      setClaims(claimsData);
+        const claimsData = claimsSnapshot.docs.map(d => {
+          const data = d.data();
+          const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+              ? data.timestamp.toDate() 
+              : new Date(); // Fallback
+          return { ...data, timestamp } as AirdropClaim
+        });
+        setClaims(claimsData);
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
-    fetchAllData().catch(console.error);
+    fetchAllData();
     
   }, [fetchAdminStats]);
 
@@ -74,7 +82,7 @@ export default function AdminPage() {
         ...user,
         walletAddress: claim?.walletAddress || user.walletAddress || '',
         amount: claim?.amount || 0,
-        status: claim?.status || (user.hasClaimedAirdrop ? user.airdropStatus : undefined),
+        status: claim?.status,
         claimTimestamp: claim?.timestamp
       }
     }).sort((a, b) => (b.claimTimestamp?.getTime() || 0) - (a.claimTimestamp?.getTime() || 0));
@@ -112,11 +120,9 @@ export default function AdminPage() {
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
     if (!walletAddress || amount <= 0) return;
     await updateClaimStatus(userId, 'distributed', walletAddress, amount);
-    setClaims(prevClaims => 
-      prevClaims.map(claim => 
-        claim.userId === userId ? { ...claim, status: 'distributed' } : claim
-      )
-    );
+    // Refetch or update local state
+    const newClaims = claims.map(c => c.userId === userId ? {...c, status: 'distributed'} : c);
+    setClaims(newClaims);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -127,22 +133,29 @@ export default function AdminPage() {
   };
 
   const handleDistributeAll = async () => {
-    const pendingClaims = claims.filter(claim => claim.status === 'processing');
+    const pendingClaims = usersWithClaims.filter(claim => claim.status === 'processing');
     if (pendingClaims.length === 0) return;
 
-    await batchUpdateClaimStatuses(pendingClaims);
+    await batchUpdateClaimStatuses(pendingClaims.map(p => ({
+        userId: p.id,
+        walletAddress: p.walletAddress,
+        amount: p.amount,
+        status: 'processing',
+        username: p.telegramUsername,
+        profilePictureUrl: p.profilePictureUrl,
+        timestamp: p.claimTimestamp || new Date()
+    })));
 
-    setClaims(prevClaims =>
-      prevClaims.map(claim => 
-        pendingClaims.some(p => p.userId === claim.userId) 
+    // Refetch or update local state
+    const newClaims = claims.map(claim => 
+        pendingClaims.some(p => p.id === claim.userId) 
         ? { ...claim, status: 'distributed' } 
         : claim
-      )
     );
+    setClaims(newClaims);
   };
 
-  const pendingClaimsCount = claims.filter(c => c.status === 'processing').length;
-
+  const pendingClaimsCount = usersWithClaims.filter(c => c.status === 'processing').length;
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -281,7 +294,13 @@ export default function AdminPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {usersWithClaims.length > 0 ? (
+            {isLoading ? (
+               <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                  Loading users...
+                </TableCell>
+              </TableRow>
+            ) : usersWithClaims.length > 0 ? (
               usersWithClaims.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
@@ -296,15 +315,20 @@ export default function AdminPage() {
                   <TableCell className="text-xs">
                     {user.walletAddress ? (
                       <div className="flex flex-col gap-1">
-                          <span>{user.walletAddress}</span>
+                          <span className="truncate max-w-xs">{user.walletAddress}</span>
                            {user.status === 'distributed' ? (
                              <Badge variant="default" className="w-fit bg-green-500 hover:bg-green-600">
                                   <CheckCircle className="mr-2 h-4 w-4" />
                                   Distributed
                               </Badge>
-                          ) : (
+                          ) : user.status === 'processing' ? (
                               <Badge variant="secondary" className="w-fit">
                                   Processing
+                              </Badge>
+                          ) : (
+                              <Badge variant="outline" className="w-fit">
+                                  <Ban className="mr-2 h-4 w-4" />
+                                  No Claim
                               </Badge>
                           )}
                       </div>
@@ -359,3 +383,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

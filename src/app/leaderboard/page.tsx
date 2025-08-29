@@ -104,3 +104,4 @@ export default function LeaderboardPage() {
     </div>
   );
 }
+

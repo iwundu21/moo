@@ -66,7 +66,8 @@ export default function AirdropPage() {
           id: 'boost',
           title: 'Purchase 2x Boost',
           description: 'Boost your earning potential.',
-          icon: userProfile.purchasedBoosts.includes('2x'),
+          icon: Rocket,
+          isCompleted: userProfile.purchasedBoosts.includes('2x'),
           link: '/'
         },
         {

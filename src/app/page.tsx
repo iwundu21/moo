@@ -179,8 +179,10 @@ export default function Home() {
       if (invoiceLink && window.Telegram?.WebApp) {
         window.Telegram.WebApp.openInvoice(invoiceLink, (status) => {
           if (status === 'paid') {
+            const newMainBalance = mainBalance + 5000;
             setIsLicenseActive(true);
-            updateUserProfile({ isLicenseActive: true });
+            setMainBalance(newMainBalance);
+            updateUserProfile({ isLicenseActive: true, mainBalance: newMainBalance });
             setShowConfetti(true);
             setShowActivationSuccess(true);
             window.Telegram.WebApp.close();
@@ -208,7 +210,7 @@ export default function Home() {
     }, 6000); // 6 seconds
   }
 
-   const handleRedeemCode = () => {
+   const handleRedeemCode = async () => {
       if (!referralCodeInput.trim()) {
           toast({
               title: "Error",
@@ -218,7 +220,7 @@ export default function Home() {
           return;
       }
       
-      const result = redeemReferralCode(referralCodeInput.trim().toUpperCase());
+      const result = await redeemReferralCode(referralCodeInput.trim().toUpperCase());
 
       toast({
           title: result.success ? "Success!" : "Error",
@@ -228,9 +230,10 @@ export default function Home() {
 
       if (result.success && userProfile) {
         setReferralCodeInput('');
+        // Balance is updated via the hook, which re-fetches or optimistically updates.
+        // Let's ensure the local state reflects the change for responsiveness.
         const newMainBalance = mainBalance + 100;
         setMainBalance(newMainBalance);
-        updateUserProfile({ mainBalance: newMainBalance, referredBy: result.referrerId });
         setSocialTasks(prev => ({...prev, referral: 'completed' }));
       }
     };
@@ -480,3 +483,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

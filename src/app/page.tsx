@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ const initialTasks: SocialTasks = {
 
 
 export default function Home() {
-  const { userProfile, addDistributionRecord, updateUserProfile, redeemReferralCode, isLoading } = useTelegram();
+  const { userProfile, updateUserProfile, redeemReferralCode, isLoading } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -104,37 +104,31 @@ export default function Home() {
 
   }, [activatedBoosts, isLicenseActive, allTasksCompleted]);
 
- useEffect(() => {
+ const runHourlyTasks = useCallback(() => {
+    // Use functional updates to ensure we have the latest state
+    setPendingBalance(currentPending => {
+      setMainBalance(currentMain => {
+          const amountToCredit = currentPending;
+
+          if (amountToCredit > 0) {
+            updateUserProfile({ 
+              mainBalance: currentMain + amountToCredit, 
+              pendingBalance: 0 
+            });
+            return 0; // Reset pending balance
+          } else {
+            // Even if the amount is 0, we reset the pending balance
+            updateUserProfile({ pendingBalance: 0 });
+            return 0;
+          }
+      });
+      return 0;
+    });
+  }, [updateUserProfile]);
+  
+  useEffect(() => {
     if (!userProfile) return;
 
-    const runHourlyTasks = () => {
-      // Use functional updates to ensure we have the latest state
-      setPendingBalance(currentPending => {
-        setMainBalance(currentMain => {
-            const amountToCredit = currentPending;
-
-            if (amountToCredit > 0) {
-              addDistributionRecord({
-                timestamp: new Date(),
-                amount: amountToCredit,
-              });
-              updateUserProfile({ 
-                mainBalance: currentMain + amountToCredit, 
-                pendingBalance: 0 
-              });
-              return 0; // Reset pending balance
-            } else {
-              // Even if the amount is 0, we reset the pending balance
-              updateUserProfile({ pendingBalance: 0 });
-              return 0;
-            }
-        });
-        return 0;
-      });
-      // Schedule the next run *after* this one completes
-      scheduleNextHourlyTask();
-    };
-    
     const scheduleNextHourlyTask = () => {
       if (hourlyTaskTimeout.current) {
         clearTimeout(hourlyTaskTimeout.current);
@@ -144,7 +138,10 @@ export default function Home() {
       nextHour.setHours(now.getHours() + 1, 0, 0, 0);
       const msUntilNextHour = nextHour.getTime() - now.getTime();
       
-      hourlyTaskTimeout.current = setTimeout(runHourlyTasks, msUntilNextHour);
+      hourlyTaskTimeout.current = setTimeout(() => {
+        runHourlyTasks();
+        scheduleNextHourlyTask(); // Reschedule for the next hour
+      }, msUntilNextHour);
     };
 
     // Initial scheduling
@@ -164,7 +161,7 @@ export default function Home() {
         clearTimeout(hourlyTaskTimeout.current);
       }
     };
-  }, [userProfile, addDistributionRecord, updateUserProfile]);
+  }, [userProfile, runHourlyTasks]);
 
 
   const handleBoostPurchase = async (boostId: string) => {
@@ -507,7 +504,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
-
-    

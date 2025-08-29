@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord, AirdropClaim } from '@/lib/types';
+import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import {
   doc,
@@ -80,7 +80,6 @@ const useTelegram = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
-  const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
   const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
   const [totalLicensedUsers, setTotalLicensedUsers] = useState<number>(0);
@@ -216,127 +215,111 @@ const useTelegram = () => {
     }
   }, []);
 
-  const fetchDistributionHistory = useCallback(async (userId: string) => {
-    if (!userId) return;
-    const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
-    const distributionSnapshot = await getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc')));
-    
-    const history = distributionSnapshot.docs.map(d => {
-        const data = d.data();
-        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-            ? data.timestamp.toDate() 
-            : new Date(data.timestamp);
-        return { ...data, timestamp } as DistributionRecord;
-    });
-    setDistributionHistory(history);
-  }, []);
+  const fetchInitialData = useCallback(async () => {
+    if (isFetching.current) return;
+    isFetching.current = true;
+    setIsLoading(true);
 
-  useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (!tg) {
-      setIsLoading(false);
-      return;
+        setIsLoading(false);
+        isFetching.current = false;
+        return;
     }
-    
+
     if (!tg.isReady) {
         tg.ready();
     }
 
-    const fetchInitialData = async () => {
-        if (isFetching.current) return;
-        isFetching.current = true;
-        setIsLoading(true);
-
-        const telegramUser = tg.initDataUnsafe?.user;
-        if (!telegramUser) {
-            setIsLoading(false);
-            isFetching.current = false;
-            return;
-        }
-        
-        const userId = telegramUser.id.toString();
-
-        const settingsDocRef = doc(db, 'settings', 'app');
-        const userDocRef = doc(db, 'userProfiles', userId);
-
-        let [settingsDoc, userDoc] = await Promise.all([
-            getDoc(settingsDocRef),
-            getDoc(userDocRef)
-        ]);
-
-        const settingsData = settingsDoc.data() || {};
-        setIsAirdropLive(settingsData.isAirdropLive === undefined ? true : settingsData.isAirdropLive);
-
-        let currentUserProfile: UserProfile;
-
-        if (!userDoc.exists()) {
-            const newReferralCode = await generateReferralCode();
-            const safeUsername = telegramUser.username || `${telegramUser.first_name || 'User'} ${telegramUser.last_name || ''}`.trimEnd();
-
-            currentUserProfile = {
-                id: userId,
-                telegramUsername: safeUsername,
-                profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${userId}/100/100`,
-                mainBalance: 0,
-                pendingBalance: 0,
-                isPremium: !!telegramUser.is_premium,
-                purchasedBoosts: [],
-                isLicenseActive: false,
-                completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle', referral: 'idle' },
-                hasClaimedAirdrop: false,
-                referredBy: null,
-                referralCode: newReferralCode,
-            };
-            await setDoc(userDocRef, currentUserProfile);
-        } else {
-             currentUserProfile = userDoc.data() as UserProfile;
-             if (!currentUserProfile.referralCode) {
-                 const newReferralCode = await generateReferralCode();
-                 currentUserProfile.referralCode = newReferralCode;
-                 await setDoc(userDocRef, currentUserProfile, { merge: true });
-             }
-        }
-        
-        setUserProfile(currentUserProfile);
-        
-        const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
-        const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
-        
-        const [
-            referralSnapshot,
-            leaderboardSnapshot
-        ] = await Promise.all([
-            getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
-            getDocs(leaderboardQuery),
-            fetchDistributionHistory(userId)
-        ]);
-        
-        setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
-            const data = doc.data();
-            return {
-                rank: index + 1,
-                username: data.telegramUsername,
-                balance: data.mainBalance,
-                profilePictureUrl: data.profilePictureUrl,
-                isPremium: data.isPremium || false
-            }
-        }));
-
-        setReferrals(referralSnapshot.docs.map(d => {
-             const data = d.data();
-             const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-                ? data.timestamp.toDate() 
-                : new Date(data.timestamp);
-            return { ...data, timestamp } as Referral;
-        }));
-
+    const telegramUser = tg.initDataUnsafe?.user;
+    if (!telegramUser) {
         setIsLoading(false);
         isFetching.current = false;
-    };
+        return;
+    }
 
-    fetchInitialData().catch(console.error);
+    const userId = telegramUser.id.toString();
+
+    const settingsDocRef = doc(db, 'settings', 'app');
+    const userDocRef = doc(db, 'userProfiles', userId);
+
+    let [settingsDoc, userDoc] = await Promise.all([
+        getDoc(settingsDocRef),
+        getDoc(userDocRef)
+    ]);
+
+    const settingsData = settingsDoc.data() || {};
+    setIsAirdropLive(settingsData.isAirdropLive === undefined ? true : settingsData.isAirdropLive);
+
+    let currentUserProfile: UserProfile;
+
+    if (!userDoc.exists()) {
+        const newReferralCode = await generateReferralCode();
+        const safeUsername = telegramUser.username || `${telegramUser.first_name || 'User'} ${telegramUser.last_name || ''}`.trimEnd();
+
+        currentUserProfile = {
+            id: userId,
+            telegramUsername: safeUsername,
+            profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${userId}/100/100`,
+            mainBalance: 0,
+            pendingBalance: 0,
+            isPremium: !!telegramUser.is_premium,
+            purchasedBoosts: [],
+            isLicenseActive: false,
+            completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle', referral: 'idle' },
+            hasClaimedAirdrop: false,
+            referredBy: null,
+            referralCode: newReferralCode,
+        };
+        await setDoc(userDocRef, currentUserProfile);
+    } else {
+         currentUserProfile = userDoc.data() as UserProfile;
+         if (!currentUserProfile.referralCode) {
+             const newReferralCode = await generateReferralCode();
+             currentUserProfile.referralCode = newReferralCode;
+             await setDoc(userDocRef, currentUserProfile, { merge: true });
+         }
+    }
     
-  }, [fetchDistributionHistory, redeemReferralCode]);
+    setUserProfile(currentUserProfile);
+    
+    const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
+    const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
+    
+    const [
+        referralSnapshot,
+        leaderboardSnapshot
+    ] = await Promise.all([
+        getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
+        getDocs(leaderboardQuery)
+    ]);
+    
+    setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
+        const data = doc.data();
+        return {
+            rank: index + 1,
+            username: data.telegramUsername,
+            balance: data.mainBalance,
+            profilePictureUrl: data.profilePictureUrl,
+            isPremium: data.isPremium || false
+        }
+    }));
+
+    setReferrals(referralSnapshot.docs.map(d => {
+         const data = d.data();
+         const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+            ? data.timestamp.toDate() 
+            : new Date(data.timestamp);
+        return { ...data, timestamp } as Referral;
+    }));
+
+    setIsLoading(false);
+    isFetching.current = false;
+  }, []);
+
+  useEffect(() => {
+    fetchInitialData().catch(console.error);
+  }, [fetchInitialData]);
 
   // Separate useEffect to handle referral code from start_param after profile is loaded
   useEffect(() => {
@@ -353,13 +336,6 @@ const useTelegram = () => {
       }
     }
   }, [userProfile, redeemReferralCode]);
-  
-  useEffect(() => {
-    if (userProfile?.id) {
-        fetchDistributionHistory(userProfile.id);
-    }
-  }, [userProfile?.id, fetchDistributionHistory]);
-
 
   const addClaimRecord = useCallback(async (claim: Omit<AirdropClaim, 'timestamp'> & { timestamp: Date }) => {
     const claimDocRef = doc(db, 'airdropClaims', claim.userId);
@@ -403,14 +379,6 @@ const useTelegram = () => {
     });
     await batch.commit();
   }, []);
-
-  const addDistributionRecord = useCallback(async (record: Omit<DistributionRecord, 'timestamp'> & { timestamp: Date }) => {
-    if (!userProfile) return;
-    const newRecord = { ...record, timestamp: new Date(record.timestamp) };
-    const distDocRef = doc(collection(db, 'userProfiles', userProfile.id, 'distributionHistory'));
-    await setDoc(distDocRef, newRecord);
-    setDistributionHistory(prevHistory => [newRecord, ...prevHistory].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
-  }, [userProfile]);
   
   const setAirdropStatus = useCallback(async (isLive: boolean) => {
     const settingsDocRef = doc(db, 'settings', 'app');
@@ -440,14 +408,12 @@ const useTelegram = () => {
     userProfile, 
     leaderboard, 
     referrals, 
-    distributionHistory, 
     isAirdropLive,
     totalUserCount,
     totalMooGenerated,
     totalLicensedUsers,
     setAirdropStatus,
     clearAllClaims,
-    addDistributionRecord, 
     updateUserProfile, 
     addClaimRecord,
     updateClaimStatus,

@@ -30,11 +30,6 @@ export type Referral = {
   timestamp: Date;
 };
 
-export type DistributionRecord = {
-  timestamp: Date;
-  amount: number;
-};
-
 export type AirdropClaim = {
   userId: string;
   username:string;

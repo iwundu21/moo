@@ -216,14 +216,14 @@ const useTelegram = () => {
   }, []);
 
   useEffect(() => {
-    if (isFetching.current) return;
-        
     const tg = window.Telegram?.WebApp;
     if (!tg) {
-        setIsLoading(false);
-        return;
+      setIsLoading(false);
+      return;
     }
-    
+
+    if (userProfile || isFetching.current) return;
+        
     tg.ready();
 
     const fetchInitialData = async () => {
@@ -329,11 +329,8 @@ const useTelegram = () => {
         isFetching.current = false;
     };
 
-    if (!userProfile) {
-      fetchInitialData().catch(console.error);
-    } else {
-        setIsLoading(false);
-    }
+    fetchInitialData().catch(console.error);
+    
   }, [userProfile]);
 
   // Separate useEffect to handle referral code from start_param after profile is loaded
@@ -418,3 +415,5 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    

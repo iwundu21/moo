@@ -43,7 +43,6 @@ export default function AirdropPage() {
   const { userProfile, referrals, addClaimRecord, updateUserProfile, isAirdropLive } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
-  const [isClaimed, setIsClaimed] = useState(false);
   const [claimedAmount, setClaimedAmount] = useState(0);
   const { toast } = useToast();
   const [eligibilityCriteria, setEligibilityCriteria] = useState<EligibilityCriterion[]>([]);
@@ -56,7 +55,6 @@ export default function AirdropPage() {
     if (userProfile) {
       setMainBalance(userProfile.mainBalance);
       if (userProfile.hasClaimedAirdrop) {
-          setIsClaimed(true);
           setClaimedAmount(userProfile.mainBalance);
       }
 
@@ -134,21 +132,113 @@ export default function AirdropPage() {
           amount: amountToClaim,
           profilePictureUrl: userProfile.profilePictureUrl,
           timestamp: new Date(),
+          status: 'processing'
       });
       
-      updateUserProfile({ mainBalance: 0, hasClaimedAirdrop: true });
+      updateUserProfile({ 
+          mainBalance: 0, 
+          hasClaimedAirdrop: true, 
+          airdropStatus: 'processing',
+          walletAddress: walletAddress
+      });
 
       setMainBalance(0);
-      setWalletAddress('');
-      setIsClaimed(true);
       setIsSubmitting(false);
       setIsDialogOpen(false);
     }, 4000);
   };
 
-
   if (!userProfile) {
     return null; // Or a loading spinner
+  }
+
+  const renderAirdropStatus = () => {
+    if (userProfile.airdropStatus === 'distributed') {
+      return (
+        <Alert variant="default" className="border-green-500/50 bg-green-500/10 text-green-500">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <AlertTitle>Airdrop Distributed!</AlertTitle>
+            <AlertDescription className="text-xs text-green-500/80">
+                Your airdrop of <span className="font-bold">{claimedAmount.toLocaleString()} MOO</span> has been sent to your wallet.
+                <p className="font-mono text-xs truncate pt-2">{userProfile.walletAddress}</p>
+                <Button asChild variant="link" size="sm" className="p-0 h-auto text-green-500">
+                  <a href={`https://tonscan.org/address/${userProfile.walletAddress}`} target="_blank" rel="noopener noreferrer">
+                    View on TON Explorer
+                  </a>
+                </Button>
+            </AlertDescription>
+        </Alert>
+      )
+    }
+
+    if (userProfile.hasClaimedAirdrop) {
+       return (
+            <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Claim Submitted for Processing</AlertTitle>
+                <AlertDescription className="text-xs">
+                    Your request to claim your airdrop allocation has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
+                </AlertDescription>
+            </Alert>
+        )
+    }
+
+    return (
+        <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-words">
+                {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                <span className="text-base ml-1">MOO</span>
+            </p>
+             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                <Button size="sm" disabled={mainBalance === 0 || !isEligible || !isAirdropLive || isProcessing} onClick={handleInitialClaimClick}>
+                    {isProcessing ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                        </>
+                    ) : (
+                       "Claim"
+                    )}
+                </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Claim Your Allocation</DialogTitle>
+                    <DialogDescription>
+                     You are about to claim <span className="font-bold text-primary">{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO</span>. Enter your TON network wallet address to receive your allocation.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="wallet-address" className="text-right">
+                        Address
+                    </Label>
+                    <Input
+                        id="wallet-address"
+                        placeholder="Paste your TON wallet address"
+                        className="col-span-3"
+                        value={walletAddress}
+                        onChange={(e) => setWalletAddress(e.target.value)}
+                    />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="submit" onClick={handleSubmitClaim} disabled={isSubmitting}>
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Submitting...
+                            </>
+                        ) : (
+                            "Submit"
+                        )}
+                    </Button>
+                </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    )
   }
   
   return (
@@ -159,74 +249,10 @@ export default function AirdropPage() {
       
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <h2 className="text-base font-semibold leading-none tracking-tight">Your Main Balance</h2>
-          
-        {isClaimed ? (
-            <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertTitle>Claim Submitted for Processing</AlertTitle>
-                <AlertDescription className="text-xs">
-                    Your request to claim your airdrop allocation has been received. The transfer to your wallet is now being processed. You can monitor the status using your wallet provider.
-                </AlertDescription>
-            </Alert>
-        ) : (
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-words">
-                    {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                    <span className="text-base ml-1">MOO</span>
-                </p>
-                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                    <Button size="sm" disabled={mainBalance === 0 || !isEligible || !isAirdropLive || isProcessing} onClick={handleInitialClaimClick}>
-                        {isProcessing ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Processing...
-                            </>
-                        ) : (
-                           "Claim"
-                        )}
-                    </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Claim Your Allocation</DialogTitle>
-                        <DialogDescription>
-                         You are about to claim <span className="font-bold text-primary">{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO</span>. Enter your TON network wallet address to receive your allocation.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="wallet-address" className="text-right">
-                            Address
-                        </Label>
-                        <Input
-                            id="wallet-address"
-                            placeholder="Paste your TON wallet address"
-                            className="col-span-3"
-                            value={walletAddress}
-                            onChange={(e) => setWalletAddress(e.target.value)}
-                        />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit" onClick={handleSubmitClaim} disabled={isSubmitting}>
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Submitting...
-                                </>
-                            ) : (
-                                "Submit"
-                            )}
-                        </Button>
-                    </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
-        )}
+          {renderAirdropStatus()}
       </div>
       
-      {!isClaimed && (
+      {!userProfile.hasClaimedAirdrop && (
         !isAirdropLive ? (
             <Alert variant="destructive">
                 <Ban className="h-4 w-4" />

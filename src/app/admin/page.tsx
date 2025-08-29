@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem, ShieldCheck } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -26,19 +26,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import Link from "next/link";
 
 
 export default function AdminPage() {
-  const { claimedAirdrops, isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers } = useTelegram();
+  const { claimedAirdrops, isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus } = useTelegram();
 
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
 
-    const headers = ['User ID', 'Username', 'Wallet Address', 'Amount', 'Timestamp'];
+    const headers = ['User ID', 'Username', 'Wallet Address', 'Amount', 'Timestamp', 'Status'];
     const csvContent = [
       headers.join(','),
       ...claimedAirdrops.map(claim => 
-        [claim.userId, claim.username, claim.walletAddress, claim.amount, claim.timestamp.toISOString()].join(',')
+        [claim.userId, claim.username, claim.walletAddress, claim.amount, claim.timestamp.toISOString(), claim.status].join(',')
       )
     ].join('\n');
 
@@ -54,6 +55,10 @@ export default function AdminPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  const handleDistribute = (userId: string, walletAddress: string, amount: number) => {
+    updateClaimStatus(userId, 'distributed', walletAddress, amount);
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -164,13 +169,14 @@ export default function AdminPage() {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Wallet Address</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {claimedAirdrops.length > 0 ? (
-              claimedAirdrops.map((claim, index) => (
-                <TableRow key={index}>
+              claimedAirdrops.map((claim) => (
+                <TableRow key={claim.userId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
@@ -181,14 +187,26 @@ export default function AdminPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-xs">{claim.walletAddress}</TableCell>
-                  <TableCell className="text-right font-semibold">
+                  <TableCell className="font-semibold text-xs">
                     {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {claim.status === 'distributed' ? (
+                       <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Distributed
+                        </Badge>
+                    ) : (
+                        <Button size="sm" onClick={() => handleDistribute(claim.userId, claim.walletAddress, claim.amount)}>
+                            Distribute
+                        </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
+                <TableCell colSpan={4} className="h-24 text-center">
                   No claims submitted yet.
                 </TableCell>
               </TableRow>

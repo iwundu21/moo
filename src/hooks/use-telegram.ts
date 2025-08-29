@@ -16,7 +16,8 @@ import {
   writeBatch,
   runTransaction,
   where,
-  getCountFromServer
+  getCountFromServer,
+  updateDoc
 } from 'firebase/firestore';
 
 interface TelegramUser {
@@ -288,7 +289,9 @@ const useTelegram = () => {
                 completedSocialTasks: { twitter: 'idle', telegram: 'idle', community: 'idle', referral: 'idle' },
                 hasClaimedAirdrop: false,
                 referredBy: null,
-                referralCode: newReferralCode
+                referralCode: newReferralCode,
+                airdropStatus: undefined,
+                walletAddress: undefined
             };
             await setDoc(userDocRef, currentUserProfile);
         } else {
@@ -316,10 +319,8 @@ const useTelegram = () => {
             getDocs(leaderboardQuery)
         ]);
         
-        setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
         setDistributionHistory(distributionSnapshot.docs.map(d => {
             const data = d.data();
-            // Firestore timestamps need to be converted to JS Dates
             const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
                 ? data.timestamp.toDate() 
                 : new Date(data.timestamp);
@@ -335,6 +336,14 @@ const useTelegram = () => {
                 profilePictureUrl: data.profilePictureUrl,
                 isPremium: data.isPremium || false
             }
+        }));
+
+        setReferrals(referralSnapshot.docs.map(d => {
+             const data = d.data();
+             const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+                ? data.timestamp.toDate() 
+                : new Date(data.timestamp);
+            return { ...data, timestamp } as Referral;
         }));
 
         setIsLoading(false);
@@ -365,11 +374,28 @@ const useTelegram = () => {
   }, [userProfile, redeemReferralCode]);
 
 
-  const addClaimRecord = useCallback(async (claim: AirdropClaim) => {
+  const addClaimRecord = useCallback(async (claim: Omit<AirdropClaim, 'timestamp'> & { timestamp: Date }) => {
     const claimDocRef = doc(db, 'airdropClaims', claim.userId);
     const newClaim = { ...claim, timestamp: new Date() };
     await setDoc(claimDocRef, newClaim);
     setClaimedAirdrops(prev => [...prev.filter(c => c.userId !== claim.userId), newClaim].sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime()));
+  }, []);
+
+  const updateClaimStatus = useCallback(async (userId: string, status: 'distributed', walletAddress: string, amount: number) => {
+    const claimDocRef = doc(db, "airdropClaims", userId);
+    const userDocRef = doc(db, "userProfiles", userId);
+    
+    const batch = writeBatch(db);
+    batch.update(claimDocRef, { status: status });
+    batch.update(userDocRef, { airdropStatus: status, walletAddress: walletAddress });
+    
+    await batch.commit();
+
+    setClaimedAirdrops(prev => 
+        prev.map(claim => 
+            claim.userId === userId ? { ...claim, status: status } : claim
+        )
+    );
   }, []);
 
   const clearAllClaims = useCallback(async () => {
@@ -412,10 +438,9 @@ const useTelegram = () => {
     addDistributionRecord, 
     updateUserProfile, 
     addClaimRecord,
+    updateClaimStatus,
     redeemReferralCode
   };
 };
 
 export { useTelegram };
-
-    

@@ -12,6 +12,8 @@ export type UserProfile = {
   hasClaimedAirdrop?: boolean;
   referredBy?: string | null;
   referralCode?: string;
+  airdropStatus?: 'processing' | 'distributed';
+  walletAddress?: string;
 };
 
 export type LeaderboardEntry = {
@@ -40,4 +42,5 @@ export type AirdropClaim = {
   amount: number;
   profilePictureUrl: string;
   timestamp: Date;
+  status: 'processing' | 'distributed';
 };

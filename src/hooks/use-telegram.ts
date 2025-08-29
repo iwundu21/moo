@@ -84,33 +84,6 @@ const useTelegram = () => {
   const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
   const [totalLicensedUsers, setTotalLicensedUsers] = useState<number>(0);
   const isFetching = useRef(false);
-  const isPathAdmin = useRef<boolean>(false);
-
-  useEffect(() => {
-    const handlePathnameChange = () => {
-      isPathAdmin.current = window.location.pathname === '/admin';
-      if (isPathAdmin.current) {
-        fetchAdminData();
-      }
-    };
-    
-    // Initial check
-    handlePathnameChange();
-
-    // The logic below is a bit simplified. In a real app, you might use
-    // Next.js's router events if available in your hook context.
-    // For now, a simple interval can work for this specific case.
-    const interval = setInterval(() => {
-      if (window.location.pathname === '/admin' && !isPathAdmin.current) {
-        handlePathnameChange();
-      } else if (window.location.pathname !== '/admin' && isPathAdmin.current) {
-        isPathAdmin.current = false;
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
-
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>, userIdToUpdate?: string) => {
     const id = userIdToUpdate || userProfile?.id;
@@ -211,18 +184,15 @@ const useTelegram = () => {
 
   }, [userProfile, updateUserProfile]);
   
-  const fetchAdminData = useCallback(async () => {
+  const fetchAdminStats = useCallback(async () => {
     const allUsersCol = collection(db, 'userProfiles');
-    const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
     
     try {
         const [
             allUsersSnapshot,
-            claimsSnapshot,
             userCountSnapshot
         ] = await Promise.all([
             getDocs(query(allUsersCol)),
-            getDocs(claimsQuery),
             getCountFromServer(allUsersCol)
         ]);
         
@@ -239,28 +209,14 @@ const useTelegram = () => {
         });
         setTotalMooGenerated(totalMoo);
         setTotalLicensedUsers(licensedUsers);
-        
-        setClaimedAirdrops(claimsSnapshot.docs.map(d => {
-            const data = d.data();
-            const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-                ? data.timestamp.toDate() 
-                : new Date(); // Fallback to current date if conversion fails
-            return { ...data, timestamp } as AirdropClaim
-        }));
 
     } catch (error) {
-        console.error("Error fetching admin data:", error);
+        console.error("Error fetching admin stats:", error);
     }
   }, []);
 
   useEffect(() => {
-    if (isPathAdmin.current) {
-        fetchAdminData().catch(console.error);
-    }
-  }, [isPathAdmin.current, fetchAdminData]);
-
-  useEffect(() => {
-    if (isFetching.current || isPathAdmin.current) return;
+    if (isFetching.current) return;
         
     const tg = window.Telegram?.WebApp;
     if (!tg) {
@@ -414,11 +370,6 @@ const useTelegram = () => {
     
     await batch.commit();
 
-    setClaimedAirdrops(prev => 
-        prev.map(claim => 
-            claim.userId === userId ? { ...claim, status: status } : claim
-        )
-    );
   }, []);
 
   const clearAllClaims = useCallback(async () => {
@@ -429,7 +380,6 @@ const useTelegram = () => {
         batch.delete(doc.ref);
     });
     await batch.commit();
-    setClaimedAirdrops([]);
   }, []);
 
   const addDistributionRecord = useCallback(async (record: Omit<DistributionRecord, 'timestamp'> & { timestamp: Date }) => {
@@ -452,7 +402,6 @@ const useTelegram = () => {
     leaderboard, 
     referrals, 
     distributionHistory, 
-    claimedAirdrops,
     isAirdropLive,
     totalUserCount,
     totalMooGenerated,
@@ -463,10 +412,9 @@ const useTelegram = () => {
     updateUserProfile, 
     addClaimRecord,
     updateClaimStatus,
-    redeemReferralCode
+    redeemReferralCode,
+    fetchAdminStats
   };
 };
 
 export { useTelegram };
-
-    

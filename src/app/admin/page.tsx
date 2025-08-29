@@ -26,11 +26,35 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { AirdropClaim } from "@/lib/types";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
-  const { claimedAirdrops, isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus } = useTelegram();
+  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, fetchAdminStats } = useTelegram();
+  const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
+  
+  useEffect(() => {
+    fetchAdminStats();
+    
+    const fetchClaims = async () => {
+      const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
+      const claimsSnapshot = await getDocs(claimsQuery);
+      setClaimedAirdrops(claimsSnapshot.docs.map(d => {
+        const data = d.data();
+        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+            ? data.timestamp.toDate() 
+            : new Date(); // Fallback
+        return { ...data, timestamp } as AirdropClaim
+      }));
+    };
+    
+    fetchClaims().catch(console.error);
+    
+  }, [fetchAdminStats]);
+
 
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
@@ -55,9 +79,20 @@ export default function AdminPage() {
     link.click();
     document.body.removeChild(link);
   };
+  
+  const handleClearClaims = async () => {
+    await clearAllClaims();
+    setClaimedAirdrops([]);
+  };
 
-  const handleDistribute = (userId: string, walletAddress: string, amount: number) => {
-    updateClaimStatus(userId, 'distributed', walletAddress, amount);
+  const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
+    await updateClaimStatus(userId, 'distributed', walletAddress, amount);
+    // Refresh the claims list to show the updated status
+    setClaimedAirdrops(prevClaims => 
+      prevClaims.map(claim => 
+        claim.userId === userId ? { ...claim, status: 'distributed' } : claim
+      )
+    );
   }
 
   return (
@@ -148,11 +183,11 @@ export default function AdminPage() {
                       <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete all
                         airdrop claim submissions.
-                      </AlertDialogDescription>
+                      </Description>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={clearAllClaims}>Continue</AlertDialogAction>
+                      <AlertDialogAction onClick={handleClearClaims}>Continue</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

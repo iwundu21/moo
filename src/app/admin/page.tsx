@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -29,7 +29,7 @@ import {
 
 
 export default function AdminPage() {
-  const { claimedAirdrops, isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount } = useTelegram();
+  const { claimedAirdrops, isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers } = useTelegram();
 
   const downloadCSV = () => {
     if (claimedAirdrops.length === 0) return;
@@ -64,8 +64,8 @@ export default function AdminPage() {
         </header>
       </div>
 
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-2">
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-2">
             <div className="flex items-center gap-4">
                 <div className="p-3 rounded-full bg-primary/20 text-primary">
                     <Users className="w-6 h-6" />
@@ -73,6 +73,17 @@ export default function AdminPage() {
                 <div>
                     <p className="text-xs text-muted-foreground">Total Users</p>
                     <p className="text-lg font-bold">{totalUserCount.toLocaleString()}</p>
+                </div>
+            </div>
+        </div>
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-2">
+            <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-primary/20 text-primary">
+                    <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                    <p className="text-xs text-muted-foreground">Licensed Miners</p>
+                    <p className="text-lg font-bold">{totalLicensedUsers.toLocaleString()}</p>
                 </div>
             </div>
         </div>

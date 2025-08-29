@@ -16,8 +16,6 @@ import {
   writeBatch,
   runTransaction,
   where,
-  documentId,
-  collectionGroup,
   getCountFromServer
 } from 'firebase/firestore';
 
@@ -83,6 +81,7 @@ const useTelegram = () => {
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
   const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
+  const [totalLicensedUsers, setTotalLicensedUsers] = useState<number>(0);
   const isFetching = useRef(false);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>, userIdToUpdate?: string) => {
@@ -183,9 +182,9 @@ const useTelegram = () => {
     }
 
   }, [userProfile, updateUserProfile]);
-
+  
+  // This effect runs only on the client and fetches data for the admin dashboard
   useEffect(() => {
-    // This effect runs only on the client
     const fetchAdminData = async () => {
         if (window.location.pathname === '/admin') {
             const allUsersCol = collection(db, 'userProfiles');
@@ -204,17 +203,26 @@ const useTelegram = () => {
             setTotalUserCount(userCountSnapshot.data().count);
             
             let totalMoo = 0;
+            let licensedUsers = 0;
             allUsersSnapshot.forEach(doc => {
-              totalMoo += doc.data().mainBalance || 0;
+              const data = doc.data() as UserProfile;
+              totalMoo += data.mainBalance || 0;
+              if (data.isLicenseActive) {
+                licensedUsers++;
+              }
             });
             setTotalMooGenerated(totalMoo);
+            setTotalLicensedUsers(licensedUsers);
             
             setClaimedAirdrops(claimsSnapshot.docs.map(d => d.data() as AirdropClaim));
         }
     };
     
+    // Using window.location.pathname ensures this only runs on the client-side
+    // where the window object is available.
     fetchAdminData().catch(console.error);
-  }, []);
+
+  }, [typeof window !== 'undefined' ? window.location.pathname : '']);
 
   useEffect(() => {
     if (isFetching.current) return;
@@ -379,6 +387,7 @@ const useTelegram = () => {
     isAirdropLive,
     totalUserCount,
     totalMooGenerated,
+    totalLicensedUsers,
     setAirdropStatus,
     clearAllClaims,
     addDistributionRecord, 
@@ -389,5 +398,3 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
-
-    

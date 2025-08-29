@@ -216,6 +216,7 @@ const useTelegram = () => {
   }, []);
 
   const fetchDistributionHistory = useCallback(async (userId: string) => {
+    if (!userId) return;
     const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
     const distributionSnapshot = await getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc')));
     
@@ -336,7 +337,7 @@ const useTelegram = () => {
 
     fetchInitialData().catch(console.error);
     
-  }, [fetchDistributionHistory]);
+  }, [fetchDistributionHistory, redeemReferralCode]);
 
   // Separate useEffect to handle referral code from start_param after profile is loaded
   useEffect(() => {
@@ -353,6 +354,12 @@ const useTelegram = () => {
       }
     }
   }, [userProfile, redeemReferralCode]);
+  
+  useEffect(() => {
+    if (userProfile?.id) {
+        fetchDistributionHistory(userProfile.id);
+    }
+  }, [userProfile?.id, fetchDistributionHistory]);
 
 
   const addClaimRecord = useCallback(async (claim: Omit<AirdropClaim, 'timestamp'> & { timestamp: Date }) => {
@@ -433,5 +440,3 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
-
-    

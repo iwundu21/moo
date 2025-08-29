@@ -87,10 +87,29 @@ const useTelegram = () => {
   const isPathAdmin = useRef<boolean>(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-        isPathAdmin.current = window.location.pathname === '/admin';
-    }
-  }, [typeof window !== 'undefined' ? window.location.pathname : null]);
+    const handlePathnameChange = () => {
+      isPathAdmin.current = window.location.pathname === '/admin';
+      if (isPathAdmin.current) {
+        fetchAdminData();
+      }
+    };
+    
+    // Initial check
+    handlePathnameChange();
+
+    // The logic below is a bit simplified. In a real app, you might use
+    // Next.js's router events if available in your hook context.
+    // For now, a simple interval can work for this specific case.
+    const interval = setInterval(() => {
+      if (window.location.pathname === '/admin' && !isPathAdmin.current) {
+        handlePathnameChange();
+      } else if (window.location.pathname !== '/admin' && isPathAdmin.current) {
+        isPathAdmin.current = false;
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
 
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>, userIdToUpdate?: string) => {
@@ -196,39 +215,43 @@ const useTelegram = () => {
     const allUsersCol = collection(db, 'userProfiles');
     const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
     
-    const [
-        allUsersSnapshot,
-        claimsSnapshot,
-        userCountSnapshot
-    ] = await Promise.all([
-        getDocs(query(allUsersCol)),
-        getDocs(claimsQuery),
-        getCountFromServer(allUsersCol)
-    ]);
-    
-    setTotalUserCount(userCountSnapshot.data().count);
-    
-    let totalMoo = 0;
-    let licensedUsers = 0;
-    allUsersSnapshot.forEach(doc => {
-      const data = doc.data() as UserProfile;
-      totalMoo += data.mainBalance || 0;
-      if (data.isLicenseActive) {
-        licensedUsers++;
-      }
-    });
-    setTotalMooGenerated(totalMoo);
-    setTotalLicensedUsers(licensedUsers);
-    
-    setClaimedAirdrops(claimsSnapshot.docs.map(d => {
-        const data = d.data();
-        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-            ? data.timestamp.toDate() 
-            : new Date(data.timestamp);
-        return { ...data, timestamp } as AirdropClaim
-    }));
-  }, []);
+    try {
+        const [
+            allUsersSnapshot,
+            claimsSnapshot,
+            userCountSnapshot
+        ] = await Promise.all([
+            getDocs(query(allUsersCol)),
+            getDocs(claimsQuery),
+            getCountFromServer(allUsersCol)
+        ]);
+        
+        setTotalUserCount(userCountSnapshot.data().count);
+        
+        let totalMoo = 0;
+        let licensedUsers = 0;
+        allUsersSnapshot.forEach(doc => {
+          const data = doc.data() as UserProfile;
+          totalMoo += data.mainBalance || 0;
+          if (data.isLicenseActive) {
+            licensedUsers++;
+          }
+        });
+        setTotalMooGenerated(totalMoo);
+        setTotalLicensedUsers(licensedUsers);
+        
+        setClaimedAirdrops(claimsSnapshot.docs.map(d => {
+            const data = d.data();
+            const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+                ? data.timestamp.toDate() 
+                : new Date(); // Fallback to current date if conversion fails
+            return { ...data, timestamp } as AirdropClaim
+        }));
 
+    } catch (error) {
+        console.error("Error fetching admin data:", error);
+    }
+  }, []);
 
   useEffect(() => {
     if (isPathAdmin.current) {
@@ -237,7 +260,7 @@ const useTelegram = () => {
   }, [isPathAdmin.current, fetchAdminData]);
 
   useEffect(() => {
-    if (isFetching.current) return;
+    if (isFetching.current || isPathAdmin.current) return;
         
     const tg = window.Telegram?.WebApp;
     if (!tg) {
@@ -323,7 +346,7 @@ const useTelegram = () => {
             const data = d.data();
             const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
                 ? data.timestamp.toDate() 
-                : new Date(data.timestamp);
+                : new Date(data.timestamp); // Keep handling both cases
             return { ...data, timestamp } as DistributionRecord;
         }));
         
@@ -350,12 +373,12 @@ const useTelegram = () => {
         isFetching.current = false;
     };
 
-    if (!userProfile && !isPathAdmin.current) {
+    if (!userProfile) {
       fetchInitialData().catch(console.error);
-    } else if (!isPathAdmin.current) {
+    } else {
         setIsLoading(false);
     }
-  }, [userProfile, isPathAdmin, fetchAdminData]);
+  }, [userProfile]);
 
   // Separate useEffect to handle referral code from start_param after profile is loaded
   useEffect(() => {
@@ -411,9 +434,10 @@ const useTelegram = () => {
 
   const addDistributionRecord = useCallback(async (record: Omit<DistributionRecord, 'timestamp'> & { timestamp: Date }) => {
     if (!userProfile) return;
+    const newRecord = { ...record, timestamp: new Date(record.timestamp) };
     const distDocRef = doc(collection(db, 'userProfiles', userProfile.id, 'distributionHistory'));
-    await setDoc(distDocRef, record);
-    setDistributionHistory(prevHistory => [{ ...record, timestamp: new Date(record.timestamp) }, ...prevHistory].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    await setDoc(distDocRef, newRecord);
+    setDistributionHistory(prevHistory => [newRecord, ...prevHistory].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
   }, [userProfile]);
   
   const setAirdropStatus = useCallback(async (isLive: boolean) => {
@@ -444,3 +468,5 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    

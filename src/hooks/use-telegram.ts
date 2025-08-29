@@ -80,6 +80,7 @@ const useTelegram = () => {
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
+  const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
   const isFetching = useRef(false);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>, userIdToUpdate?: string) => {
@@ -157,7 +158,6 @@ const useTelegram = () => {
                 'completedSocialTasks.referral': 'completed'
             });
             
-            // The referrer receives 100 MOO
             const newReferrerBalance = (referrerProfile.mainBalance || 0) + 100;
             transaction.update(referrerDoc.ref, { mainBalance: newReferrerBalance });
 
@@ -285,6 +285,13 @@ const useTelegram = () => {
         setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
         setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
         setTotalUserCount(allUsersSnapshot.size);
+        
+        let totalMoo = 0;
+        allUsersSnapshot.forEach(doc => {
+          totalMoo += doc.data().mainBalance || 0;
+        });
+        setTotalMooGenerated(totalMoo);
+
         setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
             const data = doc.data();
             return {
@@ -346,6 +353,7 @@ const useTelegram = () => {
     claimedAirdrops,
     isAirdropLive,
     totalUserCount,
+    totalMooGenerated,
     setAirdropStatus,
     clearAllClaims,
     addDistributionRecord, 

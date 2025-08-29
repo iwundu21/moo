@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import type { UserProfile, LeaderboardEntry, Referral, DistributionRecord, AirdropClaim } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import {
@@ -80,6 +80,7 @@ const useTelegram = () => {
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [distributionHistory, setDistributionHistory] = useState<DistributionRecord[]>([]);
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
+  const isFetching = useRef(false);
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>, userIdToUpdate?: string) => {
     const id = userIdToUpdate || userProfile?.id;
@@ -94,12 +95,18 @@ const useTelegram = () => {
                 return;
             }
             const currentProfile = userDoc.data() as UserProfile;
-            const updatedProfile = { ...currentProfile, ...updates };
-            transaction.set(userDocRef, updatedProfile);
+            
+            // Ensure completedSocialTasks is properly merged
+            const newCompletedSocialTasks = { 
+                ...(currentProfile.completedSocialTasks || {}), 
+                ...(updates.completedSocialTasks || {}) 
+            };
+            
+            const updatedProfileData = { ...currentProfile, ...updates, completedSocialTasks: newCompletedSocialTasks };
+            transaction.set(userDocRef, updatedProfileData);
 
              if (id === userProfile?.id) {
-                // Update local state immediately for responsiveness
-                setUserProfile(prev => prev ? { ...prev, ...updates } : null);
+                setUserProfile(prev => prev ? updatedProfileData : null);
             }
         });
     } catch(e) {
@@ -107,17 +114,16 @@ const useTelegram = () => {
     }
   }, [userProfile]);
 
-  const redeemReferralCode = useCallback(async (referralCode: string, profileToUpdate?: UserProfile): Promise<{success: boolean, message: string, referrerId?: string}> => {
-    const profile = profileToUpdate || userProfile;
-    if (!profile) return {success: false, message: "User profile not loaded."};
+  const redeemReferralCode = useCallback(async (referralCode: string): Promise<{success: boolean, message: string, referrerId?: string}> => {
+    if (!userProfile) return {success: false, message: "User profile not loaded."};
     
     const upperCaseCode = referralCode.trim().toUpperCase();
 
-    if (upperCaseCode === profile.referralCode) {
+    if (upperCaseCode === userProfile.referralCode) {
         return {success: false, message: "You cannot redeem your own referral code."};
     }
     
-    if (profile.referredBy) {
+    if (userProfile.referredBy) {
         return {success: false, message: "You have already redeemed a referral code."};
     }
 
@@ -132,13 +138,13 @@ const useTelegram = () => {
     const referrerId = referrerDoc.id;
     const referrerProfile = referrerDoc.data() as UserProfile;
 
-    if (referrerId === profile.id) {
+    if (referrerId === userProfile.id) {
         return {success: false, message: "You cannot redeem your own referral code."};
     }
 
     try {
         await runTransaction(db, async (transaction) => {
-            const userDocRef = doc(db, 'userProfiles', profile.id);
+            const userDocRef = doc(db, 'userProfiles', userProfile.id);
             const refereeDoc = await transaction.get(userDocRef);
             const currentProfile = refereeDoc.data();
 
@@ -146,7 +152,6 @@ const useTelegram = () => {
                 throw new Error("User has already redeemed a code.");
             }
             
-            // The referee does NOT receive MOO, just marks the task as complete.
             transaction.update(userDocRef, { 
                 referredBy: referrerId,
                 'completedSocialTasks.referral': 'completed'
@@ -158,17 +163,16 @@ const useTelegram = () => {
 
             const referralRecordRef = doc(collection(db, 'userProfiles', referrerId, 'referrals'));
             transaction.set(referralRecordRef, { 
-                username: profile.telegramUsername, 
-                profilePictureUrl: profile.profilePictureUrl,
+                username: userProfile.telegramUsername, 
+                profilePictureUrl: userProfile.profilePictureUrl,
                 timestamp: new Date()
             });
         });
         
-        setUserProfile(prev => prev ? {
-            ...prev,
+        updateUserProfile({ 
             referredBy: referrerId, 
-            completedSocialTasks: { ...(prev.completedSocialTasks || {}), referral: 'completed' }
-        } : null);
+            completedSocialTasks: { referral: 'completed' }
+        });
         
         return {success: true, message: "Referral code redeemed successfully!", referrerId: referrerId};
     } catch (e: any) {
@@ -176,9 +180,11 @@ const useTelegram = () => {
         return {success: false, message: e.message || "An error occurred during the transaction."};
     }
 
-  }, [userProfile]);
+  }, [userProfile, updateUserProfile]);
 
   useEffect(() => {
+    if (isFetching.current) return;
+        
     const tg = window.Telegram?.WebApp;
     if (!tg) {
         setIsLoading(false);
@@ -188,25 +194,29 @@ const useTelegram = () => {
     tg.ready();
 
     const fetchInitialData = async () => {
+        isFetching.current = true;
         setIsLoading(true);
 
         const telegramUser = tg.initDataUnsafe?.user;
         if (!telegramUser) {
             setIsLoading(false);
+            isFetching.current = false;
             return;
         }
         
         const userId = telegramUser.id.toString();
 
-        // Fetch global settings
         const settingsDocRef = doc(db, 'settings', 'app');
-        const settingsDoc = await getDoc(settingsDocRef);
+        const userDocRef = doc(db, 'userProfiles', userId);
+
+        let [settingsDoc, userDoc] = await Promise.all([
+            getDoc(settingsDocRef),
+            getDoc(userDocRef)
+        ]);
+
         const settingsData = settingsDoc.data() || {};
         setIsAirdropLive(settingsData.isAirdropLive === undefined ? true : settingsData.isAirdropLive);
 
-        // Fetch user profile
-        const userDocRef = doc(db, 'userProfiles', userId);
-        let userDoc = await getDoc(userDocRef);
         let currentUserProfile: UserProfile;
 
         if (!userDoc.exists()) {
@@ -240,30 +250,41 @@ const useTelegram = () => {
         const startParam = tg.initDataUnsafe.start_param;
         if (startParam && startParam.startsWith('ref') && !currentUserProfile.referredBy) {
             const referrerCode = startParam.substring(3);
-             await redeemReferralCode(referrerCode, currentUserProfile);
+            const result = await redeemReferralCode(referrerCode);
+            if (result.success) {
+                // Manually update the profile state to reflect the successful referral
+                currentUserProfile.referredBy = result.referrerId;
+                if(currentUserProfile.completedSocialTasks) {
+                    currentUserProfile.completedSocialTasks.referral = 'completed';
+                }
+            }
         }
 
-        // Re-fetch user profile after potential update from start_param
-        userDoc = await getDoc(userDocRef);
-        currentUserProfile = userDoc.data() as UserProfile;
         setUserProfile(currentUserProfile);
         
-        // Fetch collections for the user
         const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
-        const referralSnapshot = await getDocs(query(referralsCol, orderBy('timestamp', 'desc')));
-        setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
-
         const distributionHistoryCol = collection(db, 'userProfiles', userId, 'distributionHistory');
-        const distributionSnapshot = await getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc')));
-        setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
-
-        // Fetch leaderboard and total user count
         const allUsersQuery = query(collection(db, 'userProfiles'));
-        const allUsersSnapshot = await getDocs(allUsersQuery);
-        setTotalUserCount(allUsersSnapshot.size);
-
         const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
-        const leaderboardSnapshot = await getDocs(leaderboardQuery);
+        const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
+        
+        const [
+            referralSnapshot,
+            distributionSnapshot,
+            allUsersSnapshot,
+            leaderboardSnapshot,
+            claimsSnapshot
+        ] = await Promise.all([
+            getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
+            getDocs(query(distributionHistoryCol, orderBy('timestamp', 'desc'))),
+            getDocs(allUsersQuery),
+            getDocs(leaderboardQuery),
+            getDocs(claimsQuery)
+        ]);
+        
+        setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
+        setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
+        setTotalUserCount(allUsersSnapshot.size);
         setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
             const data = doc.data();
             return {
@@ -274,12 +295,10 @@ const useTelegram = () => {
                 isPremium: data.isPremium || false
             }
         }));
-        
-        const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
-        const claimsSnapshot = await getDocs(claimsQuery);
         setClaimedAirdrops(claimsSnapshot.docs.map(d => d.data() as AirdropClaim));
 
         setIsLoading(false);
+        isFetching.current = false;
     };
 
     fetchInitialData().catch(console.error);
@@ -290,7 +309,7 @@ const useTelegram = () => {
     const claimDocRef = doc(db, 'airdropClaims', claim.userId);
     const newClaim = { ...claim, timestamp: new Date() };
     await setDoc(claimDocRef, newClaim);
-    setClaimedAirdrops(prev => [...prev.filter(c => c.userId !== claim.userId), newClaim]);
+    setClaimedAirdrops(prev => [...prev.filter(c => c.userId !== claim.userId), newClaim].sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime()));
   }, []);
 
   const clearAllClaims = useCallback(async () => {
@@ -307,8 +326,9 @@ const useTelegram = () => {
   const addDistributionRecord = useCallback(async (record: DistributionRecord) => {
     if (!userProfile) return;
     const distDocRef = doc(collection(db, 'userProfiles', userProfile.id, 'distributionHistory'));
-    await setDoc(distDocRef, { ...record, timestamp: record.timestamp.toISOString() });
-    setDistributionHistory(prevHistory => [{ ...record, timestamp: record.timestamp.toISOString() }, ...prevHistory]);
+    const newRecord = { ...record, timestamp: record.timestamp.toISOString() };
+    await setDoc(distDocRef, newRecord);
+    setDistributionHistory(prevHistory => [newRecord, ...prevHistory]);
   }, [userProfile]);
   
   const setAirdropStatus = useCallback(async (isLive: boolean) => {

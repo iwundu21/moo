@@ -84,10 +84,11 @@ export default function Home() {
 
 
   const allTasksCompleted = useMemo(() => {
+    if (!userProfile) return false;
     const social = socialTaskList.every(task => socialTasks[task.id] === 'completed');
     const referral = socialTasks.referral === 'completed';
     return social && referral;
-  }, [socialTasks, socialTaskList]);
+  }, [socialTasks, userProfile, socialTaskList]);
 
   useEffect(() => {
     // This logic is now only for determining the earn rate based on boosts.
@@ -105,37 +106,32 @@ export default function Home() {
   useEffect(() => {
     if (!userProfile) return;
 
-    const updateCountdown = () => {
-      const now = new Date();
-      const nextHour = new Date(now);
-      nextHour.setHours(now.getHours() + 1, 0, 0, 0);
-      const secondsUntilNextHour = Math.floor((nextHour.getTime() - now.getTime()) / 1000);
-      setCountdown(secondsUntilNextHour);
-
-      if (now.getMinutes() === 0 && now.getSeconds() === 0) { // Top of the hour
-        const amountToCredit = pendingBalance;
+    const interval = setInterval(() => {
+        const now = new Date();
+        const nextHour = new Date(now);
+        nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+        const secondsUntilNextHour = Math.floor((nextHour.getTime() - now.getTime()) / 1000);
+        setCountdown(secondsUntilNextHour);
         
-        const newMainBalance = mainBalance + amountToCredit;
-        setMainBalance(newMainBalance);
-        setPendingBalance(0);
+        // This hourly check should ideally be handled by a backend cron job for reliability
+        // to avoid issues with client-side timers. For this simulation, we proceed.
+        if (now.getMinutes() === 0 && now.getSeconds() === 0) {
+            if (pendingBalance > 0) {
+                const amountToCredit = pendingBalance;
+                addDistributionRecord({
+                    timestamp: new Date(),
+                    amount: amountToCredit,
+                });
+                updateUserProfile({ 
+                    mainBalance: mainBalance + amountToCredit, 
+                    pendingBalance: 0 
+                });
+            }
+        }
+    }, 1000);
 
-        updateUserProfile({ 
-            mainBalance: newMainBalance, 
-            pendingBalance: 0 
-        });
-
-        addDistributionRecord({
-          timestamp: new Date(),
-          amount: amountToCredit,
-        });
-      }
-    };
-
-    updateCountdown(); // Initial call
-    const countdownInterval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(countdownInterval);
-  }, [userProfile, pendingBalance, addDistributionRecord, updateUserProfile, mainBalance]);
+    return () => clearInterval(interval);
+  }, [userProfile, pendingBalance, mainBalance, addDistributionRecord, updateUserProfile]);
 
   const handleBoostPurchase = async (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
@@ -345,7 +341,7 @@ export default function Home() {
                                         <task.icon className="mr-3" />
                                         <span className="flex-1 text-left">{task.text}</span>
                                         <Badge variant="secondary">
-                                            +{task.reward} MOO
+                                            +100 MOO
                                         </Badge>
                                     </Link>
                                 </Button>

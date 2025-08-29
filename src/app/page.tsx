@@ -121,8 +121,10 @@ export default function Home() {
                 pendingBalance: 0 
             });
         } else {
+            // Even if the amount is 0, we reset the pending balance
             updateUserProfile({ pendingBalance: 0 });
         }
+        // Schedule the next run after this one completes
         scheduleNextHourlyTask();
     };
     
@@ -138,6 +140,7 @@ export default function Home() {
       hourlyTaskTimeout.current = setTimeout(runHourlyTasks, msUntilNextHour);
     };
 
+    // Initial scheduling
     scheduleNextHourlyTask();
 
     const countdownInterval = setInterval(() => {

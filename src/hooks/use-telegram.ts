@@ -186,7 +186,7 @@ const useTelegram = () => {
   // This effect runs only on the client and fetches data for the admin dashboard
   useEffect(() => {
     const fetchAdminData = async () => {
-        if (window.location.pathname === '/admin') {
+        if (typeof window !== 'undefined' && window.location.pathname === '/admin') {
             const allUsersCol = collection(db, 'userProfiles');
             const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
             
@@ -218,8 +218,6 @@ const useTelegram = () => {
         }
     };
     
-    // Using window.location.pathname ensures this only runs on the client-side
-    // where the window object is available.
     fetchAdminData().catch(console.error);
 
   }, [typeof window !== 'undefined' ? window.location.pathname : '']);
@@ -306,7 +304,11 @@ const useTelegram = () => {
         ]);
         
         setReferrals(referralSnapshot.docs.map(d => d.data() as Referral));
-        setDistributionHistory(distributionSnapshot.docs.map(d => d.data() as DistributionRecord));
+        setDistributionHistory(distributionSnapshot.docs.map(d => {
+            const data = d.data();
+            // Firestore timestamps need to be converted to JS Dates
+            return { ...data, timestamp: data.timestamp.toDate() } as DistributionRecord
+        }));
         
         setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
             const data = doc.data();
@@ -363,12 +365,11 @@ const useTelegram = () => {
     setClaimedAirdrops([]);
   }, []);
 
-  const addDistributionRecord = useCallback(async (record: DistributionRecord) => {
+  const addDistributionRecord = useCallback(async (record: Omit<DistributionRecord, 'timestamp'> & { timestamp: Date }) => {
     if (!userProfile) return;
     const distDocRef = doc(collection(db, 'userProfiles', userProfile.id, 'distributionHistory'));
-    const newRecord = { ...record, timestamp: record.timestamp };
-    await setDoc(distDocRef, newRecord);
-    setDistributionHistory(prevHistory => [{ ...record, timestamp: record.timestamp.toString() }, ...prevHistory]);
+    await setDoc(distDocRef, record);
+    setDistributionHistory(prevHistory => [record, ...prevHistory]);
   }, [userProfile]);
   
   const setAirdropStatus = useCallback(async (isLive: boolean) => {

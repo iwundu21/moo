@@ -29,7 +29,7 @@ export type Referral = {
 };
 
 export type DistributionRecord = {
-  timestamp: string; // Stored as ISO string
+  timestamp: Date;
   amount: number;
 };
 

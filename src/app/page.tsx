@@ -104,28 +104,35 @@ export default function Home() {
 
   }, [activatedBoosts, isLicenseActive, allTasksCompleted]);
 
-  useEffect(() => {
+ useEffect(() => {
     if (!userProfile) return;
 
     const runHourlyTasks = () => {
-        const amountToCredit = pendingBalance;
-        
-        addDistributionRecord({
-            timestamp: new Date(),
-            amount: amountToCredit,
-        });
+      // Use functional updates to ensure we have the latest state
+      setPendingBalance(currentPending => {
+        setMainBalance(currentMain => {
+            const amountToCredit = currentPending;
 
-        if (amountToCredit > 0) {
-            updateUserProfile({ 
-                mainBalance: mainBalance + amountToCredit, 
+            if (amountToCredit > 0) {
+              addDistributionRecord({
+                timestamp: new Date(),
+                amount: amountToCredit,
+              });
+              updateUserProfile({ 
+                mainBalance: currentMain + amountToCredit, 
                 pendingBalance: 0 
-            });
-        } else {
-            // Even if the amount is 0, we reset the pending balance
-            updateUserProfile({ pendingBalance: 0 });
-        }
-        // Schedule the next run after this one completes
-        scheduleNextHourlyTask();
+              });
+              return 0; // Reset pending balance
+            } else {
+              // Even if the amount is 0, we reset the pending balance
+              updateUserProfile({ pendingBalance: 0 });
+              return 0;
+            }
+        });
+        return 0;
+      });
+      // Schedule the next run *after* this one completes
+      scheduleNextHourlyTask();
     };
     
     const scheduleNextHourlyTask = () => {
@@ -148,7 +155,7 @@ export default function Home() {
         const nextHour = new Date(now);
         nextHour.setHours(now.getHours() + 1, 0, 0, 0);
         const secondsUntilNextHour = Math.round((nextHour.getTime() - now.getTime()) / 1000);
-        setCountdown(secondsUntilNextHour);
+        setCountdown(secondsUntilNextHour > 0 ? secondsUntilNextHour : 3600); // Handle edge case at the hour
     }, 1000);
 
     return () => {
@@ -157,7 +164,8 @@ export default function Home() {
         clearTimeout(hourlyTaskTimeout.current);
       }
     };
-  }, [userProfile, pendingBalance, mainBalance, addDistributionRecord, updateUserProfile]);
+  }, [userProfile, addDistributionRecord, updateUserProfile]);
+
 
   const handleBoostPurchase = async (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
@@ -499,5 +507,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     

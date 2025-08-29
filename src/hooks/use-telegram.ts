@@ -405,6 +405,27 @@ const useTelegram = () => {
     }
   }, []);
 
+  const distributePendingBalances = useCallback(async () => {
+    const usersQuery = query(collection(db, 'userProfiles'));
+    const usersSnapshot = await getDocs(usersQuery);
+    
+    const batch = writeBatch(db);
+
+    usersSnapshot.forEach(userDoc => {
+        const userProfile = userDoc.data() as UserProfile;
+        if (userProfile.pendingBalance > 0) {
+            const newMainBalance = (userProfile.mainBalance || 0) + userProfile.pendingBalance;
+            
+            batch.update(userDoc.ref, {
+                mainBalance: newMainBalance,
+                pendingBalance: 0
+            });
+        }
+    });
+
+    await batch.commit();
+  }, []);
+
   return { 
     isLoading,
     userProfile, 
@@ -422,7 +443,8 @@ const useTelegram = () => {
     batchUpdateClaimStatuses,
     redeemReferralCode,
     fetchAdminStats,
-    deleteUser
+    deleteUser,
+    distributePendingBalances,
   };
 };
 

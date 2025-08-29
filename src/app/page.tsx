@@ -49,7 +49,6 @@ export default function Home() {
   const { userProfile, updateUserProfile, redeemReferralCode, isLoading } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
-  const [countdown, setCountdown] = useState<number | null>(null);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
   const [isLicenseActive, setIsLicenseActive] = useState(false);
   const [socialTasks, setSocialTasks] = useState<SocialTasks>(initialTasks);
@@ -58,7 +57,6 @@ export default function Home() {
   const [openedTasks, setOpenedTasks] = useState<Set<string>>(new Set());
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const { toast } = useToast();
-  const hourlyTaskTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const socialTaskList = [
     { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
@@ -103,66 +101,6 @@ export default function Home() {
     else if (isLicenseActive && allTasksCompleted) earnRate = 5;
 
   }, [activatedBoosts, isLicenseActive, allTasksCompleted]);
-
- const runHourlyTasks = useCallback(() => {
-    // Use functional updates to ensure we have the latest state
-    setPendingBalance(currentPending => {
-      setMainBalance(currentMain => {
-          const amountToCredit = currentPending;
-
-          if (amountToCredit > 0) {
-            updateUserProfile({ 
-              mainBalance: currentMain + amountToCredit, 
-              pendingBalance: 0 
-            });
-            return 0; // Reset pending balance
-          } else {
-            // Even if the amount is 0, we reset the pending balance
-            updateUserProfile({ pendingBalance: 0 });
-            return 0;
-          }
-      });
-      return 0;
-    });
-  }, [updateUserProfile]);
-  
-  useEffect(() => {
-    if (!userProfile) return;
-
-    const scheduleNextHourlyTask = () => {
-      if (hourlyTaskTimeout.current) {
-        clearTimeout(hourlyTaskTimeout.current);
-      }
-      const now = new Date();
-      const nextHour = new Date(now);
-      nextHour.setHours(now.getHours() + 1, 0, 0, 0);
-      const msUntilNextHour = nextHour.getTime() - now.getTime();
-      
-      hourlyTaskTimeout.current = setTimeout(() => {
-        runHourlyTasks();
-        scheduleNextHourlyTask(); // Reschedule for the next hour
-      }, msUntilNextHour);
-    };
-
-    // Initial scheduling
-    scheduleNextHourlyTask();
-
-    const countdownInterval = setInterval(() => {
-        const now = new Date();
-        const nextHour = new Date(now);
-        nextHour.setHours(now.getHours() + 1, 0, 0, 0);
-        const secondsUntilNextHour = Math.round((nextHour.getTime() - now.getTime()) / 1000);
-        setCountdown(secondsUntilNextHour > 0 ? secondsUntilNextHour : 3600); // Handle edge case at the hour
-    }, 1000);
-
-    return () => {
-      clearInterval(countdownInterval);
-      if (hourlyTaskTimeout.current) {
-        clearTimeout(hourlyTaskTimeout.current);
-      }
-    };
-  }, [userProfile, runHourlyTasks]);
-
 
   const handleBoostPurchase = async (boostId: string) => {
     if (activatedBoosts.includes(boostId)) return;
@@ -258,16 +196,7 @@ export default function Home() {
         setSocialTasks(prev => ({...prev, referral: 'completed' }));
       }
     };
-
   
-  const formatCountdown = (seconds: number | null) => {
-    if (seconds === null || seconds < 0) return '00:00:00';
-    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${h}:${m}:${s}`;
-  };
-
   const hasPurchasedBoosts = activatedBoosts.length > 0;
   
   const isReadyToEarn = isLicenseActive && allTasksCompleted;
@@ -308,17 +237,13 @@ export default function Home() {
       <div className="space-y-4 rounded-lg p-6">
           <div className="flex flex-row items-center justify-between">
               <h3 className="text-xl font-semibold leading-none tracking-tight">Pending Balance</h3>
-              <div className="text-xs text-amber-500 flex items-center">
-                  <Hourglass className="mr-2 animate-spin h-4 w-4" />
-                  {formatCountdown(countdown)}
-              </div>
           </div>
           <div>
               <p className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">
                   {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                   <span className="text-base ml-1">MOO</span>
               </p>
-              <p className="text-xs text-muted-foreground">Crediting to main balance at the top of the hour.</p>
+              <p className="text-xs text-muted-foreground">This balance is updated periodically by the admin.</p>
           </div>
       </div>
       

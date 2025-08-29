@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban, Zap } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -26,14 +26,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import type { AirdropClaim } from "@/lib/types";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
-  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
+  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser, distributePendingBalances } = useTelegram();
   const [claims, setClaims] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -113,6 +113,14 @@ export default function AdminPage() {
 
     await fetchAllData();
   };
+  
+  const handleDistributePending = async () => {
+    await distributePendingBalances();
+    // Optionally, refresh data to reflect changes
+    fetchAdminStats();
+    // Maybe show a toast notification
+  };
+
 
   const pendingClaimsCount = claims.filter(c => c.status === 'processing').length;
 
@@ -217,31 +225,53 @@ export default function AdminPage() {
       </div>
       
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="p-6 flex justify-between items-center">
+        <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h3 className="text-base font-semibold">User Submissions ({claims.length})</h3>
               <p className="text-xs text-muted-foreground">{pendingClaimsCount} pending claims</p>
             </div>
-             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button disabled={pendingClaimsCount === 0}>
-                  <Send className="mr-2" />
-                  Distribute All
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Distribute all pending claims?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will mark all {pendingClaimsCount} pending claims as 'distributed' and update the user profiles. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDistributeAll}>Confirm & Distribute</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button disabled={pendingClaimsCount === 0}>
+                      <Send className="mr-2" />
+                      Distribute All
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Distribute all pending claims?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will mark all {pendingClaimsCount} pending claims as 'distributed' and update the user profiles. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDistributeAll}>Confirm & Distribute</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                     <Button variant="outline">
+                        <Zap className="mr-2" />
+                        Distribute Pending
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Distribute all pending balances?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will transfer all users' pending balances to their main balances. This action is designed to be run periodically.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDistributePending}>Confirm & Run</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+            </div>
         </div>
         <Table>
           <TableHeader>

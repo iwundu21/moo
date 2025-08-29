@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -33,7 +33,7 @@ import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
-  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, fetchAdminStats } = useTelegram();
+  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats } = useTelegram();
   const [claimedAirdrops, setClaimedAirdrops] = useState<AirdropClaim[]>([]);
   
   useEffect(() => {
@@ -112,6 +112,24 @@ export default function AdminPage() {
       )
     );
   };
+
+  const handleDistributeAll = async () => {
+    const pendingClaims = claimedAirdrops.filter(claim => claim.status === 'processing' && claim.userId !== 'sample-user-123');
+    if (pendingClaims.length === 0) return;
+
+    await batchUpdateClaimStatuses(pendingClaims);
+
+    setClaimedAirdrops(prevClaims =>
+      prevClaims.map(claim => 
+        pendingClaims.some(p => p.userId === claim.userId) 
+        ? { ...claim, status: 'distributed' } 
+        : claim
+      )
+    );
+  };
+
+  const pendingClaimsCount = claimedAirdrops.filter(c => c.status === 'processing').length;
+
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -212,10 +230,33 @@ export default function AdminPage() {
             </div>
         </div>
       </div>
-
+      
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="p-6">
-            <h3 className="text-base font-semibold">Claim Submissions ({claimedAirdrops.length})</h3>
+        <div className="p-6 flex justify-between items-center">
+            <div>
+              <h3 className="text-base font-semibold">Claim Submissions ({claimedAirdrops.length})</h3>
+              <p className="text-xs text-muted-foreground">{pendingClaimsCount} pending</p>
+            </div>
+             <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button disabled={pendingClaimsCount === 0}>
+                  <Send className="mr-2" />
+                  Distribute All
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Distribute all pending claims?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will mark all {pendingClaimsCount} pending claims as 'distributed' and update the user profiles. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDistributeAll}>Confirm & Distribute</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
         </div>
         <Table>
           <TableHeader>

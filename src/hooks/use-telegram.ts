@@ -368,6 +368,18 @@ const useTelegram = () => {
     await batch.commit();
 
   }, []);
+  
+  const batchUpdateClaimStatuses = useCallback(async (claims: AirdropClaim[]) => {
+    const batch = writeBatch(db);
+    claims.forEach(claim => {
+        const claimDocRef = doc(db, "airdropClaims", claim.userId);
+        const userDocRef = doc(db, "userProfiles", claim.userId);
+        batch.update(claimDocRef, { status: 'distributed' });
+        batch.update(userDocRef, { airdropStatus: 'distributed', walletAddress: claim.walletAddress });
+    });
+    await batch.commit();
+  }, []);
+
 
   const clearAllClaims = useCallback(async () => {
     const claimsQuery = query(collection(db, 'airdropClaims'));
@@ -409,11 +421,10 @@ const useTelegram = () => {
     updateUserProfile, 
     addClaimRecord,
     updateClaimStatus,
+    batchUpdateClaimStatuses,
     redeemReferralCode,
     fetchAdminStats
   };
 };
 
 export { useTelegram };
-
-    

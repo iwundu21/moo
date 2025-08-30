@@ -166,21 +166,31 @@ export const checkTelegramMembership = functions.https.onCall(async (data, conte
         const memberStatus = response.data?.result?.status;
 
         // Valid statuses for being "in" the channel/group
-        const validStatuses = ["creator", "administrator", "member"];
+        const validStatuses = ["creator", "administrator", "member", "restricted"];
         
         if (validStatuses.includes(memberStatus)) {
             return { isMember: true };
         } else {
             // Log the actual status for debugging if it's not a success status
             functions.logger.warn(`User ${userId} in channel ${channelId} has status: ${memberStatus}`);
-            return { isMember: false, status: memberStatus };
+            return { isMember: false, reason: `User status is '${memberStatus}'.` };
         }
     } catch (error: any) {
-        functions.logger.error(`Failed to check membership for user ${userId} in channel ${channelId}:`, error.response?.data || error.message);
-        if (error.response?.status === 400 && error.response?.data?.description?.includes("user not found")) {
-            return { isMember: false, status: "not_found" };
+        const errorData = error.response?.data;
+        const errorMessage = errorData?.description || "Unknown Telegram API error.";
+        functions.logger.error(`Failed to check membership for user ${userId} in channel ${channelId}:`, errorMessage);
+
+        // Check for specific, common errors to give better feedback to the user.
+        if (errorData?.error_code === 400) {
+             if (errorMessage.includes("user not found")) {
+                return { isMember: false, reason: "user not found" };
+            }
+            if (errorMessage.includes("bot is not a member")) {
+                 throw new functions.https.HttpsError("failed-precondition", "Verification failed: The bot is not a member of the target channel/group.");
+            }
         }
-        // Re-throw a more specific error to the client
-        throw new functions.https.HttpsError("internal", `Failed to verify Telegram membership. Reason: ${error.response?.data?.description || "Unknown error"}`);
+        
+        // For other errors, throw a generic but informative error back to the client.
+        throw new functions.https.HttpsError("internal", `Failed to verify Telegram membership. Reason: ${errorMessage}`);
     }
 });

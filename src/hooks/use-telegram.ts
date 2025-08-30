@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim, ClaimRecord } from '@/lib/types';
-import { db, checkTelegramMembership } from '@/lib/firebase';
+import { db, checkTelegramMembership as checkTelegramMembershipFunc } from '@/lib/firebase';
 import {
   doc,
   getDoc,
@@ -264,16 +264,17 @@ const useTelegram = () => {
     }
   }, [userProfile]);
 
-  const verifyTelegramTask = useCallback(async (channelId: string) => {
+  const verifyTelegramTask = useCallback(async (channelId: string): Promise<{isMember: boolean, reason?: string}> => {
     if (!userProfile) {
-        return { isMember: false };
+        throw new Error("User profile not loaded.");
     }
     try {
-        const result = await checkTelegramMembership({ userId: userProfile.id, channelId });
-        return { isMember: result.data.isMember };
-    } catch (error) {
+        const result = await checkTelegramMembershipFunc({ userId: userProfile.id, channelId });
+        return result.data;
+    } catch (error: any) {
         console.error("Error verifying Telegram membership:", error);
-        return { isMember: false };
+        // The error from a callable function has a `message` property.
+        throw new Error(error.message || "An unknown error occurred during verification.");
     }
   }, [userProfile]);
 

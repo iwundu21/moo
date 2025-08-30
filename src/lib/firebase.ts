@@ -21,7 +21,7 @@ const db = getFirestore(app);
 const functions = getFunctions(app);
 
 // Callable functions
-const checkTelegramMembership = httpsCallable<{ userId: string; channelId: string; }, { isMember: boolean }>(functions, 'checkTelegramMembership');
+const checkTelegramMembership = httpsCallable<{ userId: string; channelId: string; }, { isMember: boolean; reason?: string }>(functions, 'checkTelegramMembership');
 
 
 export { app, db, functions, checkTelegramMembership };

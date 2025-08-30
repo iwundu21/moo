@@ -175,7 +175,15 @@ export default function Home() {
             const result = await verifyTelegramTask(channelId);
             isCompleted = result.isMember;
             if (!isCompleted) {
-                toast({ title: "Verification Failed", description: "Please make sure you have joined the channel and that the bot has administrator permissions in the channel.", variant: "destructive" });
+                const defaultError = "Please make sure you have joined the channel.";
+                const botError = "Please ensure the bot is an administrator in the channel/group.";
+                const errorMessage = result.reason?.includes("bot is not a member") ? botError : defaultError;
+                
+                toast({ 
+                    title: "Verification Failed", 
+                    description: errorMessage, 
+                    variant: "destructive" 
+                });
             }
         } else { // Manual verification
             isCompleted = true; 
@@ -188,9 +196,9 @@ export default function Home() {
         } else {
             setSocialTasks(prev => ({...prev, [taskId]: 'idle'}));
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error during task verification:", error);
-        toast({ title: "Error", description: "Could not verify task. Please try again later.", variant: "destructive" });
+        toast({ title: "Error", description: error.message || "Could not verify task. Please try again later.", variant: "destructive" });
         setSocialTasks(prev => ({...prev, [taskId]: 'idle'}));
     }
   }

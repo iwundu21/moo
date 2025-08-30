@@ -2,7 +2,6 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DailyEarningsChart } from '@/components/DailyEarningsChart';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Gem, Activity } from 'lucide-react';
 
@@ -15,16 +14,6 @@ export default function HistoryPage() {
                 <h1 className="text-xl font-bold tracking-tight">History</h1>
                 <p className="text-xs text-muted-foreground">Your earnings and claim history.</p>
             </header>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base">Daily Earnings</CardTitle>
-                    <CardDescription>A look at your recent earnings activity.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <DailyEarningsChart />
-                </CardContent>
-            </Card>
 
             <Card>
                 <CardHeader>

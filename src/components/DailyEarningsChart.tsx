@@ -4,6 +4,7 @@
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { useMemo } from 'react';
+import { useTelegram } from '@/hooks/use-telegram';
 
 const chartConfig = {
   earnings: {
@@ -13,39 +14,23 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function DailyEarningsChart() {
+    const { claimHistory } = useTelegram();
+
     const chartData = useMemo(() => {
-        const data = [];
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Normalize today to the start of the day
-        const dayOfWeek = today.getDay(); // Sunday - 0, Monday - 1, ...
-        const daysToMonday = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-        
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - daysToMonday);
-
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(startOfWeek);
-            date.setDate(startOfWeek.getDate() + i);
-            const dayOfMonth = date.getDate();
-
-            let earnings: number | null = null;
-            if (date <= today) {
-                // Simulate earnings only for past and current days
-                const isToday = date.getTime() === today.getTime();
-                earnings = Math.floor(Math.random() * (isToday ? 300 : 500)) + (isToday ? 50 : 100);
-            }
-
-            data.push({
-                day: days[i],
-                date: dayOfMonth,
-                earnings: earnings,
-                fill: i === daysToMonday ? 'hsl(var(--primary))' : 'hsla(var(--primary) / 0.5)'
-            });
-        }
-        return data;
+        // This component will now show an empty state.
+        // The data logic has been removed to avoid showing mock data.
+        return [];
     }, []);
+
+    if (chartData.length === 0) {
+        return (
+            <div className="flex min-h-[200px] w-full items-center justify-center rounded-lg border border-dashed p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                    Daily earnings data will be available soon.
+                </p>
+            </div>
+        );
+    }
     
     return (
         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">

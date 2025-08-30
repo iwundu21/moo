@@ -60,7 +60,7 @@ export default function Home() {
   const { toast } = useToast();
 
   const socialTaskList = [
-    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk' },
+    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk?t=3r4XYNXvnuRDf9eqhTjFqw&s=09' },
     { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement' },
     { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn' },
   ];
@@ -301,8 +301,8 @@ export default function Home() {
                         const status = socialTasks[task.id];
                         const isOpened = openedTasks.has(task.id);
                         return (
-                            <div key={task.id} className="flex items-center gap-2">
-                                <Button asChild className="flex-1 justify-start" variant="outline" disabled={status !== 'idle'}>
+                            <div key={task.id} className="flex flex-wrap items-center gap-2">
+                                <Button asChild className="flex-1 justify-start min-w-[200px]" variant="outline" disabled={status !== 'idle'}>
                                     <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
                                         <task.icon className="mr-3" />
                                         <span className="flex-1 text-left">{task.text}</span>
@@ -315,7 +315,7 @@ export default function Home() {
                                     <Button 
                                         onClick={() => handleConfirmTask(task.id)}
                                         disabled={status !== 'idle'}
-                                        className="w-28"
+                                        className="w-full sm:w-28"
                                     >
                                         {status === 'idle' && (
                                             <span className='flex items-center'>
@@ -331,16 +331,16 @@ export default function Home() {
                     })}
                     {socialTasks.referral !== 'completed' && (
                         <div className="space-y-2 pt-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <Input
                                 id="referral-code-input"
                                 placeholder="Enter friend's referral code"
                                 value={referralCodeInput}
                                 onChange={(e) => setReferralCodeInput(e.target.value)}
-                                className="uppercase flex-1"
+                                className="uppercase flex-1 min-w-[150px]"
                                 disabled={socialTasks.referral === 'completed'}
                                 />
-                                <Button onClick={handleRedeemCode} disabled={socialTasks.referral === 'completed'} className="w-28">
+                                <Button onClick={handleRedeemCode} disabled={socialTasks.referral === 'completed'} className="w-full sm:w-auto sm:flex-initial">
                                     <Ticket className="mr-2" />
                                     Redeem
                                 </Button>
@@ -447,3 +447,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

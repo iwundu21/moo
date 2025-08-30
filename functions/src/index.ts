@@ -122,7 +122,12 @@ export const setWebhook = functions.https.onRequest(async (req, res) => {
         return;
     }
 
-    const webhookUrl = `https://${req.hostname}/telegramWebhook`;
+    // Construct the full webhook URL using the request's hostname.
+    // The function name 'telegramWebhook' must match the exported function.
+    const functionRegion = process.env.FUNCTION_REGION || "us-central1";
+    const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+    const webhookUrl = `https://${functionRegion}-${projectId}.cloudfunctions.net/telegramWebhook`;
+    
     const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook?url=${webhookUrl}`;
 
     try {
@@ -149,10 +154,6 @@ export const checkTelegramMembership = functions.https.onCall(async (data, conte
         throw new functions.https.HttpsError("failed-precondition", "Telegram Bot Token is not configured.");
     }
 
-    if (!context.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "The function must be called while authenticated.");
-    }
-
     const { userId, channelId } = data;
     if (!userId || !channelId) {
         throw new functions.https.HttpsError("invalid-argument", "The function must be called with 'userId' and 'channelId'.");
@@ -166,10 +167,12 @@ export const checkTelegramMembership = functions.https.onCall(async (data, conte
 
         // Valid statuses for being "in" the channel/group
         const validStatuses = ["creator", "administrator", "member"];
-
+        
         if (validStatuses.includes(memberStatus)) {
             return { isMember: true };
         } else {
+            // Log the actual status for debugging if it's not a success status
+            functions.logger.warn(`User ${userId} in channel ${channelId} has status: ${memberStatus}`);
             return { isMember: false, status: memberStatus };
         }
     } catch (error: any) {
@@ -177,6 +180,7 @@ export const checkTelegramMembership = functions.https.onCall(async (data, conte
         if (error.response?.status === 400 && error.response?.data?.description?.includes("user not found")) {
             return { isMember: false, status: "not_found" };
         }
-        throw new functions.https.HttpsError("internal", "Failed to verify Telegram membership.");
+        // Re-throw a more specific error to the client
+        throw new functions.https.HttpsError("internal", `Failed to verify Telegram membership. Reason: ${error.response?.data?.description || "Unknown error"}`);
     }
 });

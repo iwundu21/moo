@@ -170,21 +170,27 @@ export default function Home() {
 
     let isCompleted = false;
 
-    if (task.verification === 'auto' && channelId) {
-        const result = await verifyTelegramTask(channelId);
-        isCompleted = result.isMember;
-        if (!isCompleted) {
-            toast({ title: "Verification Failed", description: "Please make sure you have joined the channel.", variant: "destructive" });
+    try {
+        if (task.verification === 'auto' && channelId) {
+            const result = await verifyTelegramTask(channelId);
+            isCompleted = result.isMember;
+            if (!isCompleted) {
+                toast({ title: "Verification Failed", description: "Please make sure you have joined the channel and that the bot has administrator permissions in the channel.", variant: "destructive" });
+            }
+        } else { // Manual verification
+            isCompleted = true; 
         }
-    } else { // Manual verification
-        isCompleted = true; 
-    }
 
-    if (isCompleted) {
-        const newSocialTasks = {...socialTasks, [taskId]: 'completed'};
-        setSocialTasks(newSocialTasks);
-        updateUserProfile({ completedSocialTasks: newSocialTasks });
-    } else {
+        if (isCompleted) {
+            const newSocialTasks = {...userProfile.completedSocialTasks, [taskId]: 'completed'};
+            setSocialTasks(newSocialTasks);
+            updateUserProfile({ completedSocialTasks: newSocialTasks });
+        } else {
+            setSocialTasks(prev => ({...prev, [taskId]: 'idle'}));
+        }
+    } catch (error) {
+        console.error("Error during task verification:", error);
+        toast({ title: "Error", description: "Could not verify task. Please try again later.", variant: "destructive" });
         setSocialTasks(prev => ({...prev, [taskId]: 'idle'}));
     }
   }
@@ -317,29 +323,25 @@ export default function Home() {
                 <div className="space-y-4 pt-4">
                     {socialTaskList.map(task => {
                         const status = socialTasks[task.id];
-                        const isOpened = openedTasks.has(task.id);
                         return (
                             <div key={task.id} className="space-y-2">
-                                <Button asChild className="w-full justify-between" variant="outline" disabled={status !== 'idle'}>
-                                    <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
+                                <Button asChild className="w-full justify-between" variant="outline" onClick={() => handleTaskOpen(task.id)} disabled={status === 'completed'}>
+                                    <Link href={task.link} target="_blank" >
                                         <span className="flex items-center gap-3">
                                             <task.icon />
                                             {task.text}
                                         </span>
-                                        <Badge variant="secondary">
-                                            Complete Task
-                                        </Badge>
+                                        {status === 'completed' ? <CheckCircle className="text-green-500"/> : <Badge variant="secondary">Complete Task</Badge>}
                                     </Link>
                                 </Button>
-                                {(isOpened || status !== 'idle') && (
-                                    <Button 
+                                {openedTasks.has(task.id) && status !== 'completed' && (
+                                     <Button 
                                         onClick={() => handleConfirmTask(task.id, task.channelId)}
                                         disabled={status !== 'idle'}
                                         className="w-full"
                                     >
                                         {status === 'idle' && <span className='flex items-center'>Confirm</span>}
                                         {status === 'verifying' && <Loader2 className="animate-spin" />}
-                                        {status === 'completed' && <CheckCircle />}
                                     </Button>
                                 )}
                             </div>
@@ -463,5 +465,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

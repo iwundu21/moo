@@ -296,16 +296,18 @@ export default function Home() {
                 </p>
             </div>
             {!allTasksCompleted ? (
-                <div className="space-y-3 pt-4">
+                <div className="space-y-4 pt-4">
                     {socialTaskList.map(task => {
                         const status = socialTasks[task.id];
                         const isOpened = openedTasks.has(task.id);
                         return (
-                            <div key={task.id} className="flex flex-wrap items-center gap-2">
-                                <Button asChild className="flex-1 justify-start min-w-[200px]" variant="outline" disabled={status !== 'idle'}>
+                            <div key={task.id} className="space-y-2">
+                                <Button asChild className="w-full justify-between" variant="outline" disabled={status !== 'idle'}>
                                     <Link href={task.link} target="_blank" onClick={() => handleTaskOpen(task.id)}>
-                                        <task.icon className="mr-3" />
-                                        <span className="flex-1 text-left">{task.text}</span>
+                                        <span className="flex items-center gap-3">
+                                            <task.icon />
+                                            {task.text}
+                                        </span>
                                         <Badge variant="secondary">
                                             Complete Task
                                         </Badge>
@@ -315,13 +317,9 @@ export default function Home() {
                                     <Button 
                                         onClick={() => handleConfirmTask(task.id)}
                                         disabled={status !== 'idle'}
-                                        className="w-full sm:w-28"
+                                        className="w-full"
                                     >
-                                        {status === 'idle' && (
-                                            <span className='flex items-center'>
-                                                Confirm
-                                            </span>
-                                        )}
+                                        {status === 'idle' && <span className='flex items-center'>Confirm</span>}
                                         {status === 'verifying' && <Loader2 className="animate-spin" />}
                                         {status === 'completed' && <CheckCircle />}
                                     </Button>
@@ -330,17 +328,17 @@ export default function Home() {
                         )
                     })}
                     {socialTasks.referral !== 'completed' && (
-                        <div className="space-y-2 pt-2">
-                            <div className="flex flex-wrap items-center gap-2">
+                        <div className="space-y-3 pt-2">
+                            <div className="space-y-2">
                                 <Input
-                                id="referral-code-input"
-                                placeholder="Enter friend's referral code"
-                                value={referralCodeInput}
-                                onChange={(e) => setReferralCodeInput(e.target.value)}
-                                className="uppercase flex-1 min-w-[150px]"
-                                disabled={socialTasks.referral === 'completed'}
+                                    id="referral-code-input"
+                                    placeholder="Enter friend's referral code"
+                                    value={referralCodeInput}
+                                    onChange={(e) => setReferralCodeInput(e.target.value)}
+                                    className="uppercase flex-1"
+                                    disabled={socialTasks.referral === 'completed'}
                                 />
-                                <Button onClick={handleRedeemCode} disabled={socialTasks.referral === 'completed'} className="w-full sm:w-auto sm:flex-initial">
+                                 <Button onClick={handleRedeemCode} disabled={socialTasks.referral === 'completed'} className="w-full">
                                     <Ticket className="mr-2" />
                                     Redeem
                                 </Button>

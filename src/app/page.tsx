@@ -45,7 +45,7 @@ const initialTasks: SocialTasks = {
 
 
 export default function Home() {
-  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance } = useTelegram();
+  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
@@ -60,9 +60,9 @@ export default function Home() {
   const { toast } = useToast();
 
   const socialTaskList = [
-    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk?t=3r4XYNXvnuRDf9eqhTjFqw&s=09' },
-    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement' },
-    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn' },
+    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk?t=3r4XYNXvnuRDf9eqhTjFqw&s=09', verification: 'manual' },
+    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement', verification: 'auto', channelId: '@moo_officialanouncement' },
+    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn', verification: 'auto', channelId: '@moo_chat_earn' },
   ];
   
   const allTasksCompleted = useMemo(() => {
@@ -161,14 +161,32 @@ export default function Home() {
     setOpenedTasks(prev => new Set(prev).add(taskId));
   };
 
-  const handleConfirmTask = (taskId: string) => {
+  const handleConfirmTask = async (taskId: string, channelId?: string) => {
+    if (!userProfile) return;
     setSocialTasks(prev => ({...prev, [taskId]: 'verifying'}));
+    
+    const task = socialTaskList.find(t => t.id === taskId);
+    if (!task) return;
 
-    setTimeout(() => {
+    let isCompleted = false;
+
+    if (task.verification === 'auto' && channelId) {
+        const result = await verifyTelegramTask(channelId);
+        isCompleted = result.isMember;
+        if (!isCompleted) {
+            toast({ title: "Verification Failed", description: "Please make sure you have joined the channel.", variant: "destructive" });
+        }
+    } else { // Manual verification
+        isCompleted = true; 
+    }
+
+    if (isCompleted) {
         const newSocialTasks = {...socialTasks, [taskId]: 'completed'};
         setSocialTasks(newSocialTasks);
         updateUserProfile({ completedSocialTasks: newSocialTasks });
-    }, 2000);
+    } else {
+        setSocialTasks(prev => ({...prev, [taskId]: 'idle'}));
+    }
   }
 
    const handleRedeemCode = async () => {
@@ -315,7 +333,7 @@ export default function Home() {
                                 </Button>
                                 {(isOpened || status !== 'idle') && (
                                     <Button 
-                                        onClick={() => handleConfirmTask(task.id)}
+                                        onClick={() => handleConfirmTask(task.id, task.channelId)}
                                         disabled={status !== 'idle'}
                                         className="w-full"
                                     >

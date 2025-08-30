@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim, ClaimRecord } from '@/lib/types';
-import { db } from '@/lib/firebase';
+import { db, checkTelegramMembership } from '@/lib/firebase';
 import {
   doc,
   getDoc,
@@ -264,6 +264,19 @@ const useTelegram = () => {
     }
   }, [userProfile]);
 
+  const verifyTelegramTask = useCallback(async (channelId: string) => {
+    if (!userProfile) {
+        return { isMember: false };
+    }
+    try {
+        const result = await checkTelegramMembership({ userId: userProfile.id, channelId });
+        return { isMember: result.data.isMember };
+    } catch (error) {
+        console.error("Error verifying Telegram membership:", error);
+        return { isMember: false };
+    }
+  }, [userProfile]);
+
   const fetchInitialData = useCallback(async () => {
     if (isFetching.current) return;
     isFetching.current = true;
@@ -486,6 +499,7 @@ const useTelegram = () => {
     fetchAdminStats,
     deleteUser,
     claimPendingBalance,
+    verifyTelegramTask,
   };
 };
 

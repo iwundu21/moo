@@ -140,3 +140,43 @@ export const setWebhook = functions.https.onRequest(async (req, res) => {
         });
     }
 });
+
+/**
+ * A callable Cloud Function to check if a user is a member of a Telegram channel.
+ */
+export const checkTelegramMembership = functions.https.onCall(async (data, context) => {
+    if (!TELEGRAM_BOT_TOKEN) {
+        throw new functions.https.HttpsError("failed-precondition", "Telegram Bot Token is not configured.");
+    }
+
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "The function must be called while authenticated.");
+    }
+
+    const { userId, channelId } = data;
+    if (!userId || !channelId) {
+        throw new functions.https.HttpsError("invalid-argument", "The function must be called with 'userId' and 'channelId'.");
+    }
+
+    const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getChatMember?chat_id=${channelId}&user_id=${userId}`;
+
+    try {
+        const response = await axios.get(telegramApiUrl);
+        const memberStatus = response.data?.result?.status;
+
+        // Valid statuses for being "in" the channel/group
+        const validStatuses = ["creator", "administrator", "member"];
+
+        if (validStatuses.includes(memberStatus)) {
+            return { isMember: true };
+        } else {
+            return { isMember: false, status: memberStatus };
+        }
+    } catch (error: any) {
+        functions.logger.error(`Failed to check membership for user ${userId} in channel ${channelId}:`, error.response?.data || error.message);
+        if (error.response?.status === 400 && error.response?.data?.description?.includes("user not found")) {
+            return { isMember: false, status: "not_found" };
+        }
+        throw new functions.https.HttpsError("internal", "Failed to verify Telegram membership.");
+    }
+});

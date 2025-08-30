@@ -60,7 +60,7 @@ export default function Home() {
   const { toast } = useToast();
 
   const socialTaskList = [
-    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile' },
+    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk' },
     { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement' },
     { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn' },
   ];

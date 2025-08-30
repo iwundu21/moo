@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Hourglass, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info } from 'lucide-react';
+import { Star, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,16 +20,15 @@ import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Confetti from 'react-confetti';
-import { createPayment } from '@/ai/flows/payment-flow';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
 
-
+// This is now a client-side representation and doesn't handle payments.
 const boosts = [
-  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message', price: 1.00 },
-  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 20 MOO per message', price: 2.00 },
-  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 35 MOO per message', price: 3.50 },
+  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message' },
+  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 20 MOO per message' },
+  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 35 MOO per message' },
 ];
 
 type TaskStatus = 'idle' | 'verifying' | 'completed';
@@ -60,9 +59,9 @@ export default function Home() {
   const { toast } = useToast();
 
   const socialTaskList = [
-    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile', reward: 100 },
-    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement', reward: 100 },
-    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn', reward: 100 },
+    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/your-profile' },
+    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement' },
+    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn' },
   ];
 
   useEffect(() => {
@@ -90,74 +89,30 @@ export default function Home() {
     return social && referral;
   }, [socialTasks, userProfile, socialTaskList]);
 
-  useEffect(() => {
-    // This logic is now only for determining the earn rate based on boosts.
-    // The actual earning simulation/crediting would happen on a backend.
-    let earnRate = 0; // Base rate is 0
-    
-    // Determine the highest active boost
-    if (activatedBoosts.includes('10x')) earnRate = 35;
-    else if (activatedBoosts.includes('5x')) earnRate = 20;
-    else if (activatedBoosts.includes('2x')) earnRate = 10;
-    else if (isLicenseActive && allTasksCompleted) earnRate = 5;
-
-  }, [activatedBoosts, isLicenseActive, allTasksCompleted]);
 
   const handleBoostPurchase = async (boostId: string) => {
-    if (activatedBoosts.includes(boostId)) return;
+    if (activatedBoosts.includes(boostId) || !userProfile || !window.Telegram?.WebApp) return;
 
     const boost = boosts.find(b => b.id === boostId);
-    if (!boost || !userProfile) return;
+    if (!boost) return;
 
-    try {
-      const invoiceLink = await createPayment({
-        userId: userProfile.id,
-        boostId: boost.id,
-        price: boost.cost // Use `cost` for the price in Stars
-      });
+    // This is a placeholder for a payment flow.
+    // In a real app, this would call a backend to create an invoice.
+    toast({
+        title: "Coming Soon!",
+        description: "Purchasing boosts will be enabled shortly.",
+    });
 
-      if (invoiceLink && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.openInvoice(invoiceLink, (status) => {
-          if (status === 'paid') {
-            const newBoosts = [...activatedBoosts, boostId];
-            setActivatedBoosts(newBoosts);
-            updateUserProfile({ purchasedBoosts: newBoosts });
-            window.Telegram.WebApp.close();
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Payment creation failed:", error);
-    }
   };
 
   const handleLicenseActivation = async () => {
-    if (isLicenseActive || !userProfile) return;
-    const cost = 150;
+    if (isLicenseActive || !userProfile || !window.Telegram?.WebApp) return;
     
-    try {
-      const invoiceLink = await createPayment({
-        userId: userProfile.id,
-        boostId: 'license', // Special ID for license
-        price: cost
-      });
-
-      if (invoiceLink && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.openInvoice(invoiceLink, (status) => {
-          if (status === 'paid') {
-            const newMainBalance = mainBalance + 5000;
-            setIsLicenseActive(true);
-            setMainBalance(newMainBalance);
-            updateUserProfile({ isLicenseActive: true, mainBalance: newMainBalance });
-            setShowConfetti(true);
-            setShowActivationSuccess(true);
-            window.Telegram.WebApp.close();
-          }
-        });
-      }
-    } catch (error) {
-      console.error("License payment creation failed:", error);
-    }
+    // This is a placeholder for a payment flow.
+    toast({
+        title: "Coming Soon!",
+        description: "License activation will be enabled shortly.",
+    });
   }
   
   const handleClaimPendingBalance = async () => {
@@ -195,7 +150,7 @@ export default function Home() {
         const newSocialTasks = {...socialTasks, [taskId]: 'completed'};
         setSocialTasks(newSocialTasks);
         updateUserProfile({ completedSocialTasks: newSocialTasks });
-    }, 6000); // 6 seconds
+    }, 2000);
   }
 
    const handleRedeemCode = async () => {
@@ -259,7 +214,7 @@ export default function Home() {
           </p>
       </div>
 
-      <div className="space-y-4 rounded-lg p-6">
+      <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex flex-row items-center justify-between">
               <h3 className="text-xl font-semibold leading-none tracking-tight">Pending Balance</h3>
               <Button 
@@ -282,7 +237,7 @@ export default function Home() {
                   {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                   <span className="text-base ml-1">MOO</span>
               </p>
-              <p className="text-xs text-muted-foreground">This balance is updated periodically from the backend.</p>
+              <p className="text-xs text-muted-foreground">This balance is updated from your chat activity.</p>
           </div>
       </div>
       
@@ -297,7 +252,7 @@ export default function Home() {
                   <p>3. Send messages in designated group chats to earn MOO.</p>
                 </AlertDescription>
             </Alert>
-            <div className="rounded-lg p-6">
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
                 <div className="flex-1">
                     <h3 className="text-xl font-semibold leading-none tracking-tight">Mining License</h3>
                     <p className="text-xs text-muted-foreground pt-1.5">
@@ -306,7 +261,7 @@ export default function Home() {
                 </div>
                 <div className="pt-4">
                     <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
-                        <span className='flex items-center'>Activate for 150 <Star className="ml-2 w-4 h-4 text-yellow-400" /></span>
+                        <span className='flex items-center'>Activate License</span>
                     </Button>
                 </div>
             </div>
@@ -315,11 +270,11 @@ export default function Home() {
 
       {isLicenseActive && (
         <>
-          <div className="space-y-4 rounded-lg p-6">
+          <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
             <div>
                 <h3 className="text-xl font-semibold leading-none tracking-tight">Social Tasks</h3>
                 <p className="text-xs text-muted-foreground pt-1.5">
-                    Complete tasks to earn more rewards.
+                    Complete tasks to unlock earning in the group chat.
                 </p>
             </div>
             {!allTasksCompleted ? (
@@ -384,7 +339,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="space-y-4 rounded-lg p-6">
+          <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
             <div>
                 <h3 className="text-xl font-semibold leading-none tracking-tight">Boost Chat Earning</h3>
                 <p className="text-xs text-muted-foreground pt-1.5">
@@ -402,7 +357,7 @@ export default function Home() {
                 )}
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button className="w-full" variant={"default"} disabled={!isLicenseActive}>
+                        <Button className="w-full" variant={"default"} disabled={!isReadyToEarn}>
                             <Rocket className="mr-2" /> 
                             {hasPurchasedBoosts ? "Purchase More Boosts" : "Boost Earning"}
                         </Button>
@@ -434,7 +389,7 @@ export default function Home() {
                                             <p className="text-xs text-primary-foreground/80">{boost.description}</p>
                                         </div>
                                         <span className='flex items-center'>
-                                            {boost.cost} <Star className="ml-2 w-4 h-4 text-yellow-400" />
+                                            Purchase
                                         </span>
                                     </>
                                     )}

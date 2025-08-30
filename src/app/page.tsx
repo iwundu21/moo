@@ -56,6 +56,7 @@ export default function Home() {
   const [openedTasks, setOpenedTasks] = useState<Set<string>>(new Set());
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const [isClaiming, setIsClaiming] = useState(false);
+  const [earningSpeed, setEarningSpeed] = useState(0);
   const { toast } = useToast();
 
   const socialTaskList = [
@@ -63,6 +64,14 @@ export default function Home() {
     { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement' },
     { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn' },
   ];
+  
+  const allTasksCompleted = useMemo(() => {
+    if (!userProfile) return false;
+    const social = socialTaskList.every(task => socialTasks[task.id] === 'completed');
+    const referral = socialTasks.referral === 'completed';
+    return social && referral;
+  }, [socialTasks, userProfile, socialTaskList]);
+
 
   useEffect(() => {
     if(userProfile) {
@@ -78,16 +87,19 @@ export default function Home() {
         referral: userProfile.referredBy ? 'completed' : 'idle',
       };
       setSocialTasks(initialSocialTasks);
+      
+      // Calculate earning speed
+      const tasksCompleted = Object.values(initialSocialTasks).every(status => status === 'completed');
+      if (userProfile.isLicenseActive && tasksCompleted) {
+        if (userProfile.purchasedBoosts?.includes("10x")) setEarningSpeed(35);
+        else if (userProfile.purchasedBoosts?.includes("5x")) setEarningSpeed(20);
+        else if (userProfile.purchasedBoosts?.includes("2x")) setEarningSpeed(10);
+        else setEarningSpeed(5);
+      } else {
+        setEarningSpeed(0);
+      }
     }
   }, [userProfile]);
-
-
-  const allTasksCompleted = useMemo(() => {
-    if (!userProfile) return false;
-    const social = socialTaskList.every(task => socialTasks[task.id] === 'completed');
-    const referral = socialTasks.referral === 'completed';
-    return social && referral;
-  }, [socialTasks, userProfile, socialTaskList]);
 
 
   const handleBoostPurchase = async (boostId: string) => {
@@ -338,9 +350,14 @@ export default function Home() {
                     )}
                 </div>
             ) : (
-                 <div className="text-center py-4">
+                 <div className="text-center py-4 space-y-1">
                      <p className="text-sm text-green-500 font-semibold">You are now active to earn!</p>
                     <p className="text-xs text-muted-foreground">Start sending messages in designated group chats.</p>
+                     {earningSpeed > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                            Your current earning speed: <span className="font-bold text-primary">{earningSpeed} MOO</span> per message.
+                        </p>
+                    )}
                 </div>
             )}
           </div>

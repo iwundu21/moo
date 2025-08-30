@@ -106,13 +106,19 @@ export default function Home() {
   };
 
   const handleLicenseActivation = async () => {
-    if (isLicenseActive || !userProfile || !window.Telegram?.WebApp) return;
+    if (isLicenseActive || !userProfile) return;
     
-    // This is a placeholder for a payment flow.
-    toast({
-        title: "Coming Soon!",
-        description: "License activation will be enabled shortly.",
+    const newBalance = (userProfile.mainBalance || 0) + 5000;
+    
+    await updateUserProfile({
+        isLicenseActive: true,
+        mainBalance: newBalance,
     });
+    
+    setMainBalance(newBalance);
+    setIsLicenseActive(true);
+    setShowConfetti(true);
+    setShowActivationSuccess(true);
   }
   
   const handleClaimPendingBalance = async () => {

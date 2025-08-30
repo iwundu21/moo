@@ -39,3 +39,9 @@ export type AirdropClaim = {
   timestamp: Date;
   status: 'processing' | 'distributed';
 };
+
+export type ClaimRecord = {
+  id: string;
+  amount: number;
+  timestamp: Date;
+};

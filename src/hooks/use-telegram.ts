@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim } from '@/lib/types';
+import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim, ClaimRecord } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import {
   doc,
@@ -78,6 +78,7 @@ const useTelegram = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [claimHistory, setClaimHistory] = useState<ClaimRecord[]>([]);
   const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
   const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
@@ -220,6 +221,7 @@ const useTelegram = () => {
     if (pendingBalance <= 0) return { success: false, message: "No pending balance to claim." };
 
     const userDocRef = doc(db, 'userProfiles', id);
+    const claimHistoryRef = doc(collection(db, 'userProfiles', id, 'claimHistory'));
 
     try {
       let newMainBalance: number | undefined;
@@ -232,7 +234,6 @@ const useTelegram = () => {
         const currentPending = currentData.pendingBalance || 0;
         
         if (currentPending <= 0) {
-            // This case should be caught earlier, but as a safeguard.
             newMainBalance = currentData.mainBalance;
             return;
         }
@@ -242,10 +243,17 @@ const useTelegram = () => {
           mainBalance: newMainBalance,
           pendingBalance: 0
         });
+
+        transaction.set(claimHistoryRef, {
+            amount: currentPending,
+            timestamp: new Date()
+        });
       });
 
       if (newMainBalance !== undefined) {
         setUserProfile(prev => prev ? { ...prev, mainBalance: newMainBalance!, pendingBalance: 0 } : null);
+        const newRecord: ClaimRecord = { id: claimHistoryRef.id, amount: pendingBalance, timestamp: new Date() };
+        setClaimHistory(prev => [newRecord, ...prev]);
         return { success: true, newMainBalance, claimedAmount: pendingBalance };
       }
       return { success: false, message: "Claim was not processed." };
@@ -329,14 +337,17 @@ const useTelegram = () => {
     setUserProfile(currentUserProfile);
     
     const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
+    const claimHistoryCol = collection(db, 'userProfiles', userId, 'claimHistory');
     const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
     
     const [
         referralSnapshot,
-        leaderboardSnapshot
+        leaderboardSnapshot,
+        claimHistorySnapshot
     ] = await Promise.all([
         getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
-        getDocs(leaderboardQuery)
+        getDocs(leaderboardQuery),
+        getDocs(query(claimHistoryCol, orderBy('timestamp', 'desc'), limit(20)))
     ]);
     
     setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
@@ -357,6 +368,14 @@ const useTelegram = () => {
             : new Date(data.timestamp);
         return { ...data, timestamp } as Referral;
     }));
+    
+    setClaimHistory(claimHistorySnapshot.docs.map(d => {
+        const data = d.data();
+        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
+           ? data.timestamp.toDate() 
+           : new Date(data.timestamp);
+       return { id: d.id, ...data, timestamp } as ClaimRecord;
+   }));
 
     setIsLoading(false);
     isFetching.current = false;
@@ -451,7 +470,8 @@ const useTelegram = () => {
     isLoading,
     userProfile, 
     leaderboard, 
-    referrals, 
+    referrals,
+    claimHistory,
     isAirdropLive,
     totalUserCount,
     totalMooGenerated,

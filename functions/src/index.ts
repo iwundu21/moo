@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Firebase Cloud Functions for the MOO Telegram Mini App.
  *
@@ -5,7 +6,7 @@
  * between the Telegram platform and the Firebase backend, such as processing
  * messages from group chats to reward users.
  */
-
+import "dotenv/config";
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import axios from "axios";
@@ -151,7 +152,7 @@ export const setWebhook = functions.https.onRequest(async (req, res) => {
  */
 export const checkTelegramMembership = functions.https.onCall(async (data, context) => {
     if (!TELEGRAM_BOT_TOKEN) {
-        throw new functions.https.HttpsError("failed-precondition", "Telegram Bot Token is not configured.");
+        throw new functions.https.HttpsError("failed-precondition", "Telegram Bot Token is not configured. Please ensure it's set in the environment variables.");
     }
 
     const { userId, channelId } = data;
@@ -178,7 +179,7 @@ export const checkTelegramMembership = functions.https.onCall(async (data, conte
     } catch (error: any) {
         const errorData = error.response?.data;
         const errorMessage = errorData?.description || "Unknown Telegram API error.";
-        functions.logger.error(`Failed to check membership for user ${userId} in channel ${channelId}:`, errorMessage);
+        functions.logger.error(`Failed to check membership for user ${userId} in channel ${channelId}:`, errorMessage, errorData);
 
         // Check for specific, common errors to give better feedback to the user.
         if (errorData?.error_code === 400) {

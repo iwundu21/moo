@@ -382,21 +382,22 @@ export default function Home() {
                                 <Button
                                     key={boost.id}
                                     variant="default"
-                                    className="w-full justify-between"
+                                    className="h-auto w-full justify-between"
                                     disabled={isActivated}
                                     onClick={() => handleBoostPurchase(boost.id)}
                                 >
                                     {isActivated ? (
-                                    <span className='text-left'>Activated</span>
+                                    <span className='py-2 text-left'>Activated</span>
                                     ) : (
                                     <>
-                                        <div className='text-left'>
+                                        <div className='py-2 text-left'>
                                             <p>{boost.multiplier}x Boost</p>
                                             <p className="text-xs text-primary-foreground/80">{boost.description}</p>
                                         </div>
-                                        <span className='flex items-center'>
-                                            Purchase
-                                        </span>
+                                        <div className='flex items-center gap-2'>
+                                            <Star className="w-4 h-4" />
+                                            <span className="font-semibold">{boost.cost}</span>
+                                        </div>
                                     </>
                                     )}
                                 </Button>

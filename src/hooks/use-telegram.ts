@@ -213,6 +213,48 @@ const useTelegram = () => {
         console.error("Error fetching admin stats:", error);
     }
   }, []);
+  
+  const claimPendingBalance = useCallback(async (): Promise<{success: boolean; message?: string; newMainBalance?: number; claimedAmount?: number;}> => {
+    if (!userProfile) return { success: false, message: "User not found." };
+    const { id, pendingBalance } = userProfile;
+    if (pendingBalance <= 0) return { success: false, message: "No pending balance to claim." };
+
+    const userDocRef = doc(db, 'userProfiles', id);
+
+    try {
+      let newMainBalance: number | undefined;
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          throw new Error("User does not exist!");
+        }
+        const currentData = userDoc.data() as UserProfile;
+        const currentPending = currentData.pendingBalance || 0;
+        
+        if (currentPending <= 0) {
+            // This case should be caught earlier, but as a safeguard.
+            newMainBalance = currentData.mainBalance;
+            return;
+        }
+
+        newMainBalance = (currentData.mainBalance || 0) + currentPending;
+        transaction.update(userDocRef, {
+          mainBalance: newMainBalance,
+          pendingBalance: 0
+        });
+      });
+
+      if (newMainBalance !== undefined) {
+        setUserProfile(prev => prev ? { ...prev, mainBalance: newMainBalance!, pendingBalance: 0 } : null);
+        return { success: true, newMainBalance, claimedAmount: pendingBalance };
+      }
+      return { success: false, message: "Claim was not processed." };
+
+    } catch (error) {
+      console.error("Claim pending balance transaction failed: ", error);
+      return { success: false, message: "An error occurred while claiming." };
+    }
+  }, [userProfile]);
 
   const fetchInitialData = useCallback(async () => {
     if (isFetching.current) return;
@@ -423,6 +465,7 @@ const useTelegram = () => {
     redeemReferralCode,
     fetchAdminStats,
     deleteUser,
+    claimPendingBalance,
   };
 };
 

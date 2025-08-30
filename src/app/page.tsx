@@ -46,7 +46,7 @@ const initialTasks: SocialTasks = {
 
 
 export default function Home() {
-  const { userProfile, updateUserProfile, redeemReferralCode, isLoading } = useTelegram();
+  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
@@ -56,6 +56,7 @@ export default function Home() {
   const [showActivationSuccess, setShowActivationSuccess] = useState(false);
   const [openedTasks, setOpenedTasks] = useState<Set<string>>(new Set());
   const [referralCodeInput, setReferralCodeInput] = useState('');
+  const [isClaiming, setIsClaiming] = useState(false);
   const { toast } = useToast();
 
   const socialTaskList = [
@@ -158,6 +159,30 @@ export default function Home() {
       console.error("License payment creation failed:", error);
     }
   }
+  
+  const handleClaimPendingBalance = async () => {
+    if (!userProfile || userProfile.pendingBalance <= 0) return;
+    
+    setIsClaiming(true);
+    const result = await claimPendingBalance();
+    
+    if (result.success) {
+      setMainBalance(result.newMainBalance!);
+      setPendingBalance(0);
+      toast({
+        title: "Success!",
+        description: `You've claimed ${result.claimedAmount?.toLocaleString()} MOO.`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
+    setIsClaiming(false);
+  };
+
 
   const handleTaskOpen = (taskId: string) => {
     setOpenedTasks(prev => new Set(prev).add(taskId));
@@ -237,6 +262,20 @@ export default function Home() {
       <div className="space-y-4 rounded-lg p-6">
           <div className="flex flex-row items-center justify-between">
               <h3 className="text-xl font-semibold leading-none tracking-tight">Pending Balance</h3>
+              <Button 
+                size="sm"
+                onClick={handleClaimPendingBalance}
+                disabled={pendingBalance <= 0 || isClaiming}
+              >
+                {isClaiming ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Claiming...
+                  </>
+                ) : (
+                  "Claim"
+                )}
+              </Button>
           </div>
           <div>
               <p className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">

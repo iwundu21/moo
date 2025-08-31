@@ -5,20 +5,20 @@ import axios from 'axios';
 export async function GET(req: NextRequest) {
     const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!telegramBotToken) {
-        return NextResponse.json({ error: "TELEGRAM_BOT_TOKEN is not set." }, { status: 500 });
+        return NextResponse.json({ error: "TELEGRAM_BOT_TOKEN is not set in the environment variables." }, { status: 500 });
     }
     
     const host = req.headers.get('host');
-    // For production environments like Firebase App Hosting, the protocol will be HTTPS.
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     const webhookUrl = `${protocol}://${host}/api/telegram/webhook`;
     
-    // The webhook URL needs to be URL-encoded to be passed as a query parameter.
-    const encodedWebhookUrl = encodeURIComponent(webhookUrl);
-    const telegramApiUrl = `https://api.telegram.org/bot${telegramBotToken}/setWebhook?url=${encodedWebhookUrl}`;
+    const telegramApiUrl = `https://api.telegram.org/bot${telegramBotToken}/setWebhook`;
 
     try {
-        const response = await axios.get(telegramApiUrl);
+        const response = await axios.post(telegramApiUrl, {
+            url: webhookUrl,
+            allowed_updates: ["message"]
+        });
 
         if (response.data.ok) {
             return NextResponse.json({

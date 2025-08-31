@@ -191,7 +191,7 @@ export default function Home() {
             updateUserProfile({ completedSocialTasks: newSocialTasks });
             isSuccess = true;
         } else {
-            setSocialTasks(prev => ({ ...prev, [taskId]: 'idle' }));
+             setSocialTasks(prev => ({ ...prev, [taskId]: 'idle' }));
         }
     } else {
         // Simulate verification for other tasks like twitter
@@ -336,13 +336,14 @@ export default function Home() {
       {isLicenseActive && (
         <>
           <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <div>
-                <h3 className="text-xl font-semibold leading-none tracking-tight">Social Tasks</h3>
-                <p className="text-xs text-muted-foreground pt-1.5">
-                    Complete tasks to unlock earning in the group chat.
-                </p>
-            </div>
             {!allTasksCompleted ? (
+              <>
+                <div>
+                  <h3 className="text-xl font-semibold leading-none tracking-tight">Social Tasks</h3>
+                  <p className="text-xs text-muted-foreground pt-1.5">
+                      Complete tasks to unlock earning in the group chat.
+                  </p>
+                </div>
                 <div className="space-y-4 pt-4">
                     {socialTaskList.map(task => {
                         const status = socialTasks[task.id];
@@ -390,9 +391,11 @@ export default function Home() {
                         </div>
                     )}
                 </div>
+              </>
             ) : (
-                 <div className="text-center py-4 space-y-1">
-                     <p className="text-sm text-green-500 font-semibold">You are now active to earn!</p>
+                 <div className='text-center space-y-2'>
+                    <h3 className="text-xl font-semibold leading-none tracking-tight">Earning Status</h3>
+                     <p className="text-sm text-green-500 font-semibold pt-1.5">You are now active to earn!</p>
                     <p className="text-xs text-muted-foreground">Start sending messages in designated group chats.</p>
                      {earningSpeed > 0 && (
                         <p className="text-xs text-muted-foreground">
@@ -519,3 +522,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

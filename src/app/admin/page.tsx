@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import {
@@ -32,7 +31,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { AirdropClaim, UserProfile } from "@/lib/types";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -58,7 +57,12 @@ export default function AdminPage() {
       const claimsSnapshot = await getDocs(collection(db, 'airdropClaims'));
       const claimsMap = new Map<string, AirdropClaim>();
       claimsSnapshot.forEach(doc => {
-        claimsMap.set(doc.id, doc.data() as AirdropClaim);
+        const data = doc.data();
+        // Ensure timestamp is a JS Date object
+        if (data.timestamp && data.timestamp instanceof Timestamp) {
+          data.timestamp = data.timestamp.toDate();
+        }
+        claimsMap.set(doc.id, data as AirdropClaim);
       });
       
       const combinedData = usersSnapshot.docs.map(userDoc => {
@@ -456,6 +460,8 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    
 
     
 

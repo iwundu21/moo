@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info, XCircle } from 'lucide-react';
+import { Star, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info, XCircle, Ban } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -51,7 +51,7 @@ type DialogContentState = {
 
 
 export default function Home() {
-  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask, purchaseBoost } = useTelegram();
+  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask, purchaseBoost, isAirdropClaimable } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
@@ -326,7 +326,17 @@ export default function Home() {
           </div>
       </div>
       
-      {!isLicenseActive && (
+      {!isAirdropClaimable && (
+          <Alert variant="destructive">
+              <Ban className="h-4 w-4" />
+              <AlertTitle>Airdrop Participation Closed</AlertTitle>
+              <AlertDescription className="text-xs">
+                  You cannot activate a license or purchase boosts while the airdrop is not active. Please check back later.
+              </AlertDescription>
+          </Alert>
+      )}
+
+      {isAirdropClaimable && !isLicenseActive && (
         <div className="space-y-4">
             <Alert>
                 <Info className="h-4 w-4" />
@@ -353,7 +363,7 @@ export default function Home() {
         </div>
       )}
 
-      {isLicenseActive && (
+      {isAirdropClaimable && isLicenseActive && (
         <>
           <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
             {!allTasksCompleted ? (

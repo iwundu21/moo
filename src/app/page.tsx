@@ -34,7 +34,7 @@ const boosts = [
 
 const licenseActivation = {
   id: 'license-activation',
-  cost: 250, // in stars
+  cost: 150, // in stars
   title: 'Mining License',
   description: 'Activate your license to start earning MOO.',
   mooBonus: 5000,
@@ -383,7 +383,11 @@ export default function Home() {
                 </div>
                 <div className="pt-4">
                     <Button className="w-full" onClick={handleLicenseActivation} disabled={isLicenseActive}>
-                        <span className='flex items-center'>Activate License</span>
+                        <span className='flex items-center'>
+                          Activate License
+                          <Star className="w-4 h-4 ml-2 mr-1" />
+                          {licenseActivation.cost}
+                        </span>
                     </Button>
                 </div>
             </div>

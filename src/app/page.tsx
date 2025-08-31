@@ -27,14 +27,14 @@ import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
 
 // This is now a client-side representation and doesn't handle payments.
 const boosts = [
-  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message', stars: 100 },
-  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 20 MOO per message', stars: 200 },
-  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 35 MOO per message', stars: 350 },
+  { id: '2x', multiplier: 2, stars: 100, description: 'Earn 10 MOO per message' },
+  { id: '5x', multiplier: 5, stars: 200, description: 'Earn 20 MOO per message' },
+  { id: '10x', multiplier: 10, stars: 350, description: 'Earn 35 MOO per message' },
 ];
 
 const licenseActivation = {
   id: 'license-activation',
-  cost: 150, // in stars
+  stars: 150, // in stars
   title: 'Mining License',
   description: 'Activate your license to start earning MOO.',
   mooBonus: 5000,
@@ -157,7 +157,7 @@ export default function Home() {
     if (isLicenseActive || !userProfile) return;
 
     processPayment(
-      licenseActivation.cost,
+      licenseActivation.stars,
       licenseActivation.title,
       licenseActivation.description,
       `LICENSE_USER_${userProfile.id}`,
@@ -386,7 +386,7 @@ export default function Home() {
                         <span className='flex items-center'>
                           Activate License
                           <Star className="w-4 h-4 ml-2 mr-1" />
-                          {licenseActivation.cost}
+                          {licenseActivation.stars}
                         </span>
                     </Button>
                 </div>
@@ -581,6 +581,8 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
 

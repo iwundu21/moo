@@ -1,10 +1,10 @@
 
-
 'use client';
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim, ClaimRecord, AppSettings } from '@/lib/types';
-import { db, functions } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
+import axios from 'axios';
 import {
   doc,
   getDoc,
@@ -22,7 +22,6 @@ import {
   deleteDoc,
   Timestamp
 } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
 
 interface TelegramUser {
   id: number;
@@ -544,14 +543,16 @@ const useTelegram = () => {
   const verifyTelegramTask = async (channelId: string): Promise<{ isMember: boolean, message?: string }> => {
     if (!userProfile) return { isMember: false, message: 'User profile not loaded.' };
     
-    const checkTelegramMembership = httpsCallable<{ userId: string, channelId: string }, { isMember: boolean, reason?: string }>(functions, 'checkTelegramMembership');
-
     try {
-        const result = await checkTelegramMembership({ userId: userProfile.id, channelId });
-        return { isMember: result.data.isMember, message: result.data.reason };
+        const response = await axios.post('/api/telegram/verify-membership', {
+            userId: userProfile.id,
+            channelId
+        });
+        return response.data;
     } catch (error: any) {
-        console.error("Firebase Functions call failed:", error);
-        return { isMember: false, message: error.message || 'Failed to connect to verification service.' };
+        console.error("API call to verify membership failed:", error);
+        const errorMessage = error.response?.data?.error || 'Failed to connect to verification service.';
+        return { isMember: false, message: errorMessage };
     }
   };
 
@@ -569,9 +570,13 @@ const useTelegram = () => {
     }
 
     try {
-      const createPaymentInvoice = httpsCallable<any, { invoiceUrl: string }>(functions, 'createPaymentInvoice');
-      const result = await createPaymentInvoice({ amount, payload, title, description });
-      const invoiceUrl = result.data.invoiceUrl;
+      const response = await axios.post('/api/payment/create-invoice', {
+        amount,
+        title,
+        description,
+        payload
+      });
+      const { invoiceUrl } = response.data;
 
       if (invoiceUrl) {
         tg.openInvoice(invoiceUrl, callback);

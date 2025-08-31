@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
+import { getFunctions } from "firebase/functions";
 
 // Your web app's Firebase configuration
 // IMPORTANT: Do not remove this object
@@ -20,8 +20,5 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const functions = getFunctions(app);
 
-// Callable functions
-const checkTelegramMembership = httpsCallable<{ userId: string; channelId: string; }, { isMember: boolean; reason?: string }>(functions, 'checkTelegramMembership');
 
-
-export { app, db, functions, checkTelegramMembership };
+export { app, db, functions };

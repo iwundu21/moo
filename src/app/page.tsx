@@ -179,10 +179,15 @@ export default function Home() {
     let isSuccess = false;
 
     if (task && (taskId === 'telegram' || taskId === 'community')) {
-        const result = await verifyTelegramTask(task.channelId as string);
+        if (!task.channelId) {
+            console.error(`Task ${taskId} is missing channelId`);
+            setSocialTasks(prev => ({ ...prev, [taskId]: 'idle' }));
+            return;
+        }
+        const result = await verifyTelegramTask(task.channelId);
         if (result.isMember) {
             const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
-            setSocialTasks(newSocialTasks);
+            setSocialTasks(prev => ({...prev, ...newSocialTasks}));
             updateUserProfile({ completedSocialTasks: newSocialTasks });
             isSuccess = true;
         } else {
@@ -192,7 +197,7 @@ export default function Home() {
         // Simulate verification for other tasks like twitter
         await new Promise(resolve => setTimeout(resolve, 1000));
         const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
-        setSocialTasks(newSocialTasks);
+        setSocialTasks(prev => ({...prev, ...newSocialTasks}));
         updateUserProfile({ completedSocialTasks: newSocialTasks });
         isSuccess = true;
     }

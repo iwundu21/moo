@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim, ClaimRecord, AppSettings } from '@/lib/types';
-import { db } from '@/lib/firebase';
+import { db, functions } from '@/lib/firebase';
 import {
   doc,
   getDoc,
@@ -21,6 +21,7 @@ import {
   deleteDoc,
   Timestamp
 } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 
 interface TelegramUser {
   id: number;
@@ -570,24 +571,14 @@ const useTelegram = () => {
   const verifyTelegramTask = async (channelId: string): Promise<{ isMember: boolean, message?: string }> => {
     if (!userProfile) return { isMember: false, message: 'User profile not loaded.' };
     
+    const checkTelegramMembership = httpsCallable<{ userId: string, channelId: string }, { isMember: boolean, reason?: string }>(functions, 'checkTelegramMembership');
+
     try {
-      const response = await fetch('/api/verify-telegram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: userProfile.id, channelId: channelId }),
-      });
-      
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { isMember: false, message: data.message || 'An error occurred during verification.' };
-      }
-      
-      return { isMember: data.isMember, message: data.reason };
-
-    } catch (error) {
-      console.error("Failed to call verification API:", error);
-      return { isMember: false, message: 'Failed to connect to verification service.' };
+        const result = await checkTelegramMembership({ userId: userProfile.id, channelId });
+        return { isMember: result.data.isMember, message: result.data.reason };
+    } catch (error: any) {
+        console.error("Firebase Functions call failed:", error);
+        return { isMember: false, message: error.message || 'Failed to connect to verification service.' };
     }
   };
 

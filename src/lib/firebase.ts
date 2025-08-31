@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 // Your web app's Firebase configuration
 // IMPORTANT: Do not remove this object
@@ -20,5 +20,12 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const functions = getFunctions(app);
 
+// It's recommended to connect to the emulator only in development
+if (process.env.NODE_ENV === 'development') {
+    // connectFunctionsEmulator(functions, 'localhost', 5001);
+}
+
 
 export { app, db, functions };
+
+    

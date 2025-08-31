@@ -62,7 +62,7 @@ export default function AirdropPage() {
     if (userProfile) {
       setMainBalance(userProfile.mainBalance);
       if (userProfile.hasClaimedAirdrop) {
-          setClaimedAmount(userProfile.mainBalance);
+          setClaimedAmount(userProfile.airdropClaimedAmount || 0);
       }
 
       const criteria: EligibilityCriterion[] = [
@@ -167,7 +167,8 @@ export default function AirdropPage() {
           mainBalance: 0, 
           hasClaimedAirdrop: true, 
           airdropStatus: 'processing',
-          walletAddress: walletAddress
+          walletAddress: walletAddress,
+          airdropClaimedAmount: amountToClaim,
       });
 
       setMainBalance(0);
@@ -403,3 +404,5 @@ export default function AirdropPage() {
     </div>
   );
 }
+
+    

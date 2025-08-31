@@ -15,6 +15,7 @@ export type UserProfile = {
   referralCode?: string;
   airdropStatus?: 'processing' | 'distributed' | 'no-claim';
   walletAddress?: string;
+  airdropClaimedAmount?: number;
 };
 
 export type LeaderboardEntry = {
@@ -51,4 +52,6 @@ export type AppSettings = {
     isAirdropLive: boolean;
     airdropEndDate: Date | null;
 };
+    
+
     

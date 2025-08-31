@@ -387,6 +387,7 @@ const useTelegram = () => {
             hasClaimedAirdrop: false,
             referredBy: null,
             referralCode: newReferralCode,
+            airdropClaimedAmount: 0,
         };
         await setDoc(userDocRef, currentUserProfile);
     } else {
@@ -521,7 +522,8 @@ const useTelegram = () => {
                     mainBalance: restoredBalance,
                     hasClaimedAirdrop: false,
                     airdropStatus: 'no-claim',
-                    walletAddress: ''
+                    walletAddress: '',
+                    airdropClaimedAmount: 0,
                 });
             }
         } catch (error) {
@@ -618,3 +620,5 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    

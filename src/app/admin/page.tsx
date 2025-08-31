@@ -147,7 +147,7 @@ export default function AdminPage() {
     await fetchAllData();
   };
   
-  const pendingClaimsCount = users.filter(c => c.status === 'processing').length;
+  const pendingClaimsCount = useMemo(() => users.filter(c => c.status === 'processing').length, [users]);
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -367,5 +367,7 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    
 
     

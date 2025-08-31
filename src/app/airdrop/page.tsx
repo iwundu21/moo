@@ -81,7 +81,7 @@ export default function AirdropPage() {
           description: 'Boost your earning potential.',
           icon: Rocket,
           isCompleted: userProfile.purchasedBoosts.includes('2x'),
-          link: '/'
+          link: '/referrals'
         },
         {
           id: 'referral',
@@ -273,6 +273,18 @@ export default function AirdropPage() {
   const renderInfoAlert = () => {
     if (userProfile.hasClaimedAirdrop) return null;
     
+    if (appSettings.airdropEndDate && new Date() > appSettings.airdropEndDate) {
+        return (
+            <Alert variant="destructive">
+                <Ban className="h-4 w-4" />
+                <AlertTitle>Airdrop Claim Period Ended</AlertTitle>
+                <AlertDescription className="text-xs">
+                    The claim period for the airdrop has now closed. Please check back for future events.
+                </AlertDescription>
+            </Alert>
+        )
+    }
+    
     if (appSettings.airdropEndDate) {
         return (
             <Alert>
@@ -280,18 +292,6 @@ export default function AirdropPage() {
                 <AlertTitle>Airdrop Claim Ends In</AlertTitle>
                 <AlertDescription className="text-xs">
                    <span className="font-semibold text-base">{timeLeft}</span>
-                </AlertDescription>
-            </Alert>
-        )
-    }
-
-    if (appSettings.airdropEndDate && new Date() > appSettings.airdropEndDate) {
-        return (
-            <Alert variant="destructive">
-                <Clock className="h-4 w-4" />
-                <AlertTitle>Airdrop Claim Period Ended</AlertTitle>
-                <AlertDescription className="text-xs">
-                    The claim period for the airdrop has now closed. Please check back for future events.
                 </AlertDescription>
             </Alert>
         )
@@ -401,5 +401,6 @@ export default function AirdropPage() {
     </div>
   );
 }
+
 
 

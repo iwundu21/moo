@@ -80,7 +80,8 @@ export default function AdminPage() {
         };
       });
       
-      combinedData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      combinedData.sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0));
+
       setUsers(combinedData);
     } catch (error) {
       console.error("Error fetching admin data:", error);
@@ -175,8 +176,7 @@ export default function AdminPage() {
 
   const handleClearClaims = async () => {
     await clearAllClaims();
-    setUsers([]);
-    fetchAllAdminData();
+    await fetchAllAdminData();
   };
 
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
@@ -277,7 +277,7 @@ export default function AdminPage() {
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" disabled={users.length === 0} className="w-full">
+                    <Button variant="destructive" disabled={users.filter(u => u.status !== 'no-claim').length === 0} className="w-full">
                         <Trash2 className="mr-2" />
                         Clear Claims
                     </Button>
@@ -286,8 +286,7 @@ export default function AdminPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete all
-                        airdrop claim submissions.
+                        This will permanently delete all airdrop claim submissions and return the claimed MOO to each user's main balance. This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -460,9 +459,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    

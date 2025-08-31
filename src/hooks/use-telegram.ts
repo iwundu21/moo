@@ -500,10 +500,39 @@ const useTelegram = () => {
   const clearAllClaims = useCallback(async () => {
     const claimsQuery = query(collection(db, 'airdropClaims'));
     const claimsSnapshot = await getDocs(claimsQuery);
+    
+    if (claimsSnapshot.empty) {
+        return;
+    }
+
     const batch = writeBatch(db);
-    claimsSnapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-    });
+
+    for (const claimDoc of claimsSnapshot.docs) {
+        const claimData = claimDoc.data() as AirdropClaim;
+        const userDocRef = doc(db, 'userProfiles', claimData.userId);
+
+        try {
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data() as UserProfile;
+                const restoredBalance = (userData.mainBalance || 0) + claimData.amount;
+                
+                batch.update(userDocRef, {
+                    mainBalance: restoredBalance,
+                    hasClaimedAirdrop: false,
+                    airdropStatus: 'no-claim',
+                    walletAddress: ''
+                });
+            }
+        } catch (error) {
+            console.error(`Could not find or update user ${claimData.userId}`, error);
+            // Decide if you want to continue or stop the batch on error.
+            // For this case, we'll continue and just log the error.
+        }
+        
+        batch.delete(claimDoc.ref);
+    }
+    
     await batch.commit();
   }, []);
   

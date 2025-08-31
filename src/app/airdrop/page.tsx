@@ -57,6 +57,7 @@ export default function AirdropPage() {
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<DialogInfo | null>(null);
+  const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
     if (userProfile) {
@@ -96,6 +97,33 @@ export default function AirdropPage() {
       setIsEligible(criteria.every(c => c.isCompleted));
     }
   }, [userProfile, referrals]);
+  
+  useEffect(() => {
+    if (!appSettings.airdropEndDate) {
+        setTimeLeft("");
+        return;
+    }
+
+    const intervalId = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = appSettings.airdropEndDate!.getTime() - now;
+
+        if (distance < 0) {
+            setTimeLeft("Ended");
+            clearInterval(intervalId);
+            return;
+        }
+        
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [appSettings.airdropEndDate]);
 
   const handleInitialClaimClick = () => {
     setIsProcessing(true);
@@ -244,6 +272,18 @@ export default function AirdropPage() {
   
   const renderInfoAlert = () => {
     if (userProfile.hasClaimedAirdrop) return null;
+    
+    if (appSettings.airdropEndDate) {
+        return (
+            <Alert>
+                <Clock className="h-4 w-4" />
+                <AlertTitle>Airdrop Claim Ends In</AlertTitle>
+                <AlertDescription className="text-xs">
+                   <span className="font-semibold text-base">{timeLeft}</span>
+                </AlertDescription>
+            </Alert>
+        )
+    }
 
     if (appSettings.airdropEndDate && new Date() > appSettings.airdropEndDate) {
         return (
@@ -361,4 +401,5 @@ export default function AirdropPage() {
     </div>
   );
 }
+
 

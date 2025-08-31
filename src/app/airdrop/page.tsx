@@ -275,8 +275,8 @@ export default function AirdropPage() {
     // Highest priority: if airdrop is paused by admin
     if (!appSettings.isAirdropLive) {
         return (
-            <Alert variant="default">
-                <Info className="h-4 w-4" />
+            <Alert variant="destructive">
+                <Ban className="h-4 w-4" />
                 <AlertTitle>Airdrop Claim Coming Soon</AlertTitle>
                 <AlertDescription className="text-xs">
                     The airdrop is not currently active. Please check back for updates on when you can claim your allocation.
@@ -289,7 +289,7 @@ export default function AirdropPage() {
     if (appSettings.airdropEndDate) {
         if (new Date() > appSettings.airdropEndDate) {
             return (
-                <Alert variant="default">
+                <Alert variant="destructive">
                     <Ban className="h-4 w-4" />
                     <AlertTitle>Airdrop Claim Period Ended</AlertTitle>
                     <AlertDescription className="text-xs">

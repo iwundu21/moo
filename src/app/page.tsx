@@ -326,7 +326,7 @@ export default function Home() {
           </div>
       </div>
       
-      {!isAirdropClaimable && (
+      {!isAirdropClaimable ? (
           <Alert variant="destructive">
               <Ban className="h-4 w-4" />
               <AlertTitle>Airdrop Participation Closed</AlertTitle>
@@ -334,9 +334,7 @@ export default function Home() {
                   You cannot activate a license or purchase boosts while the airdrop is not active. Please check back later.
               </AlertDescription>
           </Alert>
-      )}
-
-      {isAirdropClaimable && !isLicenseActive && (
+      ) : !isLicenseActive ? (
         <div className="space-y-4">
             <Alert>
                 <Info className="h-4 w-4" />
@@ -361,9 +359,7 @@ export default function Home() {
                 </div>
             </div>
         </div>
-      )}
-
-      {isAirdropClaimable && isLicenseActive && (
+      ) : (
         <>
           <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
             {!allTasksCompleted ? (
@@ -552,3 +548,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

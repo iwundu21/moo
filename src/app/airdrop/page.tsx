@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -276,11 +275,11 @@ export default function AirdropPage() {
     // Highest priority: if airdrop is paused by admin
     if (!appSettings.isAirdropLive) {
         return (
-            <Alert variant="destructive">
-                <Ban className="h-4 w-4" />
-                <AlertTitle>Airdrop Claim Paused</AlertTitle>
+            <Alert variant="default">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Airdrop Claim Coming Soon</AlertTitle>
                 <AlertDescription className="text-xs">
-                    The airdrop is temporarily paused. Please check back for updates on when you can claim your allocation.
+                    The airdrop is not currently active. Please check back for updates on when you can claim your allocation.
                 </AlertDescription>
             </Alert>
         )

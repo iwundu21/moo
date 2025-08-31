@@ -1,5 +1,4 @@
 
-
 /**
  * @fileOverview Firebase Cloud Functions for the MOO Telegram Mini App.
  *
@@ -15,12 +14,6 @@ import axios from "axios";
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
-
-// Retrieve environment variables for Telegram
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
-const TELEGRAM_PROVIDER_TOKEN = process.env.TELEGRAM_PROVIDER_TOKEN;
-
 
 /**
  * Calculates the MOO reward for a user based on their active boosts and eligibility.
@@ -58,7 +51,10 @@ const calculateReward = (userDoc: FirebaseFirestore.DocumentSnapshot): number =>
  * their pendingBalance in Firestore.
  */
 export const telegramWebhook = functions.https.onRequest(async (req, res) => {
-    if (!TELEGRAM_BOT_TOKEN || !GROUP_CHAT_ID) {
+    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+    const groupChatId = process.env.GROUP_CHAT_ID;
+
+    if (!telegramBotToken || !groupChatId) {
         functions.logger.error("Telegram Bot Token or Group Chat ID is not configured.");
         res.status(500).send("Internal Server Error: Bot not configured.");
         return;
@@ -76,7 +72,7 @@ export const telegramWebhook = functions.https.onRequest(async (req, res) => {
     const messageText = message.text;
 
     // Ignore messages that are not from the designated group chat or have no text
-    if (chatId !== GROUP_CHAT_ID || !messageText) {
+    if (chatId !== groupChatId || !messageText) {
         res.status(200).send("OK: Message ignored.");
         return;
     }
@@ -121,7 +117,8 @@ export const telegramWebhook = functions.https.onRequest(async (req, res) => {
  * E.g., open https://<region>-<project-id>.cloudfunctions.net/setWebhook in your browser.
  */
 export const setWebhook = functions.https.onRequest(async (req, res) => {
-    if (!TELEGRAM_BOT_TOKEN) {
+    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!telegramBotToken) {
         res.status(500).send("TELEGRAM_BOT_TOKEN is not set.");
         return;
     }
@@ -132,7 +129,7 @@ export const setWebhook = functions.https.onRequest(async (req, res) => {
     const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
     const webhookUrl = `https://${functionRegion}-${projectId}.cloudfunctions.net/telegramWebhook`;
 
-    const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook?url=${webhookUrl}`;
+    const telegramApiUrl = `https://api.telegram.org/bot${telegramBotToken}/setWebhook?url=${webhookUrl}`;
 
     try {
         const response = await axios.get(telegramApiUrl);
@@ -210,7 +207,10 @@ export const checkTelegramMembership = functions.https.onCall(async (data, conte
  * A callable Cloud Function to create a payment invoice link for Telegram Stars.
  */
 export const createPaymentInvoice = functions.https.onCall(async (data, context) => {
-    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_PROVIDER_TOKEN) {
+    const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+    const telegramProviderToken = process.env.TELEGRAM_PROVIDER_TOKEN;
+
+    if (!telegramBotToken || !telegramProviderToken) {
         functions.logger.error("Telegram Bot Token or Provider Token is not configured.");
         throw new functions.https.HttpsError("failed-precondition", "The payment system is not configured on the server.");
     }
@@ -220,11 +220,11 @@ export const createPaymentInvoice = functions.https.onCall(async (data, context)
         throw new functions.https.HttpsError("invalid-argument", "Missing required invoice parameters.");
     }
 
-    const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createInvoiceLink`;
+    const telegramApiUrl = `https://api.telegram.org/bot${telegramBotToken}/createInvoiceLink`;
 
     try {
         const response = await axios.post(telegramApiUrl, {
-            provider_token: TELEGRAM_PROVIDER_TOKEN,
+            provider_token: telegramProviderToken,
             title,
             description,
             payload,

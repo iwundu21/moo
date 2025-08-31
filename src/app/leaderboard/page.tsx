@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -78,7 +79,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0 ml-4">
-                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent whitespace-nowrap break-all">{userRank.balance.toLocaleString()} MOO</p>
+                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent whitespace-nowrap break-all">{(userProfile.lifetimeBalance || 0).toLocaleString()} MOO</p>
               </div>
             </div>
         </div>

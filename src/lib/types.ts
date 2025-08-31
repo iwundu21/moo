@@ -16,6 +16,7 @@ export type UserProfile = {
   airdropStatus?: 'processing' | 'distributed' | 'no-claim';
   walletAddress?: string;
   airdropClaimedAmount?: number;
+  lifetimeBalance?: number;
 };
 
 export type LeaderboardEntry = {

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -147,10 +148,12 @@ export default function Home() {
     if (isLicenseActive || !userProfile) return;
     
     const newBalance = (userProfile.mainBalance || 0) + 5000;
+    const newLifetimeBalance = (userProfile.lifetimeBalance || 0) + 5000;
     
     await updateUserProfile({
         isLicenseActive: true,
         mainBalance: newBalance,
+        lifetimeBalance: newLifetimeBalance
     });
     
     setMainBalance(newBalance);
@@ -331,7 +334,7 @@ export default function Home() {
               <Ban className="h-4 w-4" />
               <AlertTitle>Airdrop Participation Closed</AlertTitle>
               <AlertDescription className="text-xs">
-                  You cannot activate a license or purchase boosts while the airdrop is not active. Please check back later.
+                  You cannot activate a license or purchase boosts while the airdrop claim is live.
               </AlertDescription>
           </Alert>
       ) : !isLicenseActive ? (

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
@@ -170,7 +171,11 @@ const useTelegram = () => {
             });
             
             const newReferrerBalance = (referrerProfile.mainBalance || 0) + 100;
-            transaction.update(referrerDoc.ref, { mainBalance: newReferrerBalance });
+            const newReferrerLifetimeBalance = (referrerProfile.lifetimeBalance || 0) + 100;
+            transaction.update(referrerDoc.ref, { 
+              mainBalance: newReferrerBalance,
+              lifetimeBalance: newReferrerLifetimeBalance
+            });
 
             const referralRecordRef = doc(collection(db, 'userProfiles', referrerId, 'referrals'));
             transaction.set(referralRecordRef, { 
@@ -248,9 +253,11 @@ const useTelegram = () => {
         }
 
         newMainBalance = (currentData.mainBalance || 0) + currentPending;
+        const newLifetimeBalance = (currentData.lifetimeBalance || 0) + currentPending;
         transaction.update(userDocRef, {
           mainBalance: newMainBalance,
-          pendingBalance: 0
+          pendingBalance: 0,
+          lifetimeBalance: newLifetimeBalance
         });
 
         transaction.set(claimHistoryRef, {
@@ -260,7 +267,7 @@ const useTelegram = () => {
       });
 
       if (newMainBalance !== undefined) {
-        setUserProfile(prev => prev ? { ...prev, mainBalance: newMainBalance!, pendingBalance: 0 } : null);
+        setUserProfile(prev => prev ? { ...prev, mainBalance: newMainBalance!, pendingBalance: 0, lifetimeBalance: (prev.lifetimeBalance || 0) + pendingBalance } : null);
         const newRecord: ClaimRecord = { id: claimHistoryRef.id, amount: pendingBalance, timestamp: new Date() };
         setClaimHistory(prev => [newRecord, ...prev]);
         return { success: true, newMainBalance, claimedAmount: pendingBalance };
@@ -380,6 +387,7 @@ const useTelegram = () => {
             telegramUsername: safeUsername,
             profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${userId}/100/100`,
             mainBalance: 0,
+            lifetimeBalance: 0,
             pendingBalance: 0,
             isPremium: !!telegramUser.is_premium,
             purchasedBoosts: [],
@@ -398,13 +406,18 @@ const useTelegram = () => {
              currentUserProfile.referralCode = newReferralCode;
              await setDoc(userDocRef, currentUserProfile, { merge: true });
          }
+         // Backfill lifetimeBalance if it doesn't exist
+         if (currentUserProfile.lifetimeBalance === undefined) {
+            currentUserProfile.lifetimeBalance = currentUserProfile.mainBalance + (currentUserProfile.airdropClaimedAmount || 0);
+            await setDoc(userDocRef, currentUserProfile, { merge: true });
+         }
     }
     
     setUserProfile(currentUserProfile);
     
     const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
     const claimHistoryCol = collection(db, 'userProfiles', userId, 'claimHistory');
-    const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('mainBalance', 'desc'), limit(100));
+    const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('lifetimeBalance', 'desc'), limit(100));
     
     const [
         referralSnapshot,
@@ -421,7 +434,7 @@ const useTelegram = () => {
         return {
             rank: index + 1,
             username: data.telegramUsername,
-            balance: data.mainBalance,
+            balance: data.lifetimeBalance || data.mainBalance,
             profilePictureUrl: data.profilePictureUrl,
             isPremium: data.isPremium || false
         }

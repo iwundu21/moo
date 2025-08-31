@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import {
@@ -37,7 +36,9 @@ export default function LeaderboardPage() {
   // Pagination for Leaderboard
   const leaderboardPages = Math.ceil(leaderboard.length / recordsPerPage);
   const currentLeaderboardRecords = useMemo(() => {
-    return leaderboard.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+    const startIndex = (currentPage - 1) * recordsPerPage;
+    const endIndex = startIndex + recordsPerPage;
+    return leaderboard.slice(startIndex, endIndex);
   }, [leaderboard, currentPage]);
   
   // Pagination for Claimed Users

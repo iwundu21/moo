@@ -45,7 +45,7 @@ const initialTasks: SocialTasks = {
 
 
 export default function Home() {
-  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance } = useTelegram();
+  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
@@ -61,8 +61,8 @@ export default function Home() {
 
   const socialTaskList = [
     { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk?t=3r4XYNXvnuRDf9eqhTjFqw&s=09' },
-    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement' },
-    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn' },
+    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement', channelId: '@moo_officialanouncement' },
+    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn', channelId: '@moo_chat_earn' },
   ];
   
   const allTasksCompleted = useMemo(() => {
@@ -165,17 +165,28 @@ export default function Home() {
     if (!userProfile) return;
     setSocialTasks(prev => ({ ...prev, [taskId]: 'verifying' }));
 
-    // Simulate verification
-    setTimeout(() => {
-        const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
-        setSocialTasks(newSocialTasks);
-        updateUserProfile({ completedSocialTasks: newSocialTasks });
-        
-        toast({
-            title: "Task Complete!",
-            description: "Thank you for your support.",
-        });
-    }, 1000);
+    const task = socialTaskList.find(t => t.id === taskId);
+
+    if (task && (taskId === 'telegram' || taskId === 'community')) {
+        const result = await verifyTelegramTask(task.channelId as string);
+        if (result.isMember) {
+            const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
+            setSocialTasks(newSocialTasks);
+            updateUserProfile({ completedSocialTasks: newSocialTasks });
+            toast({ title: "Task Complete!", description: "Thank you for your support." });
+        } else {
+            toast({ title: "Verification Failed", description: result.message || "Please ensure you have joined the channel and try again.", variant: "destructive" });
+            setSocialTasks(prev => ({ ...prev, [taskId]: 'idle' }));
+        }
+    } else {
+        // Simulate verification for other tasks like twitter
+        setTimeout(() => {
+            const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
+            setSocialTasks(newSocialTasks);
+            updateUserProfile({ completedSocialTasks: newSocialTasks });
+            toast({ title: "Task Complete!", description: "Thank you for your support." });
+        }, 1000);
+    }
   }
 
    const handleRedeemCode = async () => {

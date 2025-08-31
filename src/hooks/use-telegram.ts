@@ -466,6 +466,30 @@ const useTelegram = () => {
     }
   }, []);
 
+  const verifyTelegramTask = async (channelId: string): Promise<{ isMember: boolean, message?: string }> => {
+    if (!userProfile) return { isMember: false, message: 'User profile not loaded.' };
+    
+    try {
+      const response = await fetch('/api/verify-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userProfile.id, channelId: channelId }),
+      });
+      
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { isMember: false, message: data.message || 'An error occurred during verification.' };
+      }
+      
+      return { isMember: data.isMember, message: data.reason };
+
+    } catch (error) {
+      console.error("Failed to call verification API:", error);
+      return { isMember: false, message: 'Failed to connect to verification service.' };
+    }
+  };
+
   return { 
     isLoading,
     userProfile, 
@@ -486,6 +510,7 @@ const useTelegram = () => {
     fetchAdminStats,
     deleteUser,
     claimPendingBalance,
+    verifyTelegramTask,
   };
 };
 

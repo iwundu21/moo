@@ -301,7 +301,7 @@ export default function AdminPage() {
                         <h3 className="text-base font-semibold">Airdrop Schedule</h3>
                         <p className="text-xs text-muted-foreground">Set a countdown timer for the airdrop.</p>
                     </div>
-                    {timeLeft && <Badge variant="secondary">{timeLeft}</Badge>}
+                     {timeLeft && <Badge variant={timeLeft === "Ended" ? "outline" : "secondary"}>{timeLeft}</Badge>}
                 </div>
             </div>
             <div className="flex flex-col gap-2">
@@ -456,5 +456,7 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    
 
     

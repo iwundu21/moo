@@ -61,8 +61,12 @@ export default function AirdropPage() {
   useEffect(() => {
     if (userProfile) {
       setMainBalance(userProfile.mainBalance);
-      if (userProfile.hasClaimedAirdrop) {
-          setClaimedAmount(userProfile.airdropClaimedAmount || 0);
+      // If the user has a claimed amount stored, use that as the source of truth for display.
+      if (userProfile.airdropClaimedAmount && userProfile.airdropClaimedAmount > 0) {
+        setClaimedAmount(userProfile.airdropClaimedAmount);
+      } else if (userProfile.hasClaimedAirdrop) {
+        // Fallback for older data structure if needed, though airdropClaimedAmount is preferred.
+        setClaimedAmount(userProfile.mainBalance); // This might be 0 if already reset
       }
 
       const criteria: EligibilityCriterion[] = [
@@ -404,5 +408,7 @@ export default function AirdropPage() {
     </div>
   );
 }
+
+    
 
     

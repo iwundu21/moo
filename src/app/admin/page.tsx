@@ -95,15 +95,19 @@ export default function AdminPage() {
     );
   }, [searchQuery, users]);
 
+  const claimedUsers = useMemo(() => {
+    return filteredUsers.filter(user => user.status === 'processing' || user.status === 'distributed');
+  }, [filteredUsers]);
+
 
   const downloadCSV = () => {
-    if (filteredUsers.length === 0) return;
+    if (claimedUsers.length === 0) return;
 
-    const headers = ['User ID', 'Username', 'Wallet Address', 'Claim Amount', 'Claim Status'];
+    const headers = ['Wallet Address', 'Amount'];
     const csvContent = [
       headers.join(','),
-      ...filteredUsers.map(claim => 
-        [claim.userId, claim.username, claim.walletAddress, claim.amount, claim.status || 'N/A'].join(',')
+      ...claimedUsers.map(claim => 
+        [claim.walletAddress, claim.amount].join(',')
       )
     ].join('\n');
 
@@ -114,7 +118,7 @@ export default function AdminPage() {
     }
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.setAttribute('download', 'claims.csv');
+    link.setAttribute('download', 'airdrop_distribution.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -220,7 +224,7 @@ export default function AdminPage() {
                 <p className="text-xs text-muted-foreground">Download or clear claim data.</p>
             </div>
             <div className="flex gap-4">
-                <Button onClick={downloadCSV} disabled={users.length === 0} className="w-full">
+                <Button onClick={downloadCSV} disabled={claimedUsers.length === 0} className="w-full">
                     <Download className="mr-2" />
                     Download CSV
                 </Button>
@@ -367,7 +371,5 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    
 
     

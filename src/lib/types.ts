@@ -12,7 +12,7 @@ export type UserProfile = {
   hasClaimedAirdrop?: boolean;
   referredBy?: string | null;
   referralCode?: string;
-  airdropStatus?: 'processing' | 'distributed';
+  airdropStatus?: 'processing' | 'distributed' | 'no-claim';
   walletAddress?: string;
 };
 
@@ -37,7 +37,7 @@ export type AirdropClaim = {
   amount: number;
   profilePictureUrl: string;
   timestamp: Date;
-  status: 'processing' | 'distributed';
+  status: 'processing' | 'distributed' | 'no-claim';
 };
 
 export type ClaimRecord = {
@@ -45,3 +45,5 @@ export type ClaimRecord = {
   amount: number;
   timestamp: Date;
 };
+
+    

@@ -28,32 +28,52 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useEffect, useState, useCallback, useMemo } from "react";
-import type { AirdropClaim } from "@/lib/types";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import type { AirdropClaim, UserProfile } from "@/lib/types";
+import { collection, getDocs, orderBy, query, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
   const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
-  const [claims, setClaims] = useState<AirdropClaim[]>([]);
+  const [users, setUsers] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
-      
-      const claimsSnapshot = await getDocs(claimsQuery);
-      
-      const claimsData = claimsSnapshot.docs.map(d => {
-        const data = d.data();
-        const timestamp = data.timestamp && typeof data.timestamp.toDate === 'function' 
-            ? data.timestamp.toDate() 
-            : new Date(); // Fallback
-        return { ...data, timestamp } as AirdropClaim
+      // 1. Fetch all user profiles
+      const usersQuery = query(collection(db, 'userProfiles'), orderBy('telegramUsername'));
+      const usersSnapshot = await getDocs(usersQuery);
+
+      // 2. Create a map of airdrop claims for efficient lookup
+      const claimsSnapshot = await getDocs(collection(db, 'airdropClaims'));
+      const claimsMap = new Map<string, AirdropClaim>();
+      claimsSnapshot.forEach(doc => {
+        claimsMap.set(doc.id, doc.data() as AirdropClaim);
       });
-      setClaims(claimsData);
+      
+      // 3. Combine user profiles with their claims
+      const combinedData = usersSnapshot.docs.map(userDoc => {
+        const userProfile = userDoc.data() as UserProfile;
+        const claimData = claimsMap.get(userProfile.id);
+
+        return {
+          userId: userProfile.id,
+          username: userProfile.telegramUsername,
+          profilePictureUrl: userProfile.profilePictureUrl,
+          amount: claimData?.amount || userProfile.mainBalance,
+          walletAddress: claimData?.walletAddress || userProfile.walletAddress || '',
+          status: claimData?.status || 'no-claim',
+          timestamp: claimData?.timestamp || new Date(0) // Use a default for sorting if no claim
+        };
+      });
+      
+      // Sort by claim timestamp descending, putting users with no claims at the end.
+      combinedData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+      setUsers(combinedData);
+
     } catch (error) {
       console.error("Error fetching admin data:", error);
     } finally {
@@ -61,27 +81,28 @@ export default function AdminPage() {
     }
   }, []);
 
+
   useEffect(() => {
     fetchAdminStats();
     fetchAllData();
   }, [fetchAdminStats, fetchAllData]);
   
-  const filteredClaims = useMemo(() => {
-    if (!searchQuery) return claims;
-    return claims.filter(claim =>
-      claim.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      claim.userId.includes(searchQuery)
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return users;
+    return users.filter(user =>
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.userId.includes(searchQuery)
     );
-  }, [searchQuery, claims]);
+  }, [searchQuery, users]);
 
 
   const downloadCSV = () => {
-    if (filteredClaims.length === 0) return;
+    if (filteredUsers.length === 0) return;
 
     const headers = ['User ID', 'Username', 'Wallet Address', 'Claim Amount', 'Claim Status'];
     const csvContent = [
       headers.join(','),
-      ...filteredClaims.map(claim => 
+      ...filteredUsers.map(claim => 
         [claim.userId, claim.username, claim.walletAddress, claim.amount, claim.status || 'N/A'].join(',')
       )
     ].join('\n');
@@ -101,7 +122,8 @@ export default function AdminPage() {
   
   const handleClearClaims = async () => {
     await clearAllClaims();
-    setClaims([]);
+    setUsers([]);
+    fetchAllData(); // Refetch to show users without claims
   };
 
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
@@ -112,12 +134,12 @@ export default function AdminPage() {
 
   const handleDeleteUser = async (userId: string) => {
     await deleteUser(userId);
-    setClaims(prevClaims => prevClaims.filter(claim => claim.userId !== userId));
+    setUsers(prevUsers => prevUsers.filter(claim => claim.userId !== userId));
     fetchAdminStats();
   };
 
   const handleDistributeAll = async () => {
-    const pendingClaims = claims.filter(claim => claim.status === 'processing');
+    const pendingClaims = users.filter(claim => claim.status === 'processing');
     if (pendingClaims.length === 0) return;
 
     await batchUpdateClaimStatuses(pendingClaims);
@@ -125,7 +147,7 @@ export default function AdminPage() {
     await fetchAllData();
   };
   
-  const pendingClaimsCount = claims.filter(c => c.status === 'processing').length;
+  const pendingClaimsCount = users.filter(c => c.status === 'processing').length;
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -198,13 +220,13 @@ export default function AdminPage() {
                 <p className="text-xs text-muted-foreground">Download or clear claim data.</p>
             </div>
             <div className="flex gap-4">
-                <Button onClick={downloadCSV} disabled={claims.length === 0} className="w-full">
+                <Button onClick={downloadCSV} disabled={users.length === 0} className="w-full">
                     <Download className="mr-2" />
                     Download CSV
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" disabled={claims.length === 0} className="w-full">
+                    <Button variant="destructive" disabled={users.length === 0} className="w-full">
                         <Trash2 className="mr-2" />
                         Clear Claims
                     </Button>
@@ -230,7 +252,7 @@ export default function AdminPage() {
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex-1">
-              <h3 className="text-base font-semibold">User Submissions ({filteredClaims.length})</h3>
+              <h3 className="text-base font-semibold">User Submissions ({filteredUsers.length})</h3>
               <p className="text-xs text-muted-foreground">{pendingClaimsCount} pending claims</p>
             </div>
             <div className="relative w-full md:w-auto md:max-w-xs">
@@ -255,7 +277,7 @@ export default function AdminPage() {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Wallet / Status</TableHead>
-              <TableHead>Claim Amount</TableHead>
+              <TableHead>Balance</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -263,57 +285,50 @@ export default function AdminPage() {
             {isLoading ? (
                <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center">
-                  Loading claims...
+                  Loading users...
                 </TableCell>
               </TableRow>
-            ) : filteredClaims.length > 0 ? (
-              filteredClaims.map((claim) => (
-                <TableRow key={claim.userId}>
+            ) : filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <TableRow key={user.userId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
-                            <AvatarImage src={claim.profilePictureUrl} data-ai-hint="profile picture" />
-                            <AvatarFallback>{claim.username.substring(0, 1)}</AvatarFallback>
+                            <AvatarImage src={user.profilePictureUrl} data-ai-hint="profile picture" />
+                            <AvatarFallback>{user.username.substring(0, 1)}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                            <span className="font-medium text-xs">@{claim.username}</span>
-                            <span className="text-xs text-muted-foreground font-mono">{claim.userId}</span>
+                            <span className="font-medium text-xs">@{user.username}</span>
+                            <span className="text-xs text-muted-foreground font-mono">{user.userId}</span>
                         </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs">
-                    {claim.walletAddress ? (
-                      <div className="flex flex-col gap-1">
-                          <span className="truncate max-w-xs">{claim.walletAddress}</span>
-                           {claim.status === 'distributed' ? (
-                             <Badge variant="default" className="w-fit bg-green-500 hover:bg-green-600">
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  Distributed
-                              </Badge>
-                          ) : claim.status === 'processing' ? (
-                              <Badge variant="secondary" className="w-fit">
-                                  Processing
-                              </Badge>
-                          ) : (
-                              <Badge variant="outline" className="w-fit">
-                                  <Ban className="mr-2 h-4 w-4" />
-                                  No Claim
-                              </Badge>
-                          )}
-                      </div>
-                    ) : (
-                      <Badge variant="outline" className="w-fit">
-                          <Ban className="mr-2 h-4 w-4" />
-                          No Claim
-                      </Badge>
-                    )}
+                    <div className="flex flex-col gap-1">
+                        <span className="truncate max-w-xs">{user.walletAddress || 'N/A'}</span>
+                         {user.status === 'distributed' ? (
+                           <Badge variant="default" className="w-fit bg-green-500 hover:bg-green-600">
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Distributed
+                            </Badge>
+                        ) : user.status === 'processing' ? (
+                            <Badge variant="secondary" className="w-fit">
+                                Processing
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="w-fit">
+                                <Ban className="mr-2 h-4 w-4" />
+                                No Claim
+                            </Badge>
+                        )}
+                    </div>
                   </TableCell>
                   <TableCell className="font-semibold text-xs">
-                    {`${(claim.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO`}
+                    {`${(user.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO`}
                   </TableCell>
                   <TableCell className="text-right flex justify-end gap-2">
-                    {claim.status === 'processing' && (
-                        <Button size="sm" onClick={() => handleDistribute(claim.userId, claim.walletAddress, claim.amount)}>
+                    {user.status === 'processing' && (
+                        <Button size="sm" onClick={() => handleDistribute(user.userId, user.walletAddress, user.amount)}>
                             Distribute
                         </Button>
                     )}
@@ -325,14 +340,14 @@ export default function AdminPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete User: @{claim.username}?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete User: @{user.username}?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will permanently delete the user's profile and their airdrop claim. Are you sure?
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteUser(claim.userId)}>Confirm & Delete</AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleDeleteUser(user.userId)}>Confirm & Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -342,7 +357,7 @@ export default function AdminPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center">
-                  {searchQuery ? "No users found for your search." : "No claims found."}
+                  {searchQuery ? "No users found for your search." : "No users found."}
                 </TableCell>
               </TableRow>
             )}
@@ -352,3 +367,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

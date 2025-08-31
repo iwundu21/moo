@@ -275,7 +275,7 @@ export default function AirdropPage() {
     
     if (appSettings.airdropEndDate && new Date() > appSettings.airdropEndDate) {
         return (
-            <Alert variant="destructive">
+            <Alert variant="default">
                 <Ban className="h-4 w-4" />
                 <AlertTitle>Airdrop Claim Period Ended</AlertTitle>
                 <AlertDescription className="text-xs">

@@ -12,13 +12,12 @@ export async function GET(req: NextRequest) {
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     const webhookUrl = `${protocol}://${host}/api/telegram/webhook`;
     
-    const telegramApiUrl = `https://api.telegram.org/bot${telegramBotToken}/setWebhook`;
+    // Pass the webhook URL as a query parameter, which is a more robust method.
+    const telegramApiUrl = `https://api.telegram.org/bot${telegramBotToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}&allowed_updates=${encodeURIComponent(JSON.stringify(["message"]))}`;
 
     try {
-        const response = await axios.post(telegramApiUrl, {
-            url: webhookUrl,
-            allowed_updates: ["message"]
-        });
+        // Use a simple GET request now that all parameters are in the URL.
+        const response = await axios.get(telegramApiUrl);
 
         if (response.data.ok) {
             return NextResponse.json({

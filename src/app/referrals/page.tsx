@@ -1,15 +1,24 @@
 
 'use client'
 
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Copy, UserPlus, Share2, Gift, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Copy, UserPlus, Share2, Gift, Users, CheckCircle, XCircle } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
+
+type DialogInfo = {
+  title: string;
+  description: string;
+  status: 'success' | 'error';
+};
 
 export default function ReferralsPage() {
     const { userProfile, referrals } = useTelegram();
-    const { toast } = useToast();
+    const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+    const [dialogContent, setDialogContent] = useState<DialogInfo | null>(null);
     
     if (!userProfile) {
       return null; // Or a loading spinner
@@ -20,10 +29,12 @@ export default function ReferralsPage() {
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(userReferralCode);
-        toast({
+        setDialogContent({
             title: "Copied!",
             description: "Referral code copied to clipboard.",
+            status: 'success'
         });
+        setIsInfoDialogOpen(true);
     };
 
     const shareOnTelegram = () => {
@@ -94,6 +105,35 @@ export default function ReferralsPage() {
         </Card>
 
       </div>
+
+      <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
+        <DialogContent>
+          {dialogContent && (
+            <>
+              <DialogHeader>
+                  <div className="flex flex-col items-center justify-center text-center p-6">
+                      {dialogContent.status === 'success' ? (
+                          <CheckCircle className="w-16 h-16 text-primary mb-4" />
+                      ) : (
+                          <XCircle className="w-16 h-16 text-destructive mb-4" />
+                      )}
+                      <DialogTitle className={cn("text-xl", dialogContent.status === 'success' ? 'text-primary' : 'text-destructive')}>
+                        {dialogContent.title}
+                      </DialogTitle>
+                      <DialogDescription className="pt-2 text-center text-xs">
+                          {dialogContent.description}
+                      </DialogDescription>
+                  </div>
+              </DialogHeader>
+              <DialogClose asChild>
+                <Button className="w-full">
+                    Continue
+                </Button>
+              </DialogClose>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

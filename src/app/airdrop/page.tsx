@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Ban, Info, Loader2 } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
@@ -32,6 +31,12 @@ type EligibilityCriterion = {
   link?: string;
 };
 
+type DialogInfo = {
+  title: string;
+  description: string;
+  status: 'success' | 'error';
+};
+
 const isValidTonAddress = (address: string) => {
   // Basic validation: 48 characters, starts with E or U, base64 characters.
   // This is not a foolproof cryptographic check but covers most user input errors.
@@ -44,12 +49,13 @@ export default function AirdropPage() {
   const [mainBalance, setMainBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
   const [claimedAmount, setClaimedAmount] = useState(0);
-  const { toast } = useToast();
   const [eligibilityCriteria, setEligibilityCriteria] = useState<EligibilityCriterion[]>([]);
   const [isEligible, setIsEligible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
+  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState<DialogInfo | null>(null);
 
   useEffect(() => {
     if (userProfile) {
@@ -94,26 +100,20 @@ export default function AirdropPage() {
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      setIsDialogOpen(true);
+      setIsClaimDialogOpen(true);
     }, 4000);
   };
 
   const handleSubmitClaim = () => {
     if (!walletAddress.trim()) {
-        toast({
-            title: "Error",
-            description: "Please enter your wallet address.",
-            variant: "destructive",
-        });
+        setDialogContent({ title: "Error", description: "Please enter your wallet address.", status: 'error' });
+        setIsInfoDialogOpen(true);
         return;
     }
     
     if (!isValidTonAddress(walletAddress.trim())) {
-        toast({
-            title: "Invalid Address",
-            description: "Please enter a valid TON wallet address.",
-            variant: "destructive",
-        });
+        setDialogContent({ title: "Invalid Address", description: "Please enter a valid TON wallet address.", status: 'error' });
+        setIsInfoDialogOpen(true);
         return;
     }
 
@@ -144,7 +144,7 @@ export default function AirdropPage() {
 
       setMainBalance(0);
       setIsSubmitting(false);
-      setIsDialogOpen(false);
+      setIsClaimDialogOpen(false);
     }, 4000);
   };
 
@@ -189,7 +189,7 @@ export default function AirdropPage() {
                 {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                 <span className="text-base ml-1">MOO</span>
             </p>
-             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+             <Dialog open={isClaimDialogOpen} onOpenChange={setIsClaimDialogOpen}>
                 <DialogTrigger asChild>
                 <Button size="sm" disabled={mainBalance === 0 || !isEligible || !isAirdropLive || isProcessing} onClick={handleInitialClaimClick}>
                     {isProcessing ? (
@@ -308,7 +308,35 @@ export default function AirdropPage() {
             ))}
         </div>
       </div>
-
+      
+       <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
+        <DialogContent>
+          {dialogContent && (
+            <>
+              <DialogHeader>
+                  <div className="flex flex-col items-center justify-center text-center p-6">
+                      {dialogContent.status === 'success' ? (
+                          <CheckCircle className="w-16 h-16 text-primary mb-4" />
+                      ) : (
+                          <XCircle className="w-16 h-16 text-destructive mb-4" />
+                      )}
+                      <DialogTitle className={cn("text-xl", dialogContent.status === 'success' ? 'text-primary' : 'text-destructive')}>
+                        {dialogContent.title}
+                      </DialogTitle>
+                      <DialogDescription className="pt-2 text-center text-xs">
+                          {dialogContent.description}
+                      </DialogDescription>
+                  </div>
+              </DialogHeader>
+              <DialogClose asChild>
+                <Button className="w-full">
+                    Continue
+                </Button>
+              </DialogClose>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

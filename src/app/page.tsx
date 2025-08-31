@@ -22,7 +22,6 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Confetti from 'react-confetti';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
 
 // This is now a client-side representation and doesn't handle payments.
@@ -66,8 +65,6 @@ export default function Home() {
   const [earningSpeed, setEarningSpeed] = useState(0);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<DialogContentState | null>(null);
-
-  const { toast } = useToast();
 
   const socialTaskList = [
     { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk?t=3r4XYNXvnuRDf9eqhTjFqw&s=09' },
@@ -118,13 +115,12 @@ export default function Home() {
     const boost = boosts.find(b => b.id === boostId);
     if (!boost) return;
 
-    // This is a placeholder for a payment flow.
-    // In a real app, this would call a backend to create an invoice.
-    toast({
+    setDialogContent({
         title: "Coming Soon!",
         description: "Purchasing boosts will be enabled shortly.",
+        status: 'success'
     });
-
+    setIsInfoDialogOpen(true);
   };
 
   const handleLicenseActivation = async () => {
@@ -152,17 +148,19 @@ export default function Home() {
     if (result.success) {
       setMainBalance(result.newMainBalance!);
       setPendingBalance(0);
-      toast({
+      setDialogContent({
         title: "Success!",
         description: `You've claimed ${result.claimedAmount?.toLocaleString()} MOO.`,
+        status: 'success'
       });
     } else {
-      toast({
+      setDialogContent({
         title: "Error",
-        description: result.message,
-        variant: "destructive",
+        description: result.message || 'An error occurred.',
+        status: 'error'
       });
     }
+    setIsInfoDialogOpen(true);
     setIsClaiming(false);
   };
 
@@ -220,21 +218,23 @@ export default function Home() {
 
    const handleRedeemCode = async () => {
       if (!referralCodeInput.trim()) {
-          toast({
-              title: "Error",
-              description: "Please enter a referral code.",
-              variant: "destructive",
+          setDialogContent({
+            title: "Error",
+            description: "Please enter a referral code.",
+            status: 'error'
           });
+          setIsInfoDialogOpen(true);
           return;
       }
       
       const result = await redeemReferralCode(referralCodeInput.trim().toUpperCase());
 
-      toast({
-          title: result.success ? "Success!" : "Error",
-          description: result.message,
-          variant: result.success ? "default" : "destructive",
+      setDialogContent({
+        title: result.success ? "Success!" : "Error",
+        description: result.message,
+        status: result.success ? "success" : "error"
       });
+      setIsInfoDialogOpen(true);
 
       if (result.success && userProfile) {
         setReferralCodeInput('');
@@ -522,5 +522,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

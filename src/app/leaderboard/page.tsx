@@ -78,7 +78,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0 ml-4">
-                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent whitespace-nowrap">{userRank.balance.toLocaleString()} MOO</p>
+                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent whitespace-nowrap break-all">{userRank.balance.toLocaleString()} MOO</p>
               </div>
             </div>
         </div>
@@ -115,7 +115,7 @@ export default function LeaderboardPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right font-semibold text-xs whitespace-nowrap">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{entry.balance.toLocaleString()} MOO</span>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">{entry.balance.toLocaleString()} MOO</span>
                   </TableCell>
                 </TableRow>
               ))}

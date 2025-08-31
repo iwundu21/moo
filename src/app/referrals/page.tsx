@@ -26,21 +26,17 @@ export default function ReferralsPage() {
 
     const userReferralCode = userProfile.referralCode || '';
     const referralLink = `https://t.me/Moo_airdrop_bot?start=ref${userReferralCode}`;
+    const referralMessage = `Join me on MOO and let's earn together! Use my referral code: ${userReferralCode}\n\nOr click the link:\n${referralLink}`;
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(userReferralCode);
+
+    const copyToClipboard = (textToCopy: string, confirmationMessage: string) => {
+        navigator.clipboard.writeText(textToCopy);
         setDialogContent({
             title: "Copied!",
-            description: "Referral code copied to clipboard.",
+            description: confirmationMessage,
             status: 'success'
         });
         setIsInfoDialogOpen(true);
-    };
-
-    const shareOnTelegram = () => {
-        const shareText = `Join me on MOO and let's earn together! Use my referral code: ${userReferralCode}`;
-        const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-        window.open(telegramShareUrl, '_blank');
     };
 
     return (
@@ -59,11 +55,11 @@ export default function ReferralsPage() {
                 {userReferralCode}
             </div>
             <div className="grid grid-cols-2 gap-4">
-                <Button className="w-full" onClick={copyToClipboard}>
+                <Button className="w-full" onClick={() => copyToClipboard(userReferralCode, 'Referral code copied to clipboard.')}>
                     <Copy className="mr-2 h-4 w-4" /> Copy Code
                 </Button>
-                <Button className="w-full" variant="outline" onClick={shareOnTelegram}>
-                    <Share2 className="mr-2 h-4 w-4" /> Invite
+                <Button className="w-full" variant="outline" onClick={() => copyToClipboard(referralMessage, 'Invite message copied to clipboard.')}>
+                    <Copy className="mr-2 h-4 w-4" /> Copy Message
                 </Button>
             </div>
         </div>

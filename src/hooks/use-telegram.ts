@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
@@ -273,6 +272,57 @@ const useTelegram = () => {
     }
   }, [userProfile]);
 
+  const purchaseBoost = useCallback(async (boostId: string, cost: number): Promise<{success: boolean; message?: string;}> => {
+    if (!userProfile) return { success: false, message: "User not found." };
+    const { id, mainBalance, purchasedBoosts } = userProfile;
+    
+    if (mainBalance < cost) {
+      return { success: false, message: "Insufficient funds." };
+    }
+    
+    if (purchasedBoosts.includes(boostId)) {
+        return { success: false, message: "Boost already purchased." };
+    }
+
+    const userDocRef = doc(db, 'userProfiles', id);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          throw new Error("User does not exist!");
+        }
+        const currentData = userDoc.data() as UserProfile;
+        const currentBalance = currentData.mainBalance || 0;
+        const currentBoosts = currentData.purchasedBoosts || [];
+
+        if (currentBalance < cost) {
+            throw new Error("Insufficient funds.");
+        }
+
+        const newBalance = currentBalance - cost;
+        const newBoosts = [...currentBoosts, boostId];
+
+        transaction.update(userDocRef, {
+          mainBalance: newBalance,
+          purchasedBoosts: newBoosts
+        });
+      });
+
+      setUserProfile(prev => prev ? { 
+          ...prev, 
+          mainBalance: prev.mainBalance - cost, 
+          purchasedBoosts: [...prev.purchasedBoosts, boostId] 
+      } : null);
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Purchase boost transaction failed: ", error);
+      return { success: false, message: error.message || "An error occurred during the purchase." };
+    }
+  }, [userProfile]);
+
+
   const fetchInitialData = useCallback(async () => {
     if (isFetching.current) return;
     isFetching.current = true;
@@ -534,11 +584,8 @@ const useTelegram = () => {
     claimPendingBalance,
     verifyTelegramTask,
     fetchInitialData,
+    purchaseBoost,
   };
 };
 
 export { useTelegram };
-
-    
-
-    

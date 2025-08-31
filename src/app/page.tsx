@@ -51,7 +51,7 @@ type DialogContentState = {
 
 
 export default function Home() {
-  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask } = useTelegram();
+  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask, purchaseBoost } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
@@ -110,16 +110,36 @@ export default function Home() {
 
 
   const handleBoostPurchase = async (boostId: string) => {
-    if (activatedBoosts.includes(boostId) || !userProfile || !window.Telegram?.WebApp) return;
+    if (activatedBoosts.includes(boostId) || !userProfile) return;
 
     const boost = boosts.find(b => b.id === boostId);
     if (!boost) return;
 
-    setDialogContent({
-        title: "Coming Soon!",
-        description: "Purchasing boosts will be enabled shortly.",
+    if (userProfile.mainBalance < boost.cost) {
+      setDialogContent({
+        title: "Insufficient Funds",
+        description: `You need ${boost.cost} MOO to purchase this boost, but you only have ${userProfile.mainBalance.toLocaleString()}.`,
+        status: 'error'
+      });
+      setIsInfoDialogOpen(true);
+      return;
+    }
+
+    const result = await purchaseBoost(boostId, boost.cost);
+
+    if (result.success) {
+      setDialogContent({
+        title: "Boost Activated!",
+        description: `You have successfully purchased the ${boost.multiplier}x boost. Your earning speed has increased!`,
         status: 'success'
-    });
+      });
+    } else {
+      setDialogContent({
+        title: "Purchase Failed",
+        description: result.message || "An unexpected error occurred. Please try again.",
+        status: 'error'
+      });
+    }
     setIsInfoDialogOpen(true);
   };
 

@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info } from 'lucide-react';
+import { Star, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info, XCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,12 @@ const initialTasks: SocialTasks = {
   referral: 'idle'
 };
 
+type DialogContentState = {
+  title: string;
+  description: string;
+  status: 'success' | 'error';
+};
+
 
 export default function Home() {
   const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask } = useTelegram();
@@ -57,6 +64,9 @@ export default function Home() {
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const [isClaiming, setIsClaiming] = useState(false);
   const [earningSpeed, setEarningSpeed] = useState(0);
+  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState<DialogContentState | null>(null);
+
   const { toast } = useToast();
 
   const socialTaskList = [
@@ -166,6 +176,7 @@ export default function Home() {
     setSocialTasks(prev => ({ ...prev, [taskId]: 'verifying' }));
 
     const task = socialTaskList.find(t => t.id === taskId);
+    let isSuccess = false;
 
     if (task && (taskId === 'telegram' || taskId === 'community')) {
         const result = await verifyTelegramTask(task.channelId as string);
@@ -173,20 +184,33 @@ export default function Home() {
             const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
             setSocialTasks(newSocialTasks);
             updateUserProfile({ completedSocialTasks: newSocialTasks });
-            toast({ title: "Task Complete!", description: "Thank you for your support." });
+            isSuccess = true;
         } else {
-            toast({ title: "Verification Failed", description: result.message || "Please ensure you have joined the channel and try again.", variant: "destructive" });
             setSocialTasks(prev => ({ ...prev, [taskId]: 'idle' }));
         }
     } else {
         // Simulate verification for other tasks like twitter
-        setTimeout(() => {
-            const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
-            setSocialTasks(newSocialTasks);
-            updateUserProfile({ completedSocialTasks: newSocialTasks });
-            toast({ title: "Task Complete!", description: "Thank you for your support." });
-        }, 1000);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const newSocialTasks = { ...userProfile.completedSocialTasks, [taskId]: 'completed' };
+        setSocialTasks(newSocialTasks);
+        updateUserProfile({ completedSocialTasks: newSocialTasks });
+        isSuccess = true;
     }
+    
+    if (isSuccess) {
+      setDialogContent({
+        title: 'Task Complete!',
+        description: 'Thank you for your support. You are one step closer to earning MOO.',
+        status: 'success'
+      });
+    } else {
+      setDialogContent({
+        title: 'Verification Failed',
+        description: 'Please ensure you have joined the channel or group before trying to confirm the task.',
+        status: 'error'
+      });
+    }
+    setIsInfoDialogOpen(true);
   }
 
    const handleRedeemCode = async () => {
@@ -451,9 +475,40 @@ export default function Home() {
                   </DialogDescription>
               </div>
           </DialogHeader>
-          <Button className="w-full" onClick={() => setShowActivationSuccess(false)}>
-              Continue
-          </Button>
+          <DialogClose asChild>
+            <Button className="w-full">
+                Continue
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
+        <DialogContent>
+          {dialogContent && (
+            <>
+              <DialogHeader>
+                  <div className="flex flex-col items-center justify-center text-center p-6">
+                      {dialogContent.status === 'success' ? (
+                          <CheckCircle className="w-16 h-16 text-primary mb-4" />
+                      ) : (
+                          <XCircle className="w-16 h-16 text-destructive mb-4" />
+                      )}
+                      <DialogTitle className={cn("text-xl", dialogContent.status === 'success' ? 'text-primary' : 'text-destructive')}>
+                        {dialogContent.title}
+                      </DialogTitle>
+                      <DialogDescription className="pt-2 text-center text-xs">
+                          {dialogContent.description}
+                      </DialogDescription>
+                  </div>
+              </DialogHeader>
+              <DialogClose asChild>
+                <Button className="w-full">
+                    Continue
+                </Button>
+              </DialogClose>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

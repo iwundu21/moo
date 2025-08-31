@@ -38,13 +38,13 @@ export default function LeaderboardPage() {
   const leaderboardPages = Math.ceil(leaderboard.length / recordsPerPage);
   const currentLeaderboardRecords = useMemo(() => {
     return leaderboard.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
-  }, [leaderboard, currentPage, recordsPerPage]);
+  }, [leaderboard, currentPage]);
   
   // Pagination for Claimed Users
   const claimedPages = Math.ceil(airdropClaims.length / recordsPerPage);
   const currentClaimedRecords = useMemo(() => {
     return airdropClaims.slice((claimedCurrentPage - 1) * recordsPerPage, claimedCurrentPage * recordsPerPage);
-  }, [airdropClaims, claimedCurrentPage, recordsPerPage]);
+  }, [airdropClaims, claimedCurrentPage]);
 
   const handleNextPage = () => {
     if (currentPage < leaderboardPages) {
@@ -157,13 +157,13 @@ export default function LeaderboardPage() {
           {leaderboardPages > 1 && (
             <div className="flex items-center justify-center space-x-4 mt-4">
               <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={currentPage === 1}>
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 mr-2" />
                 Prev
               </Button>
               <span className="text-sm font-medium">Page {currentPage} of {leaderboardPages}</span>
               <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === leaderboardPages}>
                 Next
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
           )}

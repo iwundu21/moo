@@ -34,26 +34,29 @@ import { db } from "@/lib/firebase";
 
 
 export default function AdminPage() {
-  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
+  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser, fetchInitialData } = useTelegram();
   const [users, setUsers] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchAllData = useCallback(async () => {
+  const fetchAllAdminData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch all user profiles
+      // 1. Fetch core settings and stats
+      await Promise.all([fetchAdminStats(), fetchInitialData()]);
+      
+      // 2. Fetch all user profiles
       const usersQuery = query(collection(db, 'userProfiles'), orderBy('telegramUsername'));
       const usersSnapshot = await getDocs(usersQuery);
 
-      // 2. Create a map of airdrop claims for efficient lookup
+      // 3. Create a map of airdrop claims for efficient lookup
       const claimsSnapshot = await getDocs(collection(db, 'airdropClaims'));
       const claimsMap = new Map<string, AirdropClaim>();
       claimsSnapshot.forEach(doc => {
         claimsMap.set(doc.id, doc.data() as AirdropClaim);
       });
       
-      // 3. Combine user profiles with their claims
+      // 4. Combine user profiles with their claims
       const combinedData = usersSnapshot.docs.map(userDoc => {
         const userProfile = userDoc.data() as UserProfile;
         const claimData = claimsMap.get(userProfile.id);
@@ -69,7 +72,7 @@ export default function AdminPage() {
         };
       });
       
-      // Sort by claim timestamp descending, putting users with no claims at the end.
+      // 5. Sort by claim timestamp descending, putting users with no claims at the end.
       combinedData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
       setUsers(combinedData);
@@ -79,13 +82,12 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchAdminStats, fetchInitialData]);
 
 
   useEffect(() => {
-    fetchAdminStats();
-    fetchAllData();
-  }, [fetchAdminStats, fetchAllData]);
+    fetchAllAdminData();
+  }, [fetchAllAdminData]);
   
   const filteredUsers = useMemo(() => {
     if (!searchQuery) return users;
@@ -127,13 +129,13 @@ export default function AdminPage() {
   const handleClearClaims = async () => {
     await clearAllClaims();
     setUsers([]);
-    fetchAllData(); // Refetch to show users without claims
+    fetchAllAdminData(); // Refetch to show users without claims
   };
 
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
     if (!walletAddress || amount <= 0) return;
     await updateClaimStatus(userId, 'distributed', walletAddress, amount);
-    await fetchAllData();
+    await fetchAllAdminData();
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -148,7 +150,7 @@ export default function AdminPage() {
 
     await batchUpdateClaimStatuses(pendingClaims);
 
-    await fetchAllData();
+    await fetchAllAdminData();
   };
   
   const pendingClaimsCount = useMemo(() => users.filter(c => c.status === 'processing').length, [users]);

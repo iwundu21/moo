@@ -511,7 +511,10 @@ const useTelegram = () => {
     deleteUser,
     claimPendingBalance,
     verifyTelegramTask,
+    fetchInitialData,
   };
 };
 
 export { useTelegram };
+
+    

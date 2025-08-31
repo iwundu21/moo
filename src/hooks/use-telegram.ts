@@ -86,6 +86,7 @@ const useTelegram = () => {
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
   const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
   const [totalLicensedUsers, setTotalLicensedUsers] = useState<number>(0);
+  const [airdropClaims, setAirdropClaims] = useState<AirdropClaim[]>([]);
   const isFetching = useRef(false);
 
   const isAirdropClaimable = useMemo(() => {
@@ -347,7 +348,7 @@ const useTelegram = () => {
         tg.ready();
     }
 
-    const telegramUser = tg.initDataUnsafe?.user;
+    const telegramUser = tg.initDataUnsafe.user;
     if (!telegramUser) {
         setIsLoading(false);
         isFetching.current = false;
@@ -418,15 +419,18 @@ const useTelegram = () => {
     const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
     const claimHistoryCol = collection(db, 'userProfiles', userId, 'claimHistory');
     const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('lifetimeBalance', 'desc'), limit(100));
+    const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
     
     const [
         referralSnapshot,
         leaderboardSnapshot,
-        claimHistorySnapshot
+        claimHistorySnapshot,
+        claimsSnapshot,
     ] = await Promise.all([
         getDocs(query(referralsCol, orderBy('timestamp', 'desc'))),
         getDocs(leaderboardQuery),
-        getDocs(query(claimHistoryCol, orderBy('timestamp', 'desc'), limit(20)))
+        getDocs(query(claimHistoryCol, orderBy('timestamp', 'desc'), limit(20))),
+        getDocs(claimsQuery)
     ]);
     
     setLeaderboard(leaderboardSnapshot.docs.map((doc, index) => {
@@ -455,6 +459,19 @@ const useTelegram = () => {
            : new Date(data.timestamp);
        return { id: d.id, ...data, timestamp } as ClaimRecord;
    }));
+
+   const claimsData = await Promise.all(claimsSnapshot.docs.map(async (d) => {
+        const data = d.data() as AirdropClaim;
+        const userDoc = await getDoc(doc(db, 'userProfiles', data.userId));
+        const userData = userDoc.data();
+        return {
+            ...data,
+            isPremium: userData?.isPremium || false,
+            timestamp: (data.timestamp as unknown as Timestamp).toDate(),
+        } as AirdropClaim;
+    }));
+    setAirdropClaims(claimsData);
+
 
     setIsLoading(false);
     isFetching.current = false;
@@ -602,6 +619,7 @@ const useTelegram = () => {
     referrals,
     claimHistory,
     appSettings,
+    airdropClaims,
     isAirdropClaimable,
     totalUserCount,
     totalMooGenerated,
@@ -624,5 +642,3 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
-
-    

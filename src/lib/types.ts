@@ -41,6 +41,7 @@ export type AirdropClaim = {
   profilePictureUrl: string;
   timestamp: Date;
   status: 'processing' | 'distributed' | 'no-claim';
+  isPremium?: boolean;
 };
 
 export type ClaimRecord = {
@@ -53,6 +54,4 @@ export type AppSettings = {
     isAirdropLive: boolean;
     airdropEndDate: Date | null;
 };
-    
-
     

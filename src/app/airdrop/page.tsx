@@ -273,30 +273,7 @@ export default function AirdropPage() {
   const renderInfoAlert = () => {
     if (userProfile.hasClaimedAirdrop) return null;
     
-    if (appSettings.airdropEndDate && new Date() > appSettings.airdropEndDate) {
-        return (
-            <Alert variant="default">
-                <Ban className="h-4 w-4" />
-                <AlertTitle>Airdrop Claim Period Ended</AlertTitle>
-                <AlertDescription className="text-xs">
-                    The claim period for the airdrop has now closed. Please check back for future events.
-                </AlertDescription>
-            </Alert>
-        )
-    }
-    
-    if (appSettings.airdropEndDate) {
-        return (
-            <Alert>
-                <Clock className="h-4 w-4" />
-                <AlertTitle>Airdrop Claim Ends In</AlertTitle>
-                <AlertDescription className="text-xs">
-                   <span className="font-semibold text-base">{timeLeft}</span>
-                </AlertDescription>
-            </Alert>
-        )
-    }
-
+    // Highest priority: if airdrop is paused by admin
     if (!appSettings.isAirdropLive) {
         return (
             <Alert variant="destructive">
@@ -309,6 +286,32 @@ export default function AirdropPage() {
         )
     }
 
+    // If live, check for end date
+    if (appSettings.airdropEndDate) {
+        if (new Date() > appSettings.airdropEndDate) {
+            return (
+                <Alert variant="default">
+                    <Ban className="h-4 w-4" />
+                    <AlertTitle>Airdrop Claim Period Ended</AlertTitle>
+                    <AlertDescription className="text-xs">
+                        The claim period for the airdrop has now closed. Please check back for future events.
+                    </AlertDescription>
+                </Alert>
+            );
+        } else {
+            return (
+                <Alert>
+                    <Clock className="h-4 w-4" />
+                    <AlertTitle>Airdrop Claim Ends In</AlertTitle>
+                    <AlertDescription className="text-xs">
+                       <span className="font-semibold text-base">{timeLeft}</span>
+                    </AlertDescription>
+                </Alert>
+            );
+        }
+    }
+
+    // Default message if airdrop is live and no end date is set
     return (
         <Alert>
             <Info className="h-4 w-4" />
@@ -317,7 +320,7 @@ export default function AirdropPage() {
                 Claim your MOO airdrop allocation by submitting your TON wallet address. Ensure you meet all eligibility requirements first.
             </AlertDescription>
         </Alert>
-    )
+    );
   }
   
   return (
@@ -401,9 +404,3 @@ export default function AirdropPage() {
     </div>
   );
 }
-
-
-
-
-
-    

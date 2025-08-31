@@ -10,11 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban, Zap } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban, Zap, Search } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,7 @@ export default function AdminPage() {
   const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser } = useTelegram();
   const [claims, setClaims] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
@@ -63,14 +65,23 @@ export default function AdminPage() {
     fetchAdminStats();
     fetchAllData();
   }, [fetchAdminStats, fetchAllData]);
+  
+  const filteredClaims = useMemo(() => {
+    if (!searchQuery) return claims;
+    return claims.filter(claim =>
+      claim.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      claim.userId.includes(searchQuery)
+    );
+  }, [searchQuery, claims]);
+
 
   const downloadCSV = () => {
-    if (claims.length === 0) return;
+    if (filteredClaims.length === 0) return;
 
     const headers = ['User ID', 'Username', 'Wallet Address', 'Claim Amount', 'Claim Status'];
     const csvContent = [
       headers.join(','),
-      ...claims.map(claim => 
+      ...filteredClaims.map(claim => 
         [claim.userId, claim.username, claim.walletAddress, claim.amount, claim.status || 'N/A'].join(',')
       )
     ].join('\n');
@@ -218,32 +229,26 @@ export default function AdminPage() {
       
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h3 className="text-base font-semibold">User Submissions ({claims.length})</h3>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold">User Submissions ({filteredClaims.length})</h3>
               <p className="text-xs text-muted-foreground">{pendingClaimsCount} pending claims</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button disabled={pendingClaimsCount === 0}>
-                      <Send className="mr-2" />
-                      Distribute All
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Distribute all pending claims?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will mark all {pendingClaimsCount} pending claims as 'distributed' and update the user profiles. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDistributeAll}>Confirm & Distribute</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+            <div className="relative w-full md:w-auto md:max-w-xs">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Search by username or ID..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
             </div>
+        </div>
+        <div className="p-6 pt-0 flex flex-col sm:flex-row gap-2 w-full md:w-auto justify-end">
+          <Button disabled={pendingClaimsCount === 0} onClick={handleDistributeAll}>
+              <Send className="mr-2" />
+              Distribute All ({pendingClaimsCount})
+          </Button>
         </div>
         <Table>
           <TableHeader>
@@ -261,8 +266,8 @@ export default function AdminPage() {
                   Loading claims...
                 </TableCell>
               </TableRow>
-            ) : claims.length > 0 ? (
-              claims.map((claim) => (
+            ) : filteredClaims.length > 0 ? (
+              filteredClaims.map((claim) => (
                 <TableRow key={claim.userId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -270,7 +275,10 @@ export default function AdminPage() {
                             <AvatarImage src={claim.profilePictureUrl} data-ai-hint="profile picture" />
                             <AvatarFallback>{claim.username.substring(0, 1)}</AvatarFallback>
                         </Avatar>
-                        <span className="font-medium text-xs">@{claim.username}</span>
+                        <div className="flex flex-col">
+                            <span className="font-medium text-xs">@{claim.username}</span>
+                            <span className="text-xs text-muted-foreground font-mono">{claim.userId}</span>
+                        </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs">
@@ -319,7 +327,7 @@ export default function AdminPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete User: @{claim.username}?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the user's profile and their airdrop claim.
+                              This action cannot be undone. This will permanently delete the user's profile and their airdrop claim. Are you sure?
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -334,7 +342,7 @@ export default function AdminPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center">
-                  No claims found.
+                  {searchQuery ? "No users found for your search." : "No claims found."}
                 </TableCell>
               </TableRow>
             )}

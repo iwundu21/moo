@@ -326,7 +326,7 @@ export default function Home() {
           </div>
       </div>
       
-      {!isAirdropClaimable ? (
+      {isAirdropClaimable ? (
           <Alert variant="destructive">
               <Ban className="h-4 w-4" />
               <AlertTitle>Airdrop Participation Closed</AlertTitle>
@@ -548,5 +548,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     

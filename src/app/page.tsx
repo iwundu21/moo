@@ -27,10 +27,18 @@ import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
 
 // This is now a client-side representation and doesn't handle payments.
 const boosts = [
-  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message' },
-  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 20 MOO per message' },
-  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 35 MOO per message' },
+  { id: '2x', multiplier: 2, cost: 100, description: 'Earn 10 MOO per message', stars: 100 },
+  { id: '5x', multiplier: 5, cost: 200, 'description': 'Earn 20 MOO per message', stars: 200 },
+  { id: '10x', multiplier: 10, cost: 350, 'description': 'Earn 35 MOO per message', stars: 350 },
 ];
+
+const licenseActivation = {
+  id: 'license-activation',
+  cost: 250, // in stars
+  title: 'Mining License',
+  description: 'Activate your license to start earning MOO.',
+  mooBonus: 5000,
+};
 
 type TaskStatus = 'idle' | 'verifying' | 'completed';
 type SocialTasks = {
@@ -52,7 +60,7 @@ type DialogContentState = {
 
 
 export default function Home() {
-  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask, purchaseBoost, isAirdropClaimable } = useTelegram();
+  const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask, isAirdropClaimable, processPayment } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [pendingBalance, setPendingBalance] = useState(0);
   const [activatedBoosts, setActivatedBoosts] = useState<string[]>([]);
@@ -116,50 +124,68 @@ export default function Home() {
     const boost = boosts.find(b => b.id === boostId);
     if (!boost) return;
 
-    if (userProfile.mainBalance < boost.cost) {
-      setDialogContent({
-        title: "Insufficient Funds",
-        description: `You need ${boost.cost} MOO to purchase this boost, but you only have ${userProfile.mainBalance.toLocaleString()}.`,
-        status: 'error'
-      });
-      setIsInfoDialogOpen(true);
-      return;
-    }
+    processPayment(
+      boost.stars,
+      `${boost.multiplier}x Boost Purchase`,
+      `Activate the ${boost.multiplier}x earning boost.`,
+      `BOOST_${boost.id}_USER_${userProfile.id}`,
+      (status) => {
+        if (status === 'paid') {
+          const newBoosts = [...userProfile.purchasedBoosts, boostId];
+          updateUserProfile({ purchasedBoosts: newBoosts });
+          setActivatedBoosts(newBoosts);
 
-    const result = await purchaseBoost(boostId, boost.cost);
-
-    if (result.success) {
-      setDialogContent({
-        title: "Boost Activated!",
-        description: `You have successfully purchased the ${boost.multiplier}x boost. Your earning speed has increased!`,
-        status: 'success'
-      });
-    } else {
-      setDialogContent({
-        title: "Purchase Failed",
-        description: result.message || "An unexpected error occurred. Please try again.",
-        status: 'error'
-      });
-    }
-    setIsInfoDialogOpen(true);
+          setDialogContent({
+            title: "Boost Activated!",
+            description: `You have successfully purchased the ${boost.multiplier}x boost. Your earning speed has increased!`,
+            status: 'success'
+          });
+          setIsInfoDialogOpen(true);
+        } else {
+           setDialogContent({
+            title: "Payment Failed",
+            description: `Your payment was ${status}. Please try again.`,
+            status: 'error'
+          });
+          setIsInfoDialogOpen(true);
+        }
+      }
+    );
   };
 
   const handleLicenseActivation = async () => {
     if (isLicenseActive || !userProfile) return;
-    
-    const newBalance = (userProfile.mainBalance || 0) + 5000;
-    const newLifetimeBalance = (userProfile.lifetimeBalance || 0) + 5000;
-    
-    await updateUserProfile({
-        isLicenseActive: true,
-        mainBalance: newBalance,
-        lifetimeBalance: newLifetimeBalance
-    });
-    
-    setMainBalance(newBalance);
-    setIsLicenseActive(true);
-    setShowConfetti(true);
-    setShowActivationSuccess(true);
+
+    processPayment(
+      licenseActivation.cost,
+      licenseActivation.title,
+      licenseActivation.description,
+      `LICENSE_USER_${userProfile.id}`,
+      (status) => {
+        if (status === 'paid') {
+          const newBalance = (userProfile.mainBalance || 0) + licenseActivation.mooBonus;
+          const newLifetimeBalance = (userProfile.lifetimeBalance || 0) + licenseActivation.mooBonus;
+          
+          updateUserProfile({
+              isLicenseActive: true,
+              mainBalance: newBalance,
+              lifetimeBalance: newLifetimeBalance
+          });
+          
+          setMainBalance(newBalance);
+          setIsLicenseActive(true);
+          setShowConfetti(true);
+          setShowActivationSuccess(true);
+        } else {
+          setDialogContent({
+            title: "Payment Failed",
+            description: `Your payment was ${status}. Please try again to activate your license.`,
+            status: 'error'
+          });
+          setIsInfoDialogOpen(true);
+        }
+      }
+    );
   }
   
   const handleClaimPendingBalance = async () => {
@@ -486,7 +512,7 @@ export default function Home() {
                                         </div>
                                         <div className='flex items-center gap-2'>
                                             <Star className="w-4 h-4" />
-                                            <span className="font-semibold">{boost.cost}</span>
+                                            <span className="font-semibold">{boost.stars}</span>
                                         </div>
                                     </>
                                     )}

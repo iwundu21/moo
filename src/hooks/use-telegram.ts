@@ -117,7 +117,7 @@ const useTelegram = () => {
             };
             
             const updatedProfileData = { ...currentProfile, ...updates, completedSocialTasks: newCompletedSocialTasks };
-            transaction.set(userDocRef, updatedProfileData);
+            transaction.set(userDocRef, updatedProfileData, { merge: true });
 
              if (id === userProfile?.id) {
                 setUserProfile(prev => prev ? updatedProfileData : null);
@@ -280,58 +280,7 @@ const useTelegram = () => {
       return { success: false, message: "An error occurred while claiming." };
     }
   }, [userProfile]);
-
-  const purchaseBoost = useCallback(async (boostId: string, cost: number): Promise<{success: boolean; message?: string;}> => {
-    if (!userProfile) return { success: false, message: "User not found." };
-    const { id, mainBalance, purchasedBoosts } = userProfile;
-    
-    if (mainBalance < cost) {
-      return { success: false, message: "Insufficient funds." };
-    }
-    
-    if (purchasedBoosts.includes(boostId)) {
-        return { success: false, message: "Boost already purchased." };
-    }
-
-    const userDocRef = doc(db, 'userProfiles', id);
-
-    try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          throw new Error("User does not exist!");
-        }
-        const currentData = userDoc.data() as UserProfile;
-        const currentBalance = currentData.mainBalance || 0;
-        const currentBoosts = currentData.purchasedBoosts || [];
-
-        if (currentBalance < cost) {
-            throw new Error("Insufficient funds.");
-        }
-
-        const newBalance = currentBalance - cost;
-        const newBoosts = [...currentBoosts, boostId];
-
-        transaction.update(userDocRef, {
-          mainBalance: newBalance,
-          purchasedBoosts: newBoosts
-        });
-      });
-
-      setUserProfile(prev => prev ? { 
-          ...prev, 
-          mainBalance: prev.mainBalance - cost, 
-          purchasedBoosts: [...prev.purchasedBoosts, boostId] 
-      } : null);
-
-      return { success: true };
-    } catch (error: any) {
-      console.error("Purchase boost transaction failed: ", error);
-      return { success: false, message: error.message || "An error occurred during the purchase." };
-    }
-  }, [userProfile]);
-
-
+  
   const fetchInitialData = useCallback(async () => {
     if (isFetching.current) return;
     isFetching.current = true;
@@ -606,6 +555,35 @@ const useTelegram = () => {
     }
   };
 
+  const processPayment = useCallback(async (
+    amount: number,
+    title: string,
+    description: string,
+    payload: string,
+    callback: (status: 'paid' | 'cancelled' | 'failed' | 'pending') => void
+  ) => {
+    const tg = window.Telegram?.WebApp;
+    if (!tg) {
+      callback('failed');
+      return;
+    }
+
+    try {
+      const createPaymentInvoice = httpsCallable<any, { invoiceUrl: string }>(functions, 'createPaymentInvoice');
+      const result = await createPaymentInvoice({ amount, payload, title, description });
+      const invoiceUrl = result.data.invoiceUrl;
+
+      if (invoiceUrl) {
+        tg.openInvoice(invoiceUrl, callback);
+      } else {
+        callback('failed');
+      }
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      callback('failed');
+    }
+  }, []);
+
   return { 
     isLoading,
     userProfile, 
@@ -631,7 +609,7 @@ const useTelegram = () => {
     claimPendingBalance,
     verifyTelegramTask,
     fetchInitialData,
-    purchaseBoost,
+    processPayment
   };
 };
 

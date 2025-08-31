@@ -418,7 +418,7 @@ const useTelegram = () => {
     
     const referralsCol = collection(db, 'userProfiles', userId, 'referrals');
     const claimHistoryCol = collection(db, 'userProfiles', userId, 'claimHistory');
-    const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('lifetimeBalance', 'desc'), limit(100));
+    const leaderboardQuery = query(collection(db, 'userProfiles'), orderBy('lifetimeBalance', 'desc'));
     const claimsQuery = query(collection(db, 'airdropClaims'), orderBy('timestamp', 'desc'));
     
     const [

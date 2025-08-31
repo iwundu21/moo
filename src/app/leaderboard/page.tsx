@@ -36,11 +36,15 @@ export default function LeaderboardPage() {
 
   // Pagination for Leaderboard
   const leaderboardPages = Math.ceil(leaderboard.length / recordsPerPage);
-  const currentLeaderboardRecords = leaderboard.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+  const currentLeaderboardRecords = useMemo(() => {
+    return leaderboard.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+  }, [leaderboard, currentPage, recordsPerPage]);
   
   // Pagination for Claimed Users
   const claimedPages = Math.ceil(airdropClaims.length / recordsPerPage);
-  const currentClaimedRecords = airdropClaims.slice((claimedCurrentPage - 1) * recordsPerPage, claimedCurrentPage * recordsPerPage);
+  const currentClaimedRecords = useMemo(() => {
+    return airdropClaims.slice((claimedCurrentPage - 1) * recordsPerPage, claimedCurrentPage * recordsPerPage);
+  }, [airdropClaims, claimedCurrentPage, recordsPerPage]);
 
   const handleNextPage = () => {
     if (currentPage < leaderboardPages) {
@@ -118,7 +122,7 @@ export default function LeaderboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentLeaderboardRecords.map((entry) => (
+                {currentLeaderboardRecords.length > 0 ? currentLeaderboardRecords.map((entry) => (
                   <TableRow key={entry.rank} className={cn(entry.username === userProfile.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
                     <TableCell className="font-bold text-xs text-center">
                       <div className="flex items-center justify-center">
@@ -142,20 +146,24 @@ export default function LeaderboardPage() {
                       <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">{entry.balance.toLocaleString()} MOO</span>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                   <TableRow>
+                    <TableCell colSpan={3} className="text-center h-24">No players on the leaderboard yet.</TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
           {leaderboardPages > 1 && (
             <div className="flex items-center justify-center space-x-4 mt-4">
               <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={currentPage === 1}>
-                <ChevronLeft className="mr-2" />
-                Previous
+                <ChevronLeft className="h-4 w-4" />
+                Prev
               </Button>
               <span className="text-sm font-medium">Page {currentPage} of {leaderboardPages}</span>
               <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === leaderboardPages}>
                 Next
-                <ChevronRight className="ml-2" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           )}

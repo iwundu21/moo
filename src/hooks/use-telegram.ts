@@ -1,8 +1,9 @@
 
+
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim, ClaimRecord } from '@/lib/types';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import type { UserProfile, LeaderboardEntry, Referral, AirdropClaim, ClaimRecord, AppSettings } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import {
   doc,
@@ -18,7 +19,8 @@ import {
   where,
   getCountFromServer,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  Timestamp
 } from 'firebase/firestore';
 
 interface TelegramUser {
@@ -79,11 +81,18 @@ const useTelegram = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [claimHistory, setClaimHistory] = useState<ClaimRecord[]>([]);
-  const [isAirdropLive, setIsAirdropLive] = useState<boolean>(true);
+  const [appSettings, setAppSettings] = useState<AppSettings>({ isAirdropLive: true, airdropEndDate: null });
   const [totalUserCount, setTotalUserCount] = useState<number>(0);
   const [totalMooGenerated, setTotalMooGenerated] = useState<number>(0);
   const [totalLicensedUsers, setTotalLicensedUsers] = useState<number>(0);
   const isFetching = useRef(false);
+
+  const isAirdropClaimable = useMemo(() => {
+    if (!appSettings.isAirdropLive) return false;
+    if (appSettings.airdropEndDate && new Date() > appSettings.airdropEndDate) return false;
+    return true;
+  }, [appSettings]);
+
 
   const updateUserProfile = useCallback(async (updates: Partial<UserProfile>, userIdToUpdate?: string) => {
     const id = userIdToUpdate || userProfile?.id;
@@ -301,8 +310,13 @@ const useTelegram = () => {
     
     setTotalUserCount(userCountSnapshot.data().count);
 
-    const settingsData = settingsDoc.data() || {};
-    setIsAirdropLive(settingsData.isAirdropLive === undefined ? true : settingsData.isAirdropLive);
+    if (settingsDoc.exists()) {
+        const settingsData = settingsDoc.data();
+        setAppSettings({
+            isAirdropLive: settingsData.isAirdropLive === undefined ? true : settingsData.isAirdropLive,
+            airdropEndDate: settingsData.airdropEndDate ? (settingsData.airdropEndDate as Timestamp).toDate() : null
+        });
+    }
 
     let currentUserProfile: UserProfile;
 
@@ -445,8 +459,14 @@ const useTelegram = () => {
   
   const setAirdropStatus = useCallback(async (isLive: boolean) => {
     const settingsDocRef = doc(db, 'settings', 'app');
-    await setDoc(settingsDocRef, { isAirdropLive: isLive }, { merge: true });
-    setIsAirdropLive(isLive);
+    await updateDoc(settingsDocRef, { isAirdropLive: isLive });
+    setAppSettings(prev => ({ ...prev, isAirdropLive: isLive }));
+  }, []);
+
+  const setAirdropEndDate = useCallback(async (endDate: Date | null) => {
+    const settingsDocRef = doc(db, 'settings', 'app');
+    await updateDoc(settingsDocRef, { airdropEndDate: endDate });
+    setAppSettings(prev => ({ ...prev, airdropEndDate: endDate }));
   }, []);
   
   const deleteUser = useCallback(async (userId: string) => {
@@ -496,11 +516,13 @@ const useTelegram = () => {
     leaderboard, 
     referrals,
     claimHistory,
-    isAirdropLive,
+    appSettings,
+    isAirdropClaimable,
     totalUserCount,
     totalMooGenerated,
     totalLicensedUsers,
     setAirdropStatus,
+    setAirdropEndDate,
     clearAllClaims,
     updateUserProfile, 
     addClaimRecord,
@@ -516,5 +538,7 @@ const useTelegram = () => {
 };
 
 export { useTelegram };
+
+    
 
     

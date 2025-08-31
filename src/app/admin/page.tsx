@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -10,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban, Zap, Search } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban, Zap, Search, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -27,36 +28,39 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useEffect, useState, useCallback, useMemo } from "react";
 import type { AirdropClaim, UserProfile } from "@/lib/types";
-import { collection, getDocs, orderBy, query, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 
 export default function AdminPage() {
-  const { isAirdropLive, setAirdropStatus, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser, fetchInitialData } = useTelegram();
+  const { appSettings, setAirdropStatus, setAirdropEndDate, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser, fetchInitialData } = useTelegram();
   const [users, setUsers] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [endTime, setEndTime] = useState("23:59");
+  const [timeLeft, setTimeLeft] = useState("");
 
   const fetchAllAdminData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch core settings and stats
       await Promise.all([fetchAdminStats(), fetchInitialData()]);
       
-      // 2. Fetch all user profiles
       const usersQuery = query(collection(db, 'userProfiles'), orderBy('telegramUsername'));
       const usersSnapshot = await getDocs(usersQuery);
 
-      // 3. Create a map of airdrop claims for efficient lookup
       const claimsSnapshot = await getDocs(collection(db, 'airdropClaims'));
       const claimsMap = new Map<string, AirdropClaim>();
       claimsSnapshot.forEach(doc => {
         claimsMap.set(doc.id, doc.data() as AirdropClaim);
       });
       
-      // 4. Combine user profiles with their claims
       const combinedData = usersSnapshot.docs.map(userDoc => {
         const userProfile = userDoc.data() as UserProfile;
         const claimData = claimsMap.get(userProfile.id);
@@ -68,15 +72,12 @@ export default function AdminPage() {
           amount: claimData?.amount || userProfile.mainBalance,
           walletAddress: claimData?.walletAddress || userProfile.walletAddress || '',
           status: claimData?.status || 'no-claim',
-          timestamp: claimData?.timestamp || new Date(0) // Use a default for sorting if no claim
+          timestamp: claimData?.timestamp || new Date(0)
         };
       });
       
-      // 5. Sort by claim timestamp descending, putting users with no claims at the end.
       combinedData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
       setUsers(combinedData);
-
     } catch (error) {
       console.error("Error fetching admin data:", error);
     } finally {
@@ -84,10 +85,46 @@ export default function AdminPage() {
     }
   }, [fetchAdminStats, fetchInitialData]);
 
-
   useEffect(() => {
     fetchAllAdminData();
   }, [fetchAllAdminData]);
+
+  useEffect(() => {
+    if (appSettings.airdropEndDate) {
+      setEndDate(appSettings.airdropEndDate);
+      setEndTime(format(appSettings.airdropEndDate, "HH:mm"));
+    } else {
+      setEndDate(undefined);
+      setEndTime("23:59");
+    }
+  }, [appSettings.airdropEndDate]);
+  
+  useEffect(() => {
+    if (!appSettings.airdropEndDate) {
+        setTimeLeft("");
+        return;
+    }
+
+    const intervalId = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = appSettings.airdropEndDate!.getTime() - now;
+
+        if (distance < 0) {
+            setTimeLeft("Ended");
+            clearInterval(intervalId);
+            return;
+        }
+        
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [appSettings.airdropEndDate]);
   
   const filteredUsers = useMemo(() => {
     if (!searchQuery) return users;
@@ -101,23 +138,16 @@ export default function AdminPage() {
     return filteredUsers.filter(user => user.status === 'processing' || user.status === 'distributed');
   }, [filteredUsers]);
 
-
   const downloadCSV = () => {
     if (claimedUsers.length === 0) return;
-
     const headers = ['Wallet Address', 'Amount'];
     const csvContent = [
       headers.join(','),
-      ...claimedUsers.map(claim => 
-        [claim.walletAddress, claim.amount].join(',')
-      )
+      ...claimedUsers.map(claim => [claim.walletAddress, claim.amount].join(','))
     ].join('\n');
-
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    if (link.href) {
-      URL.revokeObjectURL(link.href);
-    }
+    if (link.href) URL.revokeObjectURL(link.href);
     const url = URL.createObjectURL(blob);
     link.href = url;
     link.setAttribute('download', 'airdrop_distribution.csv');
@@ -126,10 +156,23 @@ export default function AdminPage() {
     document.body.removeChild(link);
   };
   
+  const handleSetTimer = async () => {
+    if (endDate) {
+        const [hours, minutes] = endTime.split(':').map(Number);
+        const newEndDate = new Date(endDate);
+        newEndDate.setHours(hours, minutes, 0, 0);
+        await setAirdropEndDate(newEndDate);
+    }
+  };
+
+  const handleResetTimer = async () => {
+    await setAirdropEndDate(null);
+  };
+
   const handleClearClaims = async () => {
     await clearAllClaims();
     setUsers([]);
-    fetchAllAdminData(); // Refetch to show users without claims
+    fetchAllAdminData();
   };
 
   const handleDistribute = async (userId: string, walletAddress: string, amount: number) => {
@@ -147,9 +190,7 @@ export default function AdminPage() {
   const handleDistributeAll = async () => {
     const pendingClaims = users.filter(claim => claim.status === 'processing');
     if (pendingClaims.length === 0) return;
-
     await batchUpdateClaimStatuses(pendingClaims);
-
     await fetchAllAdminData();
   };
   
@@ -200,7 +241,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -209,14 +250,14 @@ export default function AdminPage() {
                 </div>
                  <Switch
                     id="airdrop-status"
-                    checked={isAirdropLive}
+                    checked={appSettings.isAirdropLive}
                     onCheckedChange={setAirdropStatus}
                 />
             </div>
             <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Current Status:</span>
-                <Badge variant={isAirdropLive ? "default" : "destructive"}>
-                    {isAirdropLive ? "Live" : "Paused"}
+                <Badge variant={appSettings.isAirdropLive ? "default" : "destructive"}>
+                    {appSettings.isAirdropLive ? "Live" : "Paused"}
                 </Badge>
             </div>
         </div>
@@ -251,6 +292,48 @@ export default function AdminPage() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+            </div>
+        </div>
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-4">
+            <div>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h3 className="text-base font-semibold">Airdrop Schedule</h3>
+                        <p className="text-xs text-muted-foreground">Set a countdown timer for the airdrop.</p>
+                    </div>
+                    {timeLeft && <Badge variant="secondary">{timeLeft}</Badge>}
+                </div>
+            </div>
+            <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                    <div className="relative">
+                        <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="time"
+                            value={endTime}
+                            onChange={(e) => setEndTime(e.target.value)}
+                            className="pl-8"
+                        />
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    <Button onClick={handleSetTimer} className="w-full" disabled={!endDate}>Set Timer</Button>
+                    <Button onClick={handleResetTimer} className="w-full" variant="destructive" disabled={!appSettings.airdropEndDate}>Reset</Button>
+                </div>
             </div>
         </div>
       </div>
@@ -311,7 +394,7 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell className="text-xs">
                     <div className="flex flex-col gap-1">
-                        <span className="truncate max-w-xs">{user.walletAddress || 'N/A'}</span>
+                        <span className="truncate max-w-xs break-all">{user.walletAddress || 'N/A'}</span>
                          {user.status === 'distributed' ? (
                            <Badge variant="default" className="w-fit bg-green-500 hover:bg-green-600">
                                 <CheckCircle className="mr-2 h-4 w-4" />

@@ -1,4 +1,5 @@
 
+
 export type UserProfile = {
   id: string;
   telegramUsername: string;
@@ -46,4 +47,8 @@ export type ClaimRecord = {
   timestamp: Date;
 };
 
+export type AppSettings = {
+    isAirdropLive: boolean;
+    airdropEndDate: Date | null;
+};
     

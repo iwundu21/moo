@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Ban, Info, Loader2 } from 'lucide-react';
+import { CheckCircle, ShieldCheck, Rocket, UserPlus, XCircle, Ban, Info, Loader2, Clock } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -45,7 +46,7 @@ const isValidTonAddress = (address: string) => {
 };
 
 export default function AirdropPage() {
-  const { userProfile, referrals, addClaimRecord, updateUserProfile, isAirdropLive } = useTelegram();
+  const { userProfile, referrals, addClaimRecord, updateUserProfile, appSettings, isAirdropClaimable } = useTelegram();
   const [mainBalance, setMainBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
   const [claimedAmount, setClaimedAmount] = useState(0);
@@ -151,7 +152,7 @@ export default function AirdropPage() {
   if (!userProfile) {
     return null; // Or a loading spinner
   }
-
+  
   const renderAirdropStatus = () => {
     if (userProfile.airdropStatus === 'distributed') {
       return (
@@ -191,7 +192,7 @@ export default function AirdropPage() {
             </p>
              <Dialog open={isClaimDialogOpen} onOpenChange={setIsClaimDialogOpen}>
                 <DialogTrigger asChild>
-                <Button size="sm" disabled={mainBalance === 0 || !isEligible || !isAirdropLive || isProcessing} onClick={handleInitialClaimClick}>
+                <Button size="sm" disabled={mainBalance === 0 || !isEligible || !isAirdropClaimable || isProcessing} onClick={handleInitialClaimClick}>
                     {isProcessing ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -241,6 +242,44 @@ export default function AirdropPage() {
     )
   }
   
+  const renderInfoAlert = () => {
+    if (userProfile.hasClaimedAirdrop) return null;
+
+    if (appSettings.airdropEndDate && new Date() > appSettings.airdropEndDate) {
+        return (
+            <Alert variant="destructive">
+                <Clock className="h-4 w-4" />
+                <AlertTitle>Airdrop Claim Period Ended</AlertTitle>
+                <AlertDescription className="text-xs">
+                    The claim period for the airdrop has now closed. Please check back for future events.
+                </AlertDescription>
+            </Alert>
+        )
+    }
+
+    if (!appSettings.isAirdropLive) {
+        return (
+            <Alert variant="destructive">
+                <Ban className="h-4 w-4" />
+                <AlertTitle>Airdrop Claim Paused</AlertTitle>
+                <AlertDescription className="text-xs">
+                    The airdrop is temporarily paused. Please check back for updates on when you can claim your allocation.
+                </AlertDescription>
+            </Alert>
+        )
+    }
+
+    return (
+        <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Airdrop Claim is Live!</AlertTitle>
+            <AlertDescription className="text-xs">
+                Claim your MOO airdrop allocation by submitting your TON wallet address. Ensure you meet all eligibility requirements first.
+            </AlertDescription>
+        </Alert>
+    )
+  }
+  
   return (
     <div className="container mx-auto p-4 space-y-8">
       <header className="text-center space-y-2">
@@ -252,25 +291,7 @@ export default function AirdropPage() {
           {renderAirdropStatus()}
       </div>
       
-      {!userProfile.hasClaimedAirdrop && (
-        !isAirdropLive ? (
-            <Alert variant="destructive">
-                <Ban className="h-4 w-4" />
-                <AlertTitle>Airdrop Claim Coming Soon</AlertTitle>
-                <AlertDescription className="text-xs">
-                    The airdrop is not yet live. Please check back for updates on when you can claim your allocation.
-                </AlertDescription>
-            </Alert>
-        ) : (
-            <Alert>
-                <Info className="h-4 w-4" />
-                <AlertTitle>Airdrop Claim is Live!</AlertTitle>
-                <AlertDescription className="text-xs">
-                    Claim your MOO airdrop allocation by submitting your TON wallet address. Ensure you meet all eligibility requirements first.
-                </AlertDescription>
-            </Alert>
-        )
-      )}
+      {renderInfoAlert()}
 
 
       <div className="space-y-4">
@@ -340,3 +361,4 @@ export default function AirdropPage() {
     </div>
   );
 }
+

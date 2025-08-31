@@ -65,7 +65,7 @@ export default function AdminPage() {
         claimsMap.set(doc.id, data as AirdropClaim);
       });
       
-      const combinedData = usersSnapshot.docs.map(userDoc => {
+      const combinedData: AirdropClaim[] = usersSnapshot.docs.map(userDoc => {
         const userProfile = userDoc.data() as UserProfile;
         const claimData = claimsMap.get(userProfile.id);
 
@@ -80,7 +80,11 @@ export default function AdminPage() {
         };
       });
       
-      combinedData.sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0));
+      combinedData.sort((a, b) => {
+          const aTime = a.timestamp instanceof Date ? a.timestamp.getTime() : 0;
+          const bTime = b.timestamp instanceof Date ? b.timestamp.getTime() : 0;
+          return bTime - aTime;
+      });
 
       setUsers(combinedData);
     } catch (error) {

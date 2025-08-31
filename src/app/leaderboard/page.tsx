@@ -37,8 +37,7 @@ export default function LeaderboardPage() {
   const leaderboardPages = Math.ceil(leaderboard.length / recordsPerPage);
   const currentLeaderboardRecords = useMemo(() => {
     const startIndex = (currentPage - 1) * recordsPerPage;
-    const endIndex = startIndex + recordsPerPage;
-    return leaderboard.slice(startIndex, endIndex);
+    return leaderboard.slice(startIndex, startIndex + recordsPerPage);
   }, [leaderboard, currentPage]);
   
   // Pagination for Claimed Users

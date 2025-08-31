@@ -72,7 +72,7 @@ export default function Home() {
   const socialTaskList = [
     { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_cow_milk?t=3r4XYNXvnuRDf9eqhTjFqw&s=09' },
     { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_officialanouncement', channelId: '@moo_officialanouncement' },
-    { id: 'community', icon: Users, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn', channelId: '@moo_chat_earn' },
+    { id: 'community', icon: Send, text: 'Join MOO Community', link: 'https://t.me/moo_chat_earn', channelId: '@moo_chat_earn' },
   ];
   
   const allTasksCompleted = useMemo(() => {

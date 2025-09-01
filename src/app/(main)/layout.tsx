@@ -1,5 +1,6 @@
+
 import type {Metadata} from 'next';
-import './globals.css';
+import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FooterNav } from '@/components/layout/FooterNav';
 import { Inter } from 'next/font/google';

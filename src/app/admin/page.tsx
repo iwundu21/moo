@@ -39,6 +39,9 @@ import { format } from "date-fns";
 
 export default function AdminPage() {
   const { appSettings, setAirdropStatus, setAirdropEndDate, clearAllClaims, totalMooGenerated, totalUserCount, totalLicensedUsers, updateClaimStatus, batchUpdateClaimStatuses, fetchAdminStats, deleteUser, fetchInitialData } = useTelegram();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [users, setUsers] = useState<AirdropClaim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,7 +61,6 @@ export default function AdminPage() {
       const claimsMap = new Map<string, AirdropClaim>();
       claimsSnapshot.forEach(doc => {
         const data = doc.data();
-        // Ensure timestamp is a JS Date object
         if (data.timestamp && data.timestamp instanceof Timestamp) {
           data.timestamp = data.timestamp.toDate();
         }
@@ -95,8 +97,10 @@ export default function AdminPage() {
   }, [fetchAdminStats, fetchInitialData]);
 
   useEffect(() => {
-    fetchAllAdminData();
-  }, [fetchAllAdminData]);
+    if (isAuthenticated) {
+      fetchAllAdminData();
+    }
+  }, [isAuthenticated, fetchAllAdminData]);
 
   useEffect(() => {
     if (appSettings.airdropEndDate) {
@@ -202,7 +206,44 @@ export default function AdminPage() {
     await fetchAllAdminData();
   };
   
+  const handleLogin = () => {
+    if (password === '203040') {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Incorrect password');
+      setPassword('');
+    }
+  };
+  
   const pendingClaimsCount = useMemo(() => users.filter(c => c.status === 'processing').length, [users]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background p-4">
+        <div className="w-full max-w-sm p-8 space-y-6 rounded-lg border bg-card text-card-foreground shadow-lg">
+          <div className="text-center">
+            <h1 className="text-xl font-bold">Admin Access</h1>
+            <p className="text-xs text-muted-foreground">Enter password to continue</p>
+          </div>
+          <div className="space-y-4">
+            <Input 
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => { if (e.key === 'Enter') handleLogin(); }}
+              className="text-center"
+            />
+            {error && <p className="text-sm text-center text-destructive">{error}</p>}
+            <Button onClick={handleLogin} className="w-full">
+              Login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">

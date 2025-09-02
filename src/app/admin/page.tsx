@@ -35,6 +35,7 @@ import { collection, getDocs, orderBy, query, Timestamp } from "firebase/firesto
 import { db } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import Image from 'next/image';
 
 
 export default function AdminPage() {
@@ -284,7 +285,10 @@ export default function AdminPage() {
                 </div>
                 <div>
                     <p className="text-xs text-muted-foreground">Total MOO Generated</p>
-                    <p className="text-lg font-bold">{totalMooGenerated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-bold">{totalMooGenerated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                       <Image src="/moo logo.jpg" alt="MOO logo" width={20} height={20} className="rounded-full" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -461,7 +465,11 @@ export default function AdminPage() {
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold text-xs">
-                    {`${(user.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} MOO`}
+                     <div className="flex items-center gap-1">
+                        <span>{`${(user.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}</span>
+                        <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
+                        <span>MOO</span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right flex justify-end gap-2">
                     {user.status === 'processing' && (

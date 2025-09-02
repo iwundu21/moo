@@ -325,10 +325,11 @@ export default function Home() {
 
       <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground">Main Balance</p>
-          <p className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">
-            {mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-            <span className="text-base ml-1">MOO</span>
-          </p>
+          <div className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center justify-center gap-2">
+            <span>{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+            <Image src="/moo logo.jpg" alt="MOO logo" width={28} height={28} className="rounded-full" />
+            <span className="text-base">MOO</span>
+          </div>
       </div>
 
       <div className="space-y-4 rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -350,10 +351,11 @@ export default function Home() {
               </Button>
           </div>
           <div>
-              <p className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">
-                  {pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                  <span className="text-base ml-1">MOO</span>
-              </p>
+              <div className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center gap-2">
+                  <span>{pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                  <Image src="/moo logo.jpg" alt="MOO logo" width={24} height={24} className="rounded-full" />
+                  <span className="text-base">MOO</span>
+              </div>
               <p className="text-xs text-muted-foreground">This balance is updated from your chat activity.</p>
           </div>
       </div>
@@ -585,13 +587,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
-
-    
-
-    
-
-    
-
-    

@@ -4,8 +4,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTelegram } from '@/hooks/use-telegram';
-import { Gem, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 
 export default function HistoryPage() {
     const { claimHistory } = useTelegram();
@@ -62,7 +63,7 @@ export default function HistoryPage() {
                                     </div>
                                     <div className="flex items-center gap-1 text-sm font-bold text-green-500">
                                         + {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                                        <Gem className="w-4 h-4 ml-1" />
+                                        <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" />
                                     </div>
                                 </div>
                             ))}

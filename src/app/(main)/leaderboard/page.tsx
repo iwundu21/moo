@@ -18,6 +18,7 @@ import { useEffect, useState, useMemo } from "react";
 import type { LeaderboardEntry, AirdropClaim } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Image from 'next/image';
 
 export default function LeaderboardPage() {
   const { userProfile, leaderboard, airdropClaims, totalUserCount } = useTelegram();
@@ -100,7 +101,11 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0 ml-4">
-                <p className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent whitespace-nowrap break-all">{(userProfile.lifetimeBalance || 0).toLocaleString()} MOO</p>
+                <div className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center gap-1">
+                  <span>{(userProfile.lifetimeBalance || 0).toLocaleString()}</span>
+                  <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" />
+                  <span>MOO</span>
+                </div>
               </div>
             </div>
         </div>
@@ -143,7 +148,11 @@ export default function LeaderboardPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-semibold text-xs whitespace-nowrap">
-                      <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent break-all">{entry.balance.toLocaleString()} MOO</span>
+                      <div className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center justify-end gap-1">
+                        <span>{entry.balance.toLocaleString()}</span>
+                        <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
+                        <span>MOO</span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )) : (
@@ -195,7 +204,11 @@ export default function LeaderboardPage() {
                     </TableCell>
                     <TableCell className="text-xs">
                         <div className="flex flex-col gap-1">
-                          <span className="font-semibold">{claim.amount.toLocaleString()} MOO</span>
+                          <div className="font-semibold flex items-center gap-1">
+                            <span>{claim.amount.toLocaleString()}</span>
+                            <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
+                            <span>MOO</span>
+                          </div>
                           <span className="text-muted-foreground font-mono truncate max-w-[150px]">{claim.walletAddress}</span>
                         </div>
                     </TableCell>

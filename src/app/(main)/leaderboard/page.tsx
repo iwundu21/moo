@@ -55,7 +55,7 @@ export default function LeaderboardPage() {
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      setCurrentPage(currentPage + 1);
     }
   };
   
@@ -121,22 +121,22 @@ export default function LeaderboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[50px] text-center">Rank</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead className="text-right min-w-[120px]">Balance</TableHead>
+                  <TableHead className="w-[50px] text-center px-2">Rank</TableHead>
+                  <TableHead className="px-2">User</TableHead>
+                  <TableHead className="text-right min-w-[100px] px-2">Balance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentLeaderboardRecords.length > 0 ? currentLeaderboardRecords.map((entry) => (
                   <TableRow key={entry.rank} className={cn(entry.username === userProfile.telegramUsername && "bg-accent/20", "bg-transparent hover:bg-white/5")}>
-                    <TableCell className="font-bold text-xs text-center">
+                    <TableCell className="font-bold text-xs text-center px-2">
                       <div className="flex items-center justify-center">
                           {entry.rank <= 3 ? <Trophy className={cn("w-4 h-4 mr-2", entry.rank === 1 && "text-yellow-400", entry.rank === 2 && "text-gray-400", entry.rank === 3 && "text-yellow-600")} /> : null}
                           {entry.rank}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium text-xs min-w-0">
-                      <div className="flex items-center gap-3">
+                    <TableCell className="font-medium text-xs min-w-0 px-2">
+                      <div className="flex items-center gap-2">
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-8 h-8">
                               <AvatarImage src={entry.profilePictureUrl} data-ai-hint="profile picture" />
@@ -147,7 +147,7 @@ export default function LeaderboardPage() {
                         <span className="truncate">@{entry.username}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-xs whitespace-nowrap">
+                    <TableCell className="text-right font-semibold text-xs whitespace-nowrap px-2">
                        <div className="flex items-center justify-end gap-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                         <span>{entry.balance.toLocaleString()}</span>
                         <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
@@ -182,16 +182,16 @@ export default function LeaderboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Amount / Wallet</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
+                  <TableHead className="px-2">User</TableHead>
+                  <TableHead className="px-2">Amount / Wallet</TableHead>
+                  <TableHead className="text-right px-2">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentClaimedRecords.length > 0 ? currentClaimedRecords.map((claim) => (
                   <TableRow key={claim.userId}>
-                    <TableCell className="min-w-0">
-                      <div className="flex items-center gap-3">
+                    <TableCell className="min-w-0 px-2">
+                      <div className="flex items-center gap-2">
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-8 h-8">
                               <AvatarImage src={claim.profilePictureUrl} data-ai-hint="profile picture" />
@@ -202,20 +202,20 @@ export default function LeaderboardPage() {
                         <span className="font-medium truncate text-xs">@{claim.username}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="text-xs px-2">
                         <div className="flex flex-col gap-1">
                           <div className="font-semibold flex items-center gap-1">
                             <span>{claim.amount.toLocaleString()}</span>
                             <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
                             <span>MOO</span>
                           </div>
-                          <span className="text-muted-foreground font-mono truncate max-w-[150px]">{claim.walletAddress}</span>
+                          <span className="text-muted-foreground font-mono truncate max-w-[120px]">{claim.walletAddress}</span>
                         </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right px-2">
                        {claim.status === 'distributed' ? (
                            <Badge variant="default" className="w-fit bg-green-500 hover:bg-green-600">
-                                <CheckCircle className="mr-2 h-4 w-4" />
+                                <CheckCircle className="mr-1 h-3 w-3" />
                                 Distributed
                             </Badge>
                         ) : claim.status === 'processing' ? (
@@ -224,7 +224,7 @@ export default function LeaderboardPage() {
                             </Badge>
                         ) : (
                             <Badge variant="outline" className="w-fit">
-                                <Ban className="mr-2 h-4 w-4" />
+                                <Ban className="mr-1 h-3 w-3" />
                                 No Claim
                             </Badge>
                         )}

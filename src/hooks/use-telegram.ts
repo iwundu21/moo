@@ -179,7 +179,7 @@ const useTelegram = () => {
 
             const referralRecordRef = doc(collection(db, 'userProfiles', referrerId, 'referrals'));
             transaction.set(referralRecordRef, { 
-                username: userProfile.telegramUsername, 
+                firstName: userProfile.firstName, 
                 profilePictureUrl: userProfile.profilePictureUrl,
                 timestamp: new Date()
             });
@@ -314,6 +314,7 @@ const useTelegram = () => {
         currentUserProfile = {
             id: userId,
             telegramUsername: safeUsername,
+            firstName: telegramUser.first_name || 'User',
             profilePictureUrl: telegramUser.photo_url || `https://picsum.photos/seed/${userId}/100/100`,
             mainBalance: 0,
             lifetimeBalance: 0,
@@ -330,14 +331,20 @@ const useTelegram = () => {
         await setDoc(userDocRef, currentUserProfile);
     } else {
          currentUserProfile = userDoc.data() as UserProfile;
+         // Backfill missing fields for existing users
+         let updates: Partial<UserProfile> = {};
          if (!currentUserProfile.referralCode) {
-             const newReferralCode = await generateReferralCode();
-             currentUserProfile.referralCode = newReferralCode;
-             await updateDoc(userDocRef, { referralCode: newReferralCode });
+             updates.referralCode = await generateReferralCode();
          }
          if (currentUserProfile.lifetimeBalance === undefined) {
-            currentUserProfile.lifetimeBalance = currentUserProfile.mainBalance + (currentUserProfile.airdropClaimedAmount || 0);
-            await updateDoc(userDocRef, { lifetimeBalance: currentUserProfile.lifetimeBalance });
+            updates.lifetimeBalance = currentUserProfile.mainBalance + (currentUserProfile.airdropClaimedAmount || 0);
+         }
+         if (!currentUserProfile.firstName) {
+            updates.firstName = telegramUser.first_name || 'User';
+         }
+         if (Object.keys(updates).length > 0) {
+            await updateDoc(userDocRef, updates);
+            currentUserProfile = { ...currentUserProfile, ...updates };
          }
     }
     
@@ -374,10 +381,11 @@ const useTelegram = () => {
     setTotalUserCount(allUsersSnapshot.size);
     
     const leaderboardData = allUsersSnapshot.docs.map((doc, index) => {
-        const data = doc.data();
+        const data = doc.data() as UserProfile;
         return {
             rank: index + 1,
             username: data.telegramUsername,
+            firstName: data.firstName || 'User',
             balance: data.lifetimeBalance || data.mainBalance,
             profilePictureUrl: data.profilePictureUrl,
             isPremium: data.isPremium || false
@@ -409,6 +417,7 @@ const useTelegram = () => {
         const userData = allUsersMap.get(data.userId);
         return {
             ...data,
+            firstName: userData?.firstName || 'User',
             isPremium: userData?.isPremium || false,
             timestamp: (data.timestamp as unknown as Timestamp).toDate(),
         } as AirdropClaim;

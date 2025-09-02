@@ -3,6 +3,7 @@
 export type UserProfile = {
   id: string;
   telegramUsername: string;
+  firstName: string;
   profilePictureUrl: string;
   mainBalance: number;
   pendingBalance: number;
@@ -22,13 +23,14 @@ export type UserProfile = {
 export type LeaderboardEntry = {
   rank: number;
   username: string;
+  firstName: string;
   profilePictureUrl: string;
   balance: number;
   isPremium: boolean;
 };
 
 export type Referral = {
-  username: string;
+  firstName: string;
   profilePictureUrl: string;
   timestamp: Date;
 };
@@ -36,6 +38,7 @@ export type Referral = {
 export type AirdropClaim = {
   userId: string;
   username:string;
+  firstName: string;
   walletAddress: string;
   amount: number;
   profilePictureUrl: string;

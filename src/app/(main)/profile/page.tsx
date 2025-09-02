@@ -84,7 +84,7 @@ export default function ProfilePage() {
       <div className="flex flex-col items-center space-y-2">
         <Avatar className="w-24 h-24 border-4 border-primary shadow-lg">
           <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.telegramUsername} data-ai-hint="profile picture" />
-          <AvatarFallback>{userProfile.telegramUsername.substring(0, 2)}</AvatarFallback>
+          <AvatarFallback>{userProfile.firstName.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">@{userProfile.telegramUsername}</h1>

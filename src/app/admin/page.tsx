@@ -75,6 +75,7 @@ export default function AdminPage() {
         return {
           userId: userProfile.id,
           username: userProfile.telegramUsername,
+          firstName: userProfile.firstName,
           profilePictureUrl: userProfile.profilePictureUrl,
           amount: claimData?.amount || userProfile.mainBalance,
           walletAddress: claimData?.walletAddress || userProfile.walletAddress || '',
@@ -436,7 +437,7 @@ export default function AdminPage() {
                     <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
                             <AvatarImage src={user.profilePictureUrl} data-ai-hint="profile picture" />
-                            <AvatarFallback>{user.username.substring(0, 1)}</AvatarFallback>
+                            <AvatarFallback>{user.firstName.substring(0, 1)}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                             <span className="font-medium text-xs">@{user.username}</span>

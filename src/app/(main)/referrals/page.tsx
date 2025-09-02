@@ -8,6 +8,8 @@ import { Copy, UserPlus, Share2, Gift, Users, CheckCircle, XCircle } from 'lucid
 import { useTelegram } from '@/hooks/use-telegram';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 type DialogInfo = {
   title: string;
@@ -68,12 +70,28 @@ export default function ReferralsPage() {
             <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary"/>
-                    Your Referrals
+                    Your Referrals ({referrals.length})
                 </CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
-                <p className="text-4xl font-bold">{referrals.length}</p>
-                <p className="text-xs text-muted-foreground">Total friends joined</p>
+            <CardContent>
+                {referrals.length > 0 ? (
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                        {referrals.map((ref, index) => (
+                            <div key={index} className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="w-8 h-8">
+                                        <AvatarImage src={ref.profilePictureUrl} data-ai-hint="profile picture" />
+                                        <AvatarFallback>{ref.firstName.substring(0,1)}</AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm font-medium">{ref.firstName}</span>
+                                </div>
+                                <Badge variant="secondary">Joined</Badge>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-center text-sm text-muted-foreground py-4">You haven't referred any friends yet.</p>
+                )}
             </CardContent>
         </Card>
 

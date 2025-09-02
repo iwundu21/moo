@@ -316,7 +316,7 @@ export default function Home() {
       <header className="flex items-center space-x-4 pt-4">
         <Avatar className="w-16 h-16 border-2 border-primary">
           <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.telegramUsername} data-ai-hint="profile picture" />
-          <AvatarFallback>{userProfile.telegramUsername.substring(0, 2)}</AvatarFallback>
+          <AvatarFallback>{userProfile.firstName.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div>
           <p className="text-base font-semibold">@{userProfile.telegramUsername}</p>

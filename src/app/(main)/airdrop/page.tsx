@@ -284,7 +284,7 @@ export default function AirdropPage() {
     // Highest priority: if airdrop is paused by admin
     if (!appSettings.isAirdropLive) {
         return (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="bg-destructive/20 border-destructive/50 text-destructive-foreground">
                 <Ban className="h-4 w-4" />
                 <AlertTitle>Airdrop Claim Coming Soon</AlertTitle>
                 <AlertDescription className="text-xs">

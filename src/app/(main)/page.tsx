@@ -325,10 +325,10 @@ export default function Home() {
 
       <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground">Main Balance</p>
-          <div className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center justify-center gap-2">
+          <div className="text-4xl font-bold tracking-tighter text-foreground flex items-center justify-center gap-2">
             <span>{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
             <Image src="/moo logo.jpg" alt="MOO logo" width={28} height={28} className="rounded-full" />
-            <span className="text-base">MOO</span>
+            <span className="text-base text-muted-foreground">MOO</span>
           </div>
       </div>
 

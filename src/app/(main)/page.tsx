@@ -325,10 +325,12 @@ export default function Home() {
 
       <div className="text-center space-y-1">
           <p className="text-sm font-medium text-muted-foreground">Main Balance</p>
-          <div className="text-4xl font-bold tracking-tighter text-foreground flex items-center justify-center gap-2">
-            <span>{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
-            <Image src="/moo logo.jpg" alt="MOO logo" width={28} height={28} className="rounded-full" />
-            <span className="text-base text-muted-foreground">MOO</span>
+          <div className="text-4xl font-bold tracking-tighter text-foreground flex items-center justify-center gap-2 flex-wrap">
+            <span className="break-all">{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+            <div className="flex items-center gap-2">
+                <Image src="/moo logo.jpg" alt="MOO logo" width={28} height={28} className="rounded-full" />
+                <span className="text-base text-muted-foreground">MOO</span>
+            </div>
           </div>
       </div>
 
@@ -351,10 +353,12 @@ export default function Home() {
               </Button>
           </div>
           <div>
-              <div className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center gap-2">
-                  <span>{pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
-                  <Image src="/moo logo.jpg" alt="MOO logo" width={24} height={24} className="rounded-full" />
-                  <span className="text-base">MOO</span>
+              <div className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center gap-2 flex-wrap">
+                  <span className="break-all">{pendingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                  <div className="flex items-center gap-2">
+                    <Image src="/moo logo.jpg" alt="MOO logo" width={24} height={24} className="rounded-full" />
+                    <span className="text-base text-primary">MOO</span>
+                  </div>
               </div>
               <p className="text-xs text-muted-foreground">This balance is updated from your chat activity.</p>
           </div>

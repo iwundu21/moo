@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,8 +62,8 @@ export default function HistoryPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1 text-sm font-bold text-green-500">
-                                        + {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                    <div className="flex items-center gap-1 text-sm font-bold text-green-500 shrink-0">
+                                        <span className="break-all">+ {claim.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
                                         <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" />
                                     </div>
                                 </div>

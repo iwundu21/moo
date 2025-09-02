@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -92,7 +93,7 @@ export default function LeaderboardPage() {
                  <div className="relative flex-shrink-0">
                     <Avatar>
                         <AvatarImage src={userProfile.profilePictureUrl} data-ai-hint="profile picture"/>
-                        <AvatarFallback>{userProfile.telegramUsername.substring(0,1)}</AvatarFallback>
+                        <AvatarFallback>{userProfile.firstName ? userProfile.firstName.substring(0,1) : 'U'}</AvatarFallback>
                     </Avatar>
                     {userProfile.isPremium && <BadgeCheck className="absolute -bottom-1 -right-1 w-5 h-5 text-blue-500" />}
                 </div>
@@ -102,7 +103,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="text-right flex-shrink-0 ml-4">
                 <div className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center gap-1">
-                  <span>{(userProfile.lifetimeBalance || 0).toLocaleString()}</span>
+                  <span className="break-all">{(userProfile.lifetimeBalance || 0).toLocaleString()}</span>
                   <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" />
                   <span>MOO</span>
                 </div>
@@ -149,7 +150,7 @@ export default function LeaderboardPage() {
                     </TableCell>
                     <TableCell className="text-right font-semibold text-xs whitespace-nowrap px-2">
                        <div className="flex items-center justify-end gap-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        <span>{entry.balance.toLocaleString()}</span>
+                        <span className="break-all">{entry.balance.toLocaleString()}</span>
                         <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
                         <span>MOO</span>
                       </div>
@@ -205,7 +206,7 @@ export default function LeaderboardPage() {
                     <TableCell className="text-xs px-2">
                         <div className="flex flex-col gap-1">
                           <div className="font-semibold flex items-center gap-1">
-                            <span>{claim.amount.toLocaleString()}</span>
+                            <span className="break-all">{claim.amount.toLocaleString()}</span>
                             <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
                             <span>MOO</span>
                           </div>

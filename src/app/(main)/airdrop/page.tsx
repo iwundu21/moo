@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -190,11 +191,13 @@ export default function AirdropPage() {
             <CheckCircle className="h-4 w-4 text-green-500" />
             <AlertTitle>Airdrop Distributed!</AlertTitle>
             <AlertDescription className="text-xs text-green-500/80">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <span>Your airdrop of</span>
-                    <span className="font-bold">{claimedAmount.toLocaleString()}</span>
-                    <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" />
-                    <span>MOO has been sent to your wallet.</span>
+                    <span className="font-bold break-all">{claimedAmount.toLocaleString()}</span>
+                    <div className="flex items-center gap-1">
+                        <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" />
+                        <span>MOO has been sent to your wallet.</span>
+                    </div>
                 </div>
                 <p className="font-mono text-xs truncate pt-2">{userProfile.walletAddress}</p>
                 <Button asChild variant="link" size="sm" className="p-0 h-auto text-green-500">
@@ -221,10 +224,12 @@ export default function AirdropPage() {
 
     return (
         <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center gap-2">
-                <span>{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
-                <Image src="/moo logo.jpg" alt="MOO logo" width={28} height={28} className="rounded-full" />
-                <span className="text-base">MOO</span>
+            <div className="text-3xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center gap-2 flex-wrap">
+                <span className="break-all">{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                <div className="flex items-center gap-2">
+                    <Image src="/moo logo.jpg" alt="MOO logo" width={28} height={28} className="rounded-full" />
+                    <span className="text-base text-primary">MOO</span>
+                </div>
             </div>
              <Dialog open={isClaimDialogOpen} onOpenChange={setIsClaimDialogOpen}>
                 <DialogTrigger asChild>
@@ -242,8 +247,13 @@ export default function AirdropPage() {
                 <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Claim Your Allocation</DialogTitle>
-                    <DialogDescription>
-                     You are about to claim <span className="font-bold text-primary inline-flex items-center gap-1">{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" /> MOO</span>. Enter your TON network wallet address to receive your allocation.
+                    <DialogDescription className="flex flex-wrap items-center gap-1">
+                     You are about to claim 
+                     <span className="font-bold text-primary inline-flex items-center gap-1">
+                        <span className="break-all">{mainBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                        <Image src="/moo logo.jpg" alt="MOO logo" width={16} height={16} className="rounded-full" /> MOO
+                     </span>. 
+                     Enter your TON network wallet address to receive your allocation.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">

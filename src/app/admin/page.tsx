@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -287,7 +288,7 @@ export default function AdminPage() {
                 <div>
                     <p className="text-xs text-muted-foreground">Total MOO Generated</p>
                     <div className="flex items-center gap-2">
-                      <p className="text-lg font-bold">{totalMooGenerated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-lg font-bold break-all">{totalMooGenerated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                        <Image src="/moo logo.jpg" alt="MOO logo" width={20} height={20} className="rounded-full" />
                     </div>
                 </div>
@@ -447,7 +448,7 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell className="text-xs">
                     <div className="flex flex-col gap-1">
-                        <span className="truncate max-w-xs break-all">{user.walletAddress || 'N/A'}</span>
+                        <span className="truncate max-w-[120px] break-all">{user.walletAddress || 'N/A'}</span>
                          {user.status === 'distributed' ? (
                            <Badge variant="default" className="w-fit bg-green-500 hover:bg-green-600">
                                 <CheckCircle className="mr-2 h-4 w-4" />
@@ -467,7 +468,7 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell className="font-semibold text-xs">
                      <div className="flex items-center gap-1">
-                        <span>{`${(user.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}</span>
+                        <span className="break-all">{`${(user.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}</span>
                         <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
                         <span>MOO</span>
                     </div>

@@ -3,12 +3,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Award, Star, Users, Gem, Rocket, ShieldCheck, Twitter, Send } from 'lucide-react';
+import { Award, Star, Users, Gem, Rocket, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTelegram } from '@/hooks/use-telegram';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
+import Image from 'next/image';
+
+const XIcon = () => <Image src="/x.jpg" alt="X Logo" width={24} height={24} className="rounded-sm" />;
+const TelegramIcon = () => <Image src="/tg.jpg" alt="Telegram Logo" width={24} height={24} className="rounded-sm" />;
+
 
 export default function ProfilePage() {
     const { userProfile, referrals, leaderboard } = useTelegram();
@@ -49,8 +54,8 @@ export default function ProfilePage() {
                 { icon: Award, title: 'Top 10 Player', description: 'Reached the top 10', unlocked: !!(userRank && userRank <= 10) },
                 { icon: Users, title: 'Friendly Referrer', description: 'Referred one friend', unlocked: referrals.length > 0 },
                 { icon: Gem, title: 'Premium User', description: 'Using Telegram Premium', unlocked: userProfile.isPremium },
-                { icon: Twitter, title: 'X Follower', description: 'Followed on X', unlocked: userProfile.completedSocialTasks?.twitter === 'completed' },
-                { icon: Send, title: 'Telegram Subscriber', description: 'Subscribed to channel', unlocked: userProfile.completedSocialTasks?.telegram === 'completed' },
+                { icon: XIcon, title: 'X Follower', description: 'Followed on X', unlocked: userProfile.completedSocialTasks?.twitter === 'completed' },
+                { icon: TelegramIcon, title: 'Telegram Subscriber', description: 'Subscribed to channel', unlocked: userProfile.completedSocialTasks?.telegram === 'completed' },
                 { icon: Users, title: 'Community Member', description: 'Joined the community', unlocked: userProfile.completedSocialTasks?.community === 'completed' },
             ];
 
@@ -84,7 +89,7 @@ export default function ProfilePage() {
       <div className="flex flex-col items-center space-y-2">
         <Avatar className="w-24 h-24 border-4 border-primary shadow-lg">
           <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.telegramUsername} data-ai-hint="profile picture" />
-          <AvatarFallback>{userProfile.firstName.substring(0, 2)}</AvatarFallback>
+          <AvatarFallback>{userProfile.firstName ? userProfile.firstName.substring(0, 2) : 'U'}</AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold">@{userProfile.telegramUsername}</h1>
@@ -157,5 +162,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    

@@ -315,11 +315,11 @@ export default function Home() {
       {showConfetti && <Confetti recycle={false} onConfettiComplete={() => setShowConfetti(false)} />}
       <header className="flex items-center space-x-4 pt-4">
         <Avatar className="w-16 h-16 border-2 border-primary">
-          <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.telegramUsername} data-ai-hint="profile picture" />
+          <AvatarImage src={userProfile.profilePictureUrl} alt={userProfile.firstName} data-ai-hint="profile picture" />
           <AvatarFallback>{userProfile.firstName.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="text-base font-semibold">@{userProfile.telegramUsername}</p>
+          <p className="text-base font-semibold">{userProfile.firstName}</p>
         </div>
       </header>
 

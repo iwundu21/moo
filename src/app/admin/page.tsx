@@ -437,7 +437,7 @@ export default function AdminPage() {
                     <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
                             <AvatarImage src={user.profilePictureUrl} data-ai-hint="profile picture" />
-                            <AvatarFallback>{user.firstName.substring(0, 1)}</AvatarFallback>
+                            <AvatarFallback>{user.firstName ? user.firstName.substring(0, 1) : 'U'}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                             <span className="font-medium text-xs">@{user.username}</span>

@@ -81,9 +81,9 @@ export default function ReferralsPage() {
                                 <div className="flex items-center gap-3">
                                     <Avatar className="w-8 h-8">
                                         <AvatarImage src={ref.profilePictureUrl} data-ai-hint="profile picture" />
-                                        <AvatarFallback>{ref.firstName.substring(0,1)}</AvatarFallback>
+                                        <AvatarFallback>{ref.firstName ? ref.firstName.substring(0,1) : 'U'}</AvatarFallback>
                                     </Avatar>
-                                    <span className="text-sm font-medium">{ref.firstName}</span>
+                                    <span className="text-sm font-medium">{ref.firstName || 'New User'}</span>
                                 </div>
                                 <Badge variant="secondary">Joined</Badge>
                             </div>

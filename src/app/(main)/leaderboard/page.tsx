@@ -140,11 +140,11 @@ export default function LeaderboardPage() {
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-8 h-8">
                               <AvatarImage src={entry.profilePictureUrl} data-ai-hint="profile picture" />
-                              <AvatarFallback>{entry.firstName.substring(0, 1)}</AvatarFallback>
+                              <AvatarFallback>{entry.firstName ? entry.firstName.substring(0, 1) : 'U'}</AvatarFallback>
                           </Avatar>
                           {entry.isPremium && <BadgeCheck className="absolute -bottom-1 -right-1 w-4 h-4 text-blue-500" />}
                         </div>
-                        <span className="truncate">{entry.firstName}</span>
+                        <span className="truncate">{entry.firstName || 'New User'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-semibold text-xs whitespace-nowrap px-2">
@@ -195,11 +195,11 @@ export default function LeaderboardPage() {
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-8 h-8">
                               <AvatarImage src={claim.profilePictureUrl} data-ai-hint="profile picture" />
-                              <AvatarFallback>{claim.firstName.substring(0, 1)}</AvatarFallback>
+                              <AvatarFallback>{claim.firstName ? claim.firstName.substring(0, 1) : 'U'}</AvatarFallback>
                           </Avatar>
                           {claim.isPremium && <BadgeCheck className="absolute -bottom-1 -right-1 w-4 h-4 text-blue-500" />}
                         </div>
-                        <span className="font-medium truncate text-xs">{claim.firstName}</span>
+                        <span className="font-medium truncate text-xs">{claim.firstName || 'User'}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-xs px-2">
@@ -256,5 +256,3 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-
-    

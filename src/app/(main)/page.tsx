@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Star, Rocket, Twitter, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info, XCircle, Ban } from 'lucide-react';
+import { Star, Rocket, Send, Users, CheckCircle, Loader2, PartyPopper, Ticket, Info, XCircle, Ban } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +58,8 @@ type DialogContentState = {
   status: 'success' | 'error';
 };
 
+const XIcon = () => <Image src="/x.jpg" alt="X Logo" width={24} height={24} className="rounded-sm" />;
+
 
 export default function Home() {
   const { userProfile, updateUserProfile, redeemReferralCode, isLoading, claimPendingBalance, verifyTelegramTask, isAirdropClaimable, processPayment } = useTelegram();
@@ -76,7 +78,7 @@ export default function Home() {
   const [dialogContent, setDialogContent] = useState<DialogContentState | null>(null);
 
   const socialTaskList = [
-    { id: 'twitter', icon: Twitter, text: 'Follow on X', link: 'https://x.com/moo_coins?t=l5TKd8UBZoIYVXwAX75QFQ&s=09' },
+    { id: 'twitter', icon: XIcon, text: 'Follow on X', link: 'https://x.com/moo_coins?t=l5TKd8UBZoIYVXwAX75QFQ&s=09' },
     { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_coins', channelId: '@moo_coins' },
     { id: 'community', icon: Send, text: 'Join MOO Community', link: 'https://t.me/moo_coinss', channelId: '@moo_coinss' },
   ];
@@ -406,12 +408,13 @@ export default function Home() {
                 <div className="space-y-4 pt-4">
                     {socialTaskList.map(task => {
                         const status = socialTasks[task.id];
+                        const TaskIcon = task.icon;
                         return (
                             <div key={task.id} className="space-y-2">
                                 <Button asChild className="w-full justify-between" variant="outline" onClick={() => handleTaskOpen(task.id)} disabled={status === 'completed'}>
                                     <Link href={task.link} target="_blank" >
                                         <span className="flex items-center gap-3">
-                                            <task.icon />
+                                            <TaskIcon />
                                             {task.text}
                                         </span>
                                         {status === 'completed' ? <CheckCircle className="text-green-500"/> : <Badge variant="secondary">Complete Task</Badge>}
@@ -591,3 +594,4 @@ export default function Home() {
     
 
     
+

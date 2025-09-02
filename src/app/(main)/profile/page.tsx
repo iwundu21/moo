@@ -127,7 +127,7 @@ export default function ProfilePage() {
                                         </div>
                                         <div className="flex-1 flex flex-col justify-center">
                                             <p className="font-semibold text-xs text-white">{ach.title}</p>
-                                            <p className="text-xs text-white/80">{ach.description}</p>
+                                            <p className="text-xs text-white/80 break-words">{ach.description}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -157,3 +157,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    

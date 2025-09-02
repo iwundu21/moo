@@ -123,7 +123,7 @@ export default function LeaderboardPage() {
                 <TableRow>
                   <TableHead className="w-[50px] text-center">Rank</TableHead>
                   <TableHead>User</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
+                  <TableHead className="text-right min-w-[120px]">Balance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -135,7 +135,7 @@ export default function LeaderboardPage() {
                           {entry.rank}
                       </div>
                     </TableCell>
-                    <TableCell className="min-w-0">
+                    <TableCell className="font-medium text-xs min-w-0">
                       <div className="flex items-center gap-3">
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-8 h-8">
@@ -144,11 +144,11 @@ export default function LeaderboardPage() {
                           </Avatar>
                           {entry.isPremium && <BadgeCheck className="absolute -bottom-1 -right-1 w-4 h-4 text-blue-500" />}
                         </div>
-                        <span className="font-medium truncate text-xs">@{entry.username}</span>
+                        <span className="truncate">@{entry.username}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-semibold text-xs whitespace-nowrap">
-                      <div className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent flex items-center justify-end gap-1">
+                       <div className="flex items-center justify-end gap-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                         <span>{entry.balance.toLocaleString()}</span>
                         <Image src="/moo logo.jpg" alt="MOO logo" width={14} height={14} className="rounded-full" />
                         <span>MOO</span>
@@ -256,3 +256,5 @@ export default function LeaderboardPage() {
     </div>
   );
 }
+
+    

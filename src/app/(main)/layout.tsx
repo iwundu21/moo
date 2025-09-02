@@ -42,8 +42,8 @@ export default function RootLayout({
             </div>
           </header>
           <main className="flex-1 pb-24">{children}</main>
-          <FooterNav />
         </div>
+        <FooterNav />
         <Toaster />
       </body>
     </html>

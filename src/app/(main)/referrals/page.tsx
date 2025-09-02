@@ -51,7 +51,7 @@ export default function ReferralsPage() {
 
         <div className="space-y-4 text-center">
             <p className="text-sm font-semibold">Your Referral Code</p>
-            <div className="p-4 border-dashed border-2 border-primary/50 rounded-lg bg-primary/10 text-primary font-mono text-lg tracking-widest break-all">
+            <div className="p-4 border-dashed border-2 border-primary/50 rounded-lg bg-primary/10 text-foreground font-mono text-lg tracking-widest break-all">
                 {userReferralCode}
             </div>
             <div className="grid grid-cols-2 gap-4">

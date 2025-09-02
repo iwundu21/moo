@@ -59,6 +59,7 @@ type DialogContentState = {
 };
 
 const XIcon = () => <Image src="/x.jpg" alt="X Logo" width={24} height={24} className="rounded-sm" />;
+const TelegramIcon = () => <Image src="/tg.jpg" alt="Telegram Logo" width={24} height={24} className="rounded-sm" />;
 
 
 export default function Home() {
@@ -79,8 +80,8 @@ export default function Home() {
 
   const socialTaskList = [
     { id: 'twitter', icon: XIcon, text: 'Follow on X', link: 'https://x.com/moo_coins?t=l5TKd8UBZoIYVXwAX75QFQ&s=09' },
-    { id: 'telegram', icon: Send, text: 'Subscribe Telegram', link: 'https://t.me/moo_coins', channelId: '@moo_coins' },
-    { id: 'community', icon: Send, text: 'Join MOO Community', link: 'https://t.me/moo_coinss', channelId: '@moo_coinss' },
+    { id: 'telegram', icon: TelegramIcon, text: 'Subscribe Telegram', link: 'https://t.me/moo_coins', channelId: '@moo_coins' },
+    { id: 'community', icon: TelegramIcon, text: 'Join MOO Community', link: 'https://t.me/moo_coinss', channelId: '@moo_coinss' },
   ];
   
   const allTasksCompleted = useMemo(() => {
@@ -594,4 +595,3 @@ export default function Home() {
     
 
     
-

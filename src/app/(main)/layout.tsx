@@ -25,14 +25,17 @@ export default function RootLayout({
       <body className={cn("font-body antialiased", inter.variable)}>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <div className="flex flex-col min-h-screen">
-          <header className="p-4 flex justify-end">
-            <Image
-              src="/moo logo.jpg"
-              alt="MOO Logo"
-              width={50}
-              height={50}
-              className="rounded-full"
-            />
+          <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container flex h-14 max-w-lg items-center justify-between">
+               <p className="text-xl font-bold">MOO</p>
+               <Image
+                  src="/moo logo.jpg"
+                  alt="MOO Logo"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+            </div>
           </header>
           <main className="flex-1 pb-24">{children}</main>
           <FooterNav />

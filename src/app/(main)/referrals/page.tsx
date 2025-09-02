@@ -2,14 +2,12 @@
 'use client'
 
 import { useState } from 'react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Copy, UserPlus, Share2, Gift, Users, CheckCircle, XCircle } from 'lucide-react';
+import { Copy, UserPlus, Gift, Users, CheckCircle, XCircle } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 
 type DialogInfo = {
   title: string;
@@ -70,28 +68,14 @@ export default function ReferralsPage() {
             <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary"/>
-                    Your Referrals ({referrals.length})
+                    Your Referrals
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                {referrals.length > 0 ? (
-                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                        {referrals.map((ref, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="w-8 h-8">
-                                        <AvatarImage src={ref.profilePictureUrl} data-ai-hint="profile picture" />
-                                        <AvatarFallback>{ref.firstName ? ref.firstName.substring(0,1) : 'U'}</AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-sm font-medium">{ref.firstName || 'New User'}</span>
-                                </div>
-                                <Badge variant="secondary">Joined</Badge>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-center text-sm text-muted-foreground py-4">You haven't referred any friends yet.</p>
-                )}
+                <div className="text-center">
+                  <p className="text-4xl font-bold">{referrals.length}</p>
+                  <p className="text-xs text-muted-foreground">Friends Referred</p>
+                </div>
             </CardContent>
         </Card>
 

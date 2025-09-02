@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban, Zap, Search, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Download, Trash2, Users, Gem, ShieldCheck, CheckCircle, Send, Ban, Zap, Search, Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
@@ -50,6 +50,8 @@ export default function AdminPage() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [endTime, setEndTime] = useState("23:59");
   const [timeLeft, setTimeLeft] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 20;
 
   const fetchAllAdminData = useCallback(async () => {
     setIsLoading(true);
@@ -145,14 +147,33 @@ export default function AdminPage() {
   const filteredUsers = useMemo(() => {
     if (!searchQuery) return users;
     return users.filter(user =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.userId.includes(searchQuery)
+      (user.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.userId || '').includes(searchQuery)
     );
   }, [searchQuery, users]);
 
   const claimedUsers = useMemo(() => {
     return filteredUsers.filter(user => user.status === 'processing' || user.status === 'distributed');
   }, [filteredUsers]);
+
+  const totalPages = Math.ceil(filteredUsers.length / recordsPerPage);
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * recordsPerPage;
+    return filteredUsers.slice(startIndex, startIndex + recordsPerPage);
+  }, [filteredUsers, currentPage, recordsPerPage]);
+  
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const downloadCSV = () => {
     if (claimedUsers.length === 0) return;
@@ -431,8 +452,8 @@ export default function AdminPage() {
                   Loading users...
                 </TableCell>
               </TableRow>
-            ) : filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
+            ) : paginatedUsers.length > 0 ? (
+              paginatedUsers.map((user) => (
                 <TableRow key={user.userId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -510,7 +531,21 @@ export default function AdminPage() {
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-4 p-4">
+                <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={currentPage === 1}>
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Prev
+                </Button>
+                <span className="text-sm font-medium">Page {currentPage} of {totalPages}</span>
+                <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+            </div>
+        )}
       </div>
     </div>
   );
 }
+
